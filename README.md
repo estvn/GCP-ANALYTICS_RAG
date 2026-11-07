@@ -6,6 +6,7 @@ this branch's results: `bge-m3` (int8, ONNX Runtime).
 
 Full description, settings and how to reproduce: [CHUNKING.md](CHUNKING.md). Raw evaluation lines:
 [eval/runs/structure-semantic-bge-m3.log](eval/runs/structure-semantic-bge-m3.log).
+Hardware cost of the embedding model (`bge-m3`): [HARDWARE_bge-m3.md](HARDWARE_bge-m3.md).
 
 ## Technique applied
 

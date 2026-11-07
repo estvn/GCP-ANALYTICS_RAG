@@ -149,6 +149,21 @@ semantic 0.700 / 0.900 / 0.625 / 0.850, structure + semantic 0.725 / 1.000 / 0.6
 - Each technique lives in its own branch (`chunking/recursive`, `chunking/structural`, `chunking/semantic`,
   `chunking/structure-semantic`) with its code, tests and a `CHUNKING.md`.
 
+## How structure and meaning share the cuts (structure + semantic)
+
+Why each chunk ended, counted on a sample of 24 course 1 files (every third file, 101 chunks, median 153 tokens;
+small files weigh more in the sample than in the full course):
+
+| cause | chunks | share of the 77 real decisions |
+|---|---|---|
+| header (structure) | 36 | 47% |
+| meaning shift (semantic) | 33 | 43% |
+| token cap (440) | 8 | 10% |
+| end of document (not a decision) | 24 | |
+
+A header was reached with the current chunk still under 100 tokens 33 times, so the section was merged into the next
+one instead of becoming a tiny chunk: the minimum size does as much work as the cut rules.
+
 ## Where the chunks are cut
 
 Checked on course 1 by looking, in the source markdown, at what follows each chunk end.

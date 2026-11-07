@@ -23,9 +23,9 @@ Complete record of every experiment, measurement and diagnostic run on this proj
 | Item | Value |
 |---|---|
 | Machine | Intel i7-1360P (16 threads), 15.7 GB RAM, no GPU, Windows 11. Budget: 20-30% of CPU and RAM |
-| Corpus | Google Cloud Data Analytics certificate. Course 1: 70 markdown files (40 PDF converted + 30 native). Full: 311 files, 5 courses, about 1.8 MB of text (161 PDFs, 500 MB on disk, mostly images) |
+| Corpus | Google Cloud Data Analytics certificate. Course 1: 70 markdown files (40 PDF converted + 30 native). Full: 310 files (309 with chunks), 5 courses, about 1.8 MB of text (161 PDFs, 500 MB on disk, mostly images) |
 | Database | Podman container `rag-db` (`pgvector/pgvector:pg17`, `127.0.0.1:5433`, 1 GB / 2 CPUs), PostgreSQL + pgvector 0.8.7. Throwaway databases per experiment |
-| Embeddings | `multilingual-e5-small` int8 ONNX (384 d, 512 tokens, mean pooling, `query:`/`passage:` prefixes), 4 threads. From E25 also `bge-m3` int8 ONNX (1024 d, CLS pooling, no prefixes, 1024 tokens used) |
+| Embeddings | `multilingual-e5-small` int8 ONNX (384 d, 512 tokens, mean pooling, `query:`/`passage:` prefixes), 4 threads. From E26 also `bge-m3` int8 ONNX (1024 d, CLS pooling, no prefixes, 1024 tokens used) |
 | Store schema | `halfvec(N)`, HNSW `halfvec_cosine_ops` (m=16, ef_construction=64, ef_search=100), `tsvector` ('simple') + GIN |
 | Retrieval | Vector leg + keyword leg (Postgres full-text, `ts_rank_cd`, words of 3+ chars joined with OR, document-frequency cap), 30 candidates each, fused with RRF (k=60) |
 
@@ -39,7 +39,7 @@ Golden sets (every evidence snippet verified verbatim against the corpus files):
 | F (`golden_courses_2_5.json`) | 40 | Paraphrased, courses 2-5 (12/12/12/4), 40 distinct files | Sonnet subagent |
 | Translations (`golden_translations.json`) | 130 | Each question translated to the other language | Sonnet subagent (stand-in for the calling LLM) |
 
-Test suite growth: 21 (after ingest) -> 34 (retrieval) -> 43 -> 52 -> 64 -> 67 -> 69 -> 74 -> 83 tests, all passing.
+Test suite growth: 21 (after ingest) -> 34 (retrieval) -> 43 -> 52 -> 64 -> 67 -> 69 -> 74 -> 83 tests, all passing. Today the suite has 73 tests (83 was the count while the structural/recursive chunker tests existed).
 Security: Bandit 0 issues and pip-audit no known vulnerabilities, run before each important push.
 
 ---
@@ -267,7 +267,7 @@ Cells `hit / MRR`. Variants: vector; hybrid with df cap 0.10 / 0.15 / 0.30 and R
 
 ### E18. Full-course conversion and indexing (three chunkers)
 - Conversion: 241 new files in 77 s (course 1 skipped); 310 md files, sizes per course 393 / 442 / 306 / 542 / 85 KB; 0 U+FFFD; 26 files under 200 characters (normal short intros).
-- Indexing (311 documents each):
+- Indexing (310 documents each; the chunk counts below are from this older run, E29 counts 741 / 1144 / 1408 for the same techniques, cause not verified):
 
 | chunker | chunks | avg chars | tokens med/max | over 512 | first indexing |
 |---|---|---|---|---|---|
@@ -291,7 +291,7 @@ Cells `hit / MRR`. Variants: vector; hybrid with df cap 0.10 / 0.15 / 0.30 and R
 - **Findings**: order in hit rate structure+semantic >= semantic >= structural under all three search variants (2-6 points; a trend within about 1 standard error);
   MRR does not follow (structural .565 vs structure+semantic .562 at df .05); hybrid beats vector in all three; scores on course 1 questions fall with
   the full index (look-alike passages from other courses); courses 2-5 score 0.85-0.90; **df cap 0.05 beats 0.15 for all three** (+0.8 to +2.3 points).
-  **Status**: accepted. The code still uses 0.15 (open item). **Commits**: `bfc178c`, `4809081`.
+  **Status**: accepted. The code used 0.15 at the time (done since: `MAX_DOC_FREQUENCY` is 0.05 on main). **Commits**: `bfc178c`, `4809081`.
 
 ### E20. Plain recursive baseline (never tested before; the user assumed it had been)
 - Course 1 (138 chunks, avg 1729 chars, tokens 478 / 908, 52 over 512 = 38%, ingest 22 s), k=5, pooled over A+T+V: vector 0.711 / 0.537, hybrid df .15 0.700 / 0.552, df .05 0.678 / 0.537
@@ -305,7 +305,7 @@ Cells `hit / MRR`. Variants: vector; hybrid with df cap 0.10 / 0.15 / 0.30 and R
 | hybrid df .05 | .600/.443 | .900/.717 | .625/.466 | .825/.677 | .700/.543 |
 - **Finding**: last in hit rate on the full index (0.700 vs 0.731 / 0.738 / 0.762), suggesting that using headers helps. A header can end alone in a chunk when the next paragraph exceeds the size
   limit (documented by a test; 0 of 648 chunks under 60 characters on the real course); no header path in the chunk. **Status**: accepted.
-  **Commits**: `46bca68`, `a9e0e3b`; branch `chunking/recursive` (`8495c16`).
+  **Commits**: `46bca68`, `a9e0e3b`; branch `chunking/recursive-e5-small` (`8495c16`; deleted since, the recursive chunker is no longer in the repository).
 
 ### E21. How structure and meaning share the cuts (structure + semantic, sample of 24 course 1 files, 101 chunks, median 153 tokens)
 | cause | chunks | share of 77 real decisions |
@@ -378,7 +378,7 @@ Cells `hit / MRR`. Variants: vector; hybrid with df cap 0.10 / 0.15 / 0.30 and R
 
 ### E27. bge-m3 with structure + semantic chunking
 - **Question**: does bge-m3 beat e5-small when both use structure + semantic chunking, and by how much?
-- **Setup**: full corpus (311 files, 309 docs indexed), 130 questions (A 40, T 10, V 40, F 40), k = 10 (about 9,000 characters returned), hybrid with df cap 0.05, single phrasing.
+- **Setup**: full corpus (310 files, 309 docs indexed), 130 questions (A 40, T 10, V 40, F 40), k = 10 (about 9,000 characters returned), hybrid with df cap 0.05, single phrasing.
   bge-m3 (int8 ONNX, 1024 dims) both cuts (`SemanticChunker(bge, 440, 100, 90, split_on_headers=True)`) and embeds. Database `full_SEMH_bge`: 1416 chunks, average 879 chars, tokens median 213 / max 499, none over 512.
   Scripts: `bge_run.py` and `resume_semh.py` (session scratchpad, **not in the repo**). The indexing was interrupted when the window closed (177 of 309 docs done) and resumed without dropping the database; the resumed run added 132 docs in 1194 s.
 - **Result** (hit rate / MRR; e5 values from E28 and the branch `CHUNKING.md`):
@@ -395,7 +395,7 @@ Cells `hit / MRR`. Variants: vector; hybrid with df cap 0.10 / 0.15 / 0.30 and R
   bge-m3 per set, vector / hybrid: A .950/.692 / .925/.564, T .900/.404 / 1.000/.510, V .700/.482 / .775/.527, F .925/.774 / .900/.666.
 - **Conclusion**: bge-m3 is clearly better on this corpus: +12 to +14 points in total hit rate, far above the 3.8-point standard error. Most of the gain is cross-lingual (Spanish question, English passage and the reverse); same-language improves 4-5 points.
   The keyword leg still helps exact terms (T: vector .900 vs hybrid 1.000) but hurts cross-lingual (.818 to .727), as in E26. On the structural index bge-m3 gave .808 hybrid (E26); structure + semantic gives .877, about 7 points more.
-- **Caveats**: (1) the chunks are not identical: bge-m3 also decides the cuts, so the gain mixes better cutting with better retrieval; separating them needs cutting with one model and embedding with the other (`same_model.py`-style run, pending). (2) Only 22 cross-lingual questions: that subset is noisy (one question is 4.5 points). (3) The ES+EN fusion and the weighted fusion (E28) were not run on this index. (4) Resumed indexing: documents are deterministic, so the result should equal an uninterrupted run, but this was not checked.
+- **Caveats**: (1) the chunks are not identical: bge-m3 also decides the cuts, so the gain mixes better cutting with better retrieval; separating them needs cutting with one model and embedding with the other (`same_model.py`-style run, pending). (2) Only 22 cross-lingual questions: that subset is noisy (one question is 4.5 points). (3) The ES+EN fusion and the weighted fusion (E28) were not run on this index (the ES/EN fusion was later done in E30; the weighted fusion also ran there). (4) Resumed indexing: documents are deterministic, so the result should equal an uninterrupted run, but this was not checked.
 - **Status**: accepted (single phrasing, vector and hybrid). **Commit**: this entry; the scripts are not in the repo.
 
 ### E28. Weighted RRF over two phrasings: more weight on the original question (130 questions)
@@ -422,6 +422,63 @@ Weights are original : translation; the translation always comes from `golden_tr
 
 ---
 
+### E29. All chunking techniques on one common method (10 indexes, 130 questions, hybrid)
+- **Question**: which chunking technique answers the most questions when every index is measured the same way, and does the user's hybrid (community two-stage recipe + merge step) beat the community recipe alone?
+- **Setup**: full corpus (310 files, 309 with chunks), 130 questions (A 40, T 10, V 40, F 40), single phrasing, hybrid = vector + keyword leg fused with RRF, df cap 0.05.
+  `k` is set per index so every query returns about 9,000 characters (`k = round(9000 / average chunk length)`), which gives larger-chunk techniques fewer results. One script (`eval_all.py`, session scratchpad, **not in the repo**) evaluated all ten databases in one run; the raw output is `eval/runs/e29_unified_eval.log`.
+  Chunker settings: structural `StructuralChunker(2400, 200)` (characters); semantic `SemanticChunker(emb, 440, 100, 90, split_on_headers=False)`; semantic + header cuts the same with `split_on_headers=True`; **community two-stage** `StructureThenSemanticChunker(emb, 440, 100, 90)`; **user's hybrid** `StructureSemanticMergeChunker(emb, 440, 100, 25)`.
+- **Result** (hybrid, pooled over 130 questions; hits = questions with a relevant chunk in the top k):
+
+| chunking technique | model | database | chunks | avg chars | k | hits / 130 | hit rate | MRR | same-lang (108) | cross-lingual (22) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| structural | e5-small | `full_S2400` | 741 | 1567 | 6 | 95 | .731 | .561 | .861 | .091 |
+| semantic | e5-small | `full_SEM` | 1144 | 1045 | 9 | 96 | .738 | .517 | .852 | .182 |
+| semantic + header cuts | e5-small | `full_SEMH` | 1408 | 883 | 10 | 99 | .762 | .557 | .870 | .227 |
+| **community two-stage** | e5-small | `full_STSEM_e5` | 1335 | 911 | 10 | 97 | .746 | .508 | .870 | .136 |
+| **user's hybrid (two-stage + merge)** | e5-small | `full_STMERGE_e5` | 907 | 1267 | 7 | 95 | .731 | .552 | .861 | .091 |
+| structural | bge-m3 | `full_S2400_bge` | 741 | 1567 | 6 | 107 | .823 | .612 | .898 | .455 |
+| semantic | bge-m3 | `full_SEM_bge` | 1128 | 1058 | 9 | 113 | .869 | .576 | .917 | .636 |
+| semantic + header cuts | bge-m3 | `full_SEMH_bge` | 1416 | 879 | 10 | **114** | **.877** | .580 | .907 | .727 |
+| **community two-stage** | bge-m3 | `full_STSEM_bge` | 1336 | 911 | 10 | 113 | .869 | .584 | .926 | .591 |
+| **user's hybrid (two-stage + merge)** | bge-m3 | `full_STMERGE_bge` | 906 | 1268 | 7 | 109 | .838 | .592 | .917 | .455 |
+
+  Vector only (hits / 130): structural e5 86, semantic e5 92, semantic + header cuts e5 94, two-stage e5 91, hybrid e5 89; structural bge 102, semantic bge 107, semantic + header cuts bge 112, two-stage bge 107, hybrid bge 105.
+- **Findings**:
+  - Community vs user's hybrid: the community two-stage recipe has more hits in both models (e5 97 vs 95, bge 113 vs 109), the user's hybrid has a higher MRR in both (e5 .552 vs .508, bge .592 vs .584). The gaps are 2 and 4 questions out of 130; differences under about 8 points (about 10 of the 130 questions) are not conclusive, so this is **not conclusive**.
+  - Among the chunkers with the plain hybrid, semantic + header cuts has the highest count in both models (e5 99 against 95-97; bge-m3 114 against 107-113), but every gap is 1 to 7 questions, inside the noise: **no chunker is conclusively better**. It is the default of `main` because it is the highest measured and also leads in the vector and translation rows (E30). It is **not** the user's hybrid (see the technique definitions in `CLAUDE.md`).
+  - bge-m3 beats e5-small on every technique (+12 to +17 hits, 9 to 13 points): **conclusive**. About half or more of the gain is the 22 cross-lingual questions (e5 gets 2-5 of them, bge-m3 10-14).
+  - Semantic + header cuts makes more chunks than pure semantic because it adds a third cut: at every `#` header, when the current chunk already has 100 tokens (`starts_section and tokens >= min_tokens`). 1416 vs 1128 chunks with bge-m3.
+  - The user's hybrid makes the biggest chunks (average 1268 characters), so at equal returned text it gets the smallest `k` (7). Whether it would close the gap at `k = 10` was not measured.
+- **Caveats**: single run per index; `k` differs by technique; the chunk counts of the three e5 indexes (741, 1144, 1408) differ from the ones in the older branch documents and in E19 (755, 1173, 1443) while the hit counts match, and the cause was **not verified** (the working tree has uncommitted changes in `parse.py`); `full_STMERGE_bge` was first evaluated with 289 of 309 documents and `full_SEM_bge` with 69, then both were completed (resume with the same chunker settings: 20 and 241 documents added, the rest skipped) before the numbers above.
+- **Status**: accepted (single run, n = 130). **Branches**: one per technique and model, each with a `CHUNKING.md` (see "Branches and commits").
+
+### E30. Retrieval techniques on the three best chunking indexes (bge-m3, 130 questions)
+- **Question**: how do vector, keyword and hybrid search compare on the three most precise chunking techniques, and does fusing the question with its translation (ES/EN RRF) help each of them?
+- **Setup**: indexes `full_SEMH_bge` (semantic + header cuts), `full_SEM_bge` (semantic), `full_STSEM_bge` (community two-stage); embedding model bge-m3; the 130 questions; `k` from the 9,000-character budget (10, 9, 10). Techniques: vector (cosine over halfvec, HNSW), keyword (Postgres full-text `ts_rank_cd`, document-frequency cap 0.05), hybrid (vector + keyword, 30 candidates each, RRF k = 60). ES/EN RRF runs the same search with the question and its hand translation (`eval/golden_translations.json`) and fuses the two lists with weights `original:translation` of 1:1 or 2:1; score = weight / (60 + position). Scripts `retrieval_modes.py` and `retrieval_modes2.py` (session scratchpad, **not in the repo**); raw output `eval/runs/e30_retrieval_modes.log`.
+- **Result** (questions answered out of 130 / MRR):
+
+| retrieval | semantic + headers (`SEMH`) | semantic (`SEM`) | community two-stage (`STSEM`) |
+|---|---|---|---|
+| vector | 112 / 0.631 | 107 / 0.581 | 107 / 0.595 |
+| vector + ES/EN 1:1 | 116 / 0.639 | 104 / 0.548 | 105 / 0.594 |
+| vector + ES/EN 2:1 | 116 / 0.638 | 105 / 0.564 | 106 / 0.588 |
+| keyword | 75 / 0.355 | 77 / 0.374 | 80 / 0.351 |
+| keyword + ES/EN 1:1 | 75 / 0.300 | 79 / 0.313 | 73 / 0.319 |
+| keyword + ES/EN 2:1 | 73 / 0.296 | 75 / 0.312 | 76 / 0.320 |
+| hybrid | 114 / 0.580 | 113 / 0.576 | 113 / 0.584 |
+| hybrid + ES/EN 1:1 | 122 / 0.591 | 110 / 0.551 | 114 / 0.576 |
+| hybrid + ES/EN 2:1 | 121 / 0.607 | 111 / 0.591 | 112 / 0.605 |
+
+- **Findings**:
+  - `SEMH` has the highest count in 6 of the 9 rows (every vector and hybrid row) and is last in two of the three keyword rows (rows 1 and 3; two-stage is last in the 1:1 row). The gaps are conclusive in some rows and not in others (next bullet). The hybrid with ES/EN 1:1 on `SEMH` answers the most questions (122), the best measured configuration; vector with ES/EN on `SEMH` has the best MRR (0.639) with 116 answers and no keyword leg.
+  - Translation helps only `SEMH` (vector 112 to 116, hybrid 114 to 122); on `SEM` and `STSEM` it is neutral or worse.
+  - Keyword alone is the weakest (75 to 80 answered). Translation does not raise its total: it rescues cross-lingual questions (`SEMH`: .091 to .818 with 1:1) and loses same-language ones (.676 to .528).
+  - RRF is not a search technique by itself: it only fuses lists; here it was applied on top of vector, keyword and hybrid.
+  - With the ES/EN translation, `SEMH` answers 11-12 more questions than the other two chunkers on vector (116 against 104/105) and 12 more than semantic-only on hybrid (122 against 110): conclusive at the 8-point rule. Against two-stage on hybrid (122 against 114) it is 8 questions (6 points): not conclusive.
+  - The 6-question gap between hybrid + ES/EN and vector + ES/EN on `SEMH` is not conclusive (under about 8 points). Vector leads in MRR. 1:1 against 2:1 is tied (1 question).
+- **Caveats**: single run; the second phrasing is a hand translation, so a real system would need a translation step (extra call, two searches per query), which this does not measure; the keyword leg uses a document-frequency cap of 0.05 and the 2:1 weights come from scratch scripts, while the repo default of `MAX_DOC_FREQUENCY` is 0.05 (changed after this run; it was 0.15) and `search_many` uses unweighted `rrf` (1:1); the user's hybrid chunking and the e5-small indexes were not run through these modes.
+- **Status**: accepted (single run, n = 130). **Branches**: `retrieval/vector`, `retrieval/keyword`, `retrieval/hybrid`, and the two ES/EN RRF variants that did best, `retrieval/hybrid-es-en-rrf` and `retrieval/vector-es-en-rrf`.
+
 ## Corrections log (things said or measured wrongly, and what replaced them)
 
 | # | Claim or measurement | Reality | Where fixed |
@@ -433,12 +490,14 @@ Weights are original : translation; the translation always comes from `golden_tr
 | 5 | First mid-sentence audits: 43-47% | Heuristic and a Python bug; real value 4% (E14) | E14 |
 | 6 | Compare sizes at the same `k` | Larger chunks win by returning more text; redone at equal text (E08) | E08 |
 | 7 | Structural + recursive vs recursive only | Recursive alone had never been run; implemented and measured (E20) | E20 |
-| 8 | df cap 0.15 | Tuned on 162 chunks; 0.05 is better on 750-1450 chunks (E19). Code unchanged yet | open |
+| 8 | df cap 0.15 | Tuned on 162 chunks; 0.05 is better on 750-1450 chunks (E19) | `MAX_DOC_FREQUENCY` = 0.05 in `main` |
 | 9 | Reranker not needed | Measured only on course 1 (E10); not repeated on the full index | open |
 | 10 | "Vectors alone miss exact terms almost always" | 9 of 10 on course 1; 0.600 vs 0.900 hybrid on the full index | PDF guide |
+| 11 | First unified run of E29: 0.000 on sets A, T and V for every index | Evaluation bug, not retrieval: the course 1 golden sets lack the `01_INTRODUCTION_GC_DATA_ANALYTICS/` prefix that the indexes have (`load_golden(path, source_prefix)`); redone with the prefix. `python -m rag.evaluation.report` still loads those sets without the prefix | E29 |
 
 ## Operational notes
 
+- `rag-db` would not start: it mounted `rag/sql/init.sql`, which no longer exists. Recreated with `podman run` on the same volume `rag_pgdata` and without that mount (the script only runs on first initialisation); all ten databases were intact.
 - Tooling quirk: `\n` escapes written through shell heredocs were turned into real newlines inside source files (broke `chunk.py` twice); use the editor tool for code with backslash escapes.
 - The machine slowed 5-10x for periods (background apps): indexing times are noisy; quote only the ones marked as measured idle.
 - `uv init` created a nested git repo inside `rag/`, which became the project repo (remote `estvn/GCP-ANALYTICS_RAG`); `mcp/` and `mcp-drawio/` have their own empty repos.
@@ -451,13 +510,14 @@ Weights are original : translation; the translation always comes from `golden_tr
 | Reproducible from this repository | Ad hoc (script not in the repo) |
 |---|---|
 | `uv run python -m rag.evaluation.report [--model e5-small\|bge-m3]` (vector / keyword / hybrid on the golden sets) | The chunker x size grids (E06-E08, E15-E17), the full-index runs (E18-E22, E25-E26), the resource and rotation tests (E23-E24) |
-| `ingest(md_root, conn, embedder, chunker=...)` with `RecursiveChunker`, `StructuralChunker`, `SemanticChunker`; `HybridRetriever.search` / `search_many` | Boundary audits (E14), tail-truncation test (E22), cut-cause counting (E21) |
+| `ingest(md_root, conn, embedder, chunker=...)` with `SemanticChunker` (the highest measured, the only chunker on main and the default); `HybridRetriever.search` / `search_many`. The structural, recursive, two-stage and merge chunkers are only in their branches | Boundary audits (E14), tail-truncation test (E22), cut-cause counting (E21) |
 | Golden sets and translations under `eval/` (verified evidence) | |
-| 83 automated tests (`uv run pytest`) | |
+| 73 automated tests (`uv run pytest`; 83 was the count while the structural/recursive chunker tests existed) | |
 
 ## Branches and commits
 
-Branches: `main` (all techniques), `chunking/recursive` (`8495c16`), `chunking/structural` (`4d4352b`), `chunking/semantic` (`c418c67`), `chunking/structure-semantic` (`84c5341`).
+Branches: `main` (winning path only) and one branch per technique and model, each with a `CHUNKING.md`, the raw eval lines in `eval/runs/` and a README that leads with the technique (E29):
+`chunking/structural-{e5-small,bge-m3}`, `chunking/semantic-{e5-small,bge-m3}`, `chunking/structure-semantic-{e5-small,bge-m3}` (semantic + header cuts, not the hybrid), `chunking/structure-then-semantic-{e5-small,bge-m3}` (community two-stage), `chunking/structure-semantic-merge-{e5-small,bge-m3}` (the user's hybrid), The recursive baseline (E20) has no branch: `chunking/recursive-e5-small` (tip `66b0c8f`) was deleted. Retrieval techniques (E30): `retrieval/vector`, `retrieval/keyword`, `retrieval/hybrid`, and the two ES/EN RRF variants that did best, `retrieval/hybrid-es-en-rrf` and `retrieval/vector-es-en-rrf`. The old `chunking/structure-then-semantic` (tip `48861e3`) was deleted; its module and test live in the two two-stage branches.
 Main commits in order: `c499977` scaffold, `b9edd96` parse, `cb7adda` chunk, `6373e84` embed, `8c40b66` ingest, `4f5fb05` refactor, `6de9c0a` README, `0a087c0` retrieval,
 `24d02f4` docs, `8655b7e` golden set, `3c4bb27` keyword df cap + search_many, `bc8b097` report + terms set, `5cbf826` results, `8fcbbdf` chunker injection, `3bd7110` semantic chunker,
 `0846a24` docs, `f5afaa8` structure-first option, `033f9af` validation + grid docs, `f912c1c` sentence-aware splitter, `bfc178c` courses 2-5 set,
@@ -465,9 +525,9 @@ Main commits in order: `c499977` scaffold, `b9edd96` parse, `cb7adda` chunk, `63
 
 ## Open experiments and decisions
 
-1. ES+EN fusion and weighted fusion (E28) on the bge-m3 structure + semantic index (E27 is done), and a run that cuts with one model and embeds with the other.
-2. Decide the final configuration (current leader on the data so far: bge-m3 + structural or structure + semantic + hybrid with ES+EN RRF) and keep only that path on `main`; techniques stay in their branches.
-3. Branches `embedding/e5-small` and `embedding/bge-m3` and a results document per technique.
-4. Lower `MAX_DOC_FREQUENCY` (0.15 -> 0.05); store the embedding model name in the database.
+1. A run that cuts with one model and embeds with the other. (The ES+EN fusion and weighted fusion on the bge-m3 semantic + header cuts index were done in E30.)
+2. Decided (E29, E30): bge-m3 + semantic with header cuts + hybrid with ES/EN RRF 1:1, which is what `main` implements; the other techniques stay in their branches. Still open: make the full-course evaluation (prefix of the course 1 sets, ES/EN fusion) reproducible from the repository.
+3. Done differently: no `embedding/*` branches (deleted, tips `b05e36f` and `5fd2ac0`; they only held `EMBEDDING.md`). The hardware cost of each model (E24) is a `HARDWARE_<model>.md` in every chunking branch that uses it, and each technique has its `CHUNKING.md` and README.
+4. Done: `MAX_DOC_FREQUENCY` is 0.05. Still open: store the embedding model name in the database.
 5. Re-measure the reranker ceiling on the full index; fixed-size and clustering chunkers were never tested; int8 vs full precision never compared.
 6. MCP server (`mcp/`) and draw.io MCP (`mcp-drawio/`).

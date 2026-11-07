@@ -1,0 +1,30 @@
+## full_S2400: 741 chunks, avg 1567 chars, k=6
+  vector         A 0.600/0.488 T 0.600/0.350 V 0.625/0.436 F 0.775/0.577 | pooled 0.662/0.489 | same-language(108) 0.769 | cross-lingual(22) 0.136
+  hybrid df0.05  A 0.625/0.442 T 0.900/0.600 V 0.675/0.495 F 0.850/0.738 | pooled 0.731/0.561 | same-language(108) 0.861 | cross-lingual(22) 0.091
+## full_SEM: 1144 chunks, avg 1045 chars, k=9
+  vector         A 0.650/0.463 T 0.800/0.306 V 0.600/0.414 F 0.850/0.564 | pooled 0.708/0.467 | same-language(108) 0.815 | cross-lingual(22) 0.182
+  hybrid df0.05  A 0.700/0.433 T 0.900/0.508 V 0.625/0.452 F 0.850/0.667 | pooled 0.738/0.517 | same-language(108) 0.852 | cross-lingual(22) 0.182
+## full_SEMH: 1408 chunks, avg 883 chars, k=10
+  vector         A 0.700/0.510 T 0.900/0.327 V 0.600/0.416 F 0.825/0.618 | pooled 0.723/0.500 | same-language(108) 0.824 | cross-lingual(22) 0.227
+  hybrid df0.05  A 0.725/0.486 T 1.000/0.528 V 0.650/0.480 F 0.850/0.710 | pooled 0.762/0.557 | same-language(108) 0.870 | cross-lingual(22) 0.227
+## full_STSEM_e5: 1335 chunks, avg 911 chars, k=10
+  vector         A 0.600/0.490 T 0.800/0.362 V 0.625/0.396 F 0.850/0.570 | pooled 0.700/0.476 | same-language(108) 0.815 | cross-lingual(22) 0.136
+  hybrid df0.05  A 0.675/0.451 T 0.900/0.517 V 0.650/0.458 F 0.875/0.612 | pooled 0.746/0.508 | same-language(108) 0.870 | cross-lingual(22) 0.136
+## full_STMERGE_e5: 907 chunks, avg 1267 chars, k=7
+  vector         A 0.625/0.443 T 0.700/0.234 V 0.625/0.405 F 0.800/0.545 | pooled 0.685/0.447 | same-language(108) 0.796 | cross-lingual(22) 0.136
+  hybrid df0.05  A 0.650/0.477 T 0.900/0.483 V 0.675/0.498 F 0.825/0.698 | pooled 0.731/0.552 | same-language(108) 0.861 | cross-lingual(22) 0.091
+## full_S2400_bge: 741 chunks, avg 1567 chars, k=6
+  vector         A 0.825/0.645 T 0.600/0.475 V 0.700/0.515 F 0.875/0.682 | pooled 0.785/0.603 | same-language(108) 0.787 | cross-lingual(22) 0.773
+  hybrid df0.05  A 0.800/0.556 T 0.900/0.667 V 0.750/0.534 F 0.900/0.731 | pooled 0.823/0.612 | same-language(108) 0.898 | cross-lingual(22) 0.455
+## full_SEM_bge: 1128 chunks, avg 1058 chars, k=9
+  vector         A 0.875/0.626 T 0.600/0.425 V 0.725/0.486 F 0.925/0.671 | pooled 0.823/0.581 | same-language(108) 0.815 | cross-lingual(22) 0.864
+  hybrid df0.05  A 0.850/0.523 T 0.900/0.587 V 0.825/0.534 F 0.925/0.669 | pooled 0.869/0.576 | same-language(108) 0.917 | cross-lingual(22) 0.636
+## full_SEMH_bge: 1416 chunks, avg 879 chars, k=10
+  vector         A 0.950/0.692 T 0.900/0.404 V 0.700/0.482 F 0.925/0.774 | pooled 0.862/0.631 | same-language(108) 0.870 | cross-lingual(22) 0.818
+  hybrid df0.05  A 0.925/0.564 T 1.000/0.510 V 0.775/0.527 F 0.900/0.666 | pooled 0.877/0.580 | same-language(108) 0.907 | cross-lingual(22) 0.727
+## full_STSEM_bge: 1336 chunks, avg 911 chars, k=10
+  vector         A 0.850/0.594 T 0.800/0.583 V 0.700/0.473 F 0.925/0.721 | pooled 0.823/0.595 | same-language(108) 0.843 | cross-lingual(22) 0.727
+  hybrid df0.05  A 0.825/0.540 T 0.900/0.670 V 0.850/0.538 F 0.925/0.653 | pooled 0.869/0.584 | same-language(108) 0.926 | cross-lingual(22) 0.591
+## full_STMERGE_bge: 906 chunks, avg 1268 chars, k=7
+  vector         A 0.875/0.687 T 0.400/0.233 V 0.700/0.450 F 0.950/0.729 | pooled 0.808/0.592 | same-language(108) 0.806 | cross-lingual(22) 0.818
+  hybrid df0.05  A 0.800/0.594 T 0.900/0.487 V 0.775/0.473 F 0.925/0.735 | pooled 0.838/0.592 | same-language(108) 0.917 | cross-lingual(22) 0.455

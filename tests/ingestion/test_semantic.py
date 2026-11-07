@@ -111,7 +111,7 @@ TWO_SECTIONS_SAME_TOPIC = (
 
 
 def test_headers_are_cut_points_when_structure_comes_first():
-    by_meaning = chunker(min_tokens=5).chunk(TWO_SECTIONS_SAME_TOPIC, "m/doc.md")
+    by_meaning = chunker(min_tokens=5, split_on_headers=False).chunk(TWO_SECTIONS_SAME_TOPIC, "m/doc.md")
     by_structure = chunker(min_tokens=5, split_on_headers=True).chunk(TWO_SECTIONS_SAME_TOPIC, "m/doc.md")
 
     assert len(by_meaning) == 1
@@ -127,4 +127,4 @@ def test_a_tiny_section_is_merged_into_the_next_one_even_with_header_cuts():
 
 
 def test_the_fingerprint_changes_with_the_structure_flag():
-    assert chunker().fingerprint != chunker(split_on_headers=True).fingerprint
+    assert chunker(split_on_headers=False).fingerprint != chunker(split_on_headers=True).fingerprint

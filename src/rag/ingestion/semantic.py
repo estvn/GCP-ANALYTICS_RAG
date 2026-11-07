@@ -63,7 +63,7 @@ class SemanticChunker:
         max_tokens: int = 440,
         min_tokens: int = 100,
         percentile: float = 90,
-        split_on_headers: bool = False,
+        split_on_headers: bool = True,
     ):
         # max_tokens leaves room for the context prefix and special tokens under the 512-token model limit
         self.embedder = embedder

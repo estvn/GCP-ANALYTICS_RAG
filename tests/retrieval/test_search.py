@@ -1,3 +1,5 @@
+import inspect
+
 import numpy as np
 import pytest
 
@@ -151,3 +153,23 @@ def test_a_chunk_found_by_several_phrasings_appears_once(retriever):
 
 def test_no_phrasings_gives_no_results(retriever):
     assert retriever.search_many([]) == []
+
+
+@pytest.fixture
+def forty_chunks(conn, tmp_path):
+    (tmp_path / "m").mkdir()
+    for i in range(40):
+        (tmp_path / "m" / f"d{i}.md").write_text(f"# Doc {i}\n\nStorage note number {i}.", encoding="utf-8")
+    embedder = TopicEmbedder()
+    ingest(tmp_path, conn, embedder)
+    return HybridRetriever(conn, embedder)
+
+
+def test_a_search_returns_30_chunks_by_default(forty_chunks):
+    assert len(forty_chunks.search("storage")) == 30
+    assert len(forty_chunks.search_many(["storage", "storage notes"])) == 30
+
+
+def test_each_search_contributes_100_candidates_by_default():
+    for method in (HybridRetriever.search, HybridRetriever.search_many):
+        assert inspect.signature(method).parameters["candidates"].default == 100

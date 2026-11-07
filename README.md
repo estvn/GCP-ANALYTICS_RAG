@@ -222,13 +222,15 @@ from rag.store import connect
 conn = connect("postgresql://rag:rag@127.0.0.1:5433/rag")
 retriever = HybridRetriever(conn, embedder)
 hits = retriever.search_many(
-    ["¿Cómo se particiona una base de datos por columnas?", "How is a database partitioned by columns?"], k=10
-)
+    ["¿Cómo se particiona una base de datos por columnas?", "How is a database partitioned by columns?"]
+)  # 30 chunks, 100 candidates per search
 for hit in hits:
     print(hit["source"], hit["headers"], hit["text"][:80])
 ```
 
-`retriever.search(question, k=10)` is the plain hybrid with one phrasing.
+`retriever.search(question)` is the plain hybrid with one phrasing. Both return 30 chunks by default, drawn from a pool of
+100 candidates per search (E31); pass `k=10` to return fewer chunks, which means less text for the language model but fewer
+questions answered.
 
 **6. Measure.** The golden sets are in `eval/`. The report compares vector, keyword and hybrid; use `--model` to match
 the index (`bge-m3` by default, `e5-small` for a 384-number index):

@@ -26,6 +26,7 @@ Written up in [eval/experiments.md](https://github.com/estvn/GCP-ANALYTICS_RAG/b
 - **E25**: e5-small on the full index: same-language vs cross-lingual, and ES+EN fusion
 - **E28**: Weighted RRF over two phrasings
 - **E30**: Retrieval techniques on the three best chunking indexes
+- **E31**: Returning 30 chunks and a larger candidate pool
 
 ## Results (E30, bge-m3, 130 questions: 108 same-language and 22 cross-lingual)
 
@@ -59,6 +60,27 @@ first correct chunk (1 = always first, 0 if absent).
 - The scripts that produced the E30 tables are not in the repository; the report of this branch (`--translations`)
   evaluates the same modes with the translations in `eval/golden_translations.json`.
 - The user's hybrid chunking and the e5-small indexes were not run through these modes.
+
+## Results returning 30 chunks (E31)
+
+Same 130 questions; each query returns up to 30 chunks and the candidate pool is 30 or 100 per search. Answered out of 130; rows are the technique of this branch on the five bge-m3 indexes (the e5-small indexes are in the raw output):
+
+| chunking technique (bge-m3 index) | retrieval | @10 (30 cand.) | @20 (100 cand.) | @30 (30 cand.) | @30 (100 cand.) | MRR (100 cand.) |
+|---|---|---|---|---|---|---|
+| semantic + header cuts | vector + ES/EN 1:1 | 116 | 123 | 126 | 127 | 0.645 |
+| semantic + header cuts | vector + ES/EN 2:1 | 116 | 124 | 125 | 127 | 0.644 |
+| structural | vector + ES/EN 1:1 | 110 | 123 | 123 | 125 | 0.586 |
+| structural | vector + ES/EN 2:1 | 112 | 122 | 124 | 124 | 0.613 |
+| user's hybrid (two-stage + merge) | vector + ES/EN 1:1 | 109 | 120 | 124 | 124 | 0.571 |
+| user's hybrid (two-stage + merge) | vector + ES/EN 2:1 | 110 | 119 | 124 | 125 | 0.579 |
+| semantic only | vector + ES/EN 1:1 | 106 | 117 | 121 | 119 | 0.555 |
+| semantic only | vector + ES/EN 2:1 | 107 | 115 | 119 | 120 | 0.571 |
+| community two-stage | vector + ES/EN 1:1 | 105 | 117 | 121 | 122 | 0.603 |
+| community two-stage | vector + ES/EN 2:1 | 106 | 119 | 120 | 122 | 0.597 |
+
+- Best row: vector + ES/EN 1:1 on the semantic + header cuts index, 127 of 130 answered (MRR 0.645); still missing: ['k10', 'v24', 'f40'].
+- Returning 30 chunks answers more questions than about 10; a pool of 100 candidates helps at 30 chunks but can hurt the top 10 and the MRR.
+- Differences under about 8 points (about 10 of the 130 questions) are not conclusive; the 130 questions also chose the settings, so the figures are optimistic for new questions. Raw output: [eval/runs/e31_k30_candidates100.log](eval/runs/e31_k30_candidates100.log).
 
 ## Layout
 

@@ -1,6 +1,6 @@
 # GCP Analytics RAG
 
-Hybrid retrieval (BM25 + vectors) over the Google Cloud Data Analytics course, built to run on a laptop
+Hybrid retrieval (Postgres full-text + vectors) over the Google Cloud Data Analytics course, built to run on a laptop
 within a small CPU/RAM budget (no GPU). Postgres + pgvector for storage, `multilingual-e5-small`
 (int8, ONNX Runtime) for embeddings.
 

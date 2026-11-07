@@ -526,7 +526,7 @@ Main commits in order: `c499977` scaffold, `b9edd96` parse, `cb7adda` chunk, `63
 
 1. ES+EN fusion and weighted fusion (E28) on the bge-m3 structure + semantic index (E27 is done), and a run that cuts with one model and embeds with the other.
 2. Decide the final configuration (current leader on the data so far: bge-m3 + structural or structure + semantic + hybrid with ES+EN RRF) and keep only that path on `main`; techniques stay in their branches.
-3. Branches `embedding/e5-small` and `embedding/bge-m3` and a results document per technique.
+3. Done differently: no `embedding/*` branches (deleted, tips `b05e36f` and `5fd2ac0`; they only held `EMBEDDING.md`). The hardware cost of each model (E24) is a `HARDWARE_<model>.md` in every chunking branch that uses it, and each technique has its `CHUNKING.md` and README.
 4. Lower `MAX_DOC_FREQUENCY` (0.15 -> 0.05); store the embedding model name in the database.
 5. Re-measure the reranker ceiling on the full index; fixed-size and clustering chunkers were never tested; int8 vs full precision never compared.
 6. MCP server (`mcp/`) and draw.io MCP (`mcp-drawio/`).

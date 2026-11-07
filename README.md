@@ -85,9 +85,8 @@ src/rag/
 │   ├── semantic.py   # semantic chunking under a token cap (option)
 │   └── pipeline.py   # incremental ingest (hash-based)
 ├── retrieval/        # online path
-│   ├── fusion.py     # Reciprocal Rank Fusion
-│   └── search.py     # HybridRetriever: vector leg + keyword leg, multi-phrasing search
-└── evaluation/       # golden sets, hit@k / MRR, comparison report
+│   └── search.py     # KeywordRetriever: discriminating words ranked by ts_rank_cd
+└── evaluation/       # golden sets, hit@k / MRR, keyword report
 eval/                 # golden sets, results.md and experiments.md (full ledger)
 docs/                 # study guides (Spanish)
 tests/                # mirrors src/

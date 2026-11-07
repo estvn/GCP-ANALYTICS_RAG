@@ -21,7 +21,7 @@ class WordEmbedder:
         return np.array(rows)
 
 
-def test_run_scores_every_mode_on_every_set(conn, tmp_path):
+def test_run_scores_the_keyword_mode_on_every_set(conn, tmp_path):
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "a.md").write_text("# Z\n\nThe zorblax protocol is rare.", encoding="utf-8")
     (tmp_path / "docs" / "b.md").write_text("# B\n\nSomething else entirely.", encoding="utf-8")
@@ -33,19 +33,19 @@ def test_run_scores_every_mode_on_every_set(conn, tmp_path):
         encoding="utf-8",
     )
 
-    rows = run(conn, WordEmbedder(), {"terms": load_golden(golden)}, k=5)
+    rows = run(conn, {"terms": load_golden(golden)}, k=5)
 
-    assert [(r["set"], r["mode"]) for r in rows] == [("terms", "vector"), ("terms", "keyword"), ("terms", "hybrid")]
-    assert next(r for r in rows if r["mode"] == "keyword")["hit_rate"] == 1.0
+    assert [(r["set"], r["mode"]) for r in rows] == [("terms", "keyword")]
+    assert rows[0]["hit_rate"] == 1.0
 
 
 def test_markdown_table_has_one_line_per_row():
-    rows = [{"set": "s", "mode": "hybrid", "n": 10, "hit_rate": 0.7, "mrr": 0.5}]
+    rows = [{"set": "s", "mode": "keyword", "n": 10, "hit_rate": 0.7, "mrr": 0.5}]
 
     table = to_markdown(rows, k=5).splitlines()
 
     assert table[0].startswith("| set |") and "hit@5" in table[0]
-    assert table[-1] == "| s | hybrid | 10 | 0.700 | 0.500 |"
+    assert table[-1] == "| s | keyword | 10 | 0.700 | 0.500 |"
 
 
 def test_connect_returns_a_connection_that_understands_vectors(conn):

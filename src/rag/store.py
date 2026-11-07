@@ -76,13 +76,12 @@ def delete_documents(conn: psycopg.Connection, sources: set[str]) -> None:
         conn.commit()
 
 
-EF_SEARCH = 100  # HNSW recall/latency knob; starting point from the pgvector skill
 MIN_WORD_LENGTH = 3  # shorter words ("es", "de", "to") only add noise to the keyword leg
 MAX_DOC_FREQUENCY = 0.05  # a word in more than this share of chunks does not discriminate (E19, E30)
 MIN_COMMON_COUNT = 5  # ...but a tiny corpus cannot tell what is common
 
 
-def _hit(row, distance=None, kw_score=None) -> dict:
+def _hit(row, kw_score) -> dict:
     chunk_id, source, idx, headers, text = row[:5]
     return {
         "id": chunk_id,
@@ -90,24 +89,8 @@ def _hit(row, distance=None, kw_score=None) -> dict:
         "idx": idx,
         "headers": headers,
         "text": text,
-        "distance": distance,
         "kw_score": kw_score,
     }
-
-
-def vector_search(conn: psycopg.Connection, query_vector, limit: int) -> list[dict]:
-    """Nearest chunks by cosine distance (0 = identical, 2 = opposite)."""
-    vector = HalfVector(query_vector.tolist())
-    dim = len(query_vector)
-    with conn.transaction():
-        conn.execute("SELECT set_config('hnsw.ef_search', %s, true)", (str(max(EF_SEARCH, limit)),))
-        rows = conn.execute(
-            f"SELECT id, source, idx, headers, text, embedding <=> %s::halfvec({dim}) AS distance "
-            f"FROM chunks ORDER BY embedding <=> %s::halfvec({dim}) LIMIT %s",
-            (vector, vector, limit),
-        ).fetchall()
-    conn.commit()
-    return [_hit(row, distance=row[5]) for row in rows]
 
 
 def _discriminating(conn: psycopg.Connection, words: list[str]) -> list[str]:

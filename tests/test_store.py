@@ -1,17 +1,13 @@
 import numpy as np
 
-from rag.store import replace_document, vector_search
+from rag.store import keyword_search, replace_document
 
 
-def test_the_vector_dimension_is_configurable(make_db):
+def test_replacing_a_document_swaps_its_chunks(make_db):
     conn = make_db(dim=8)
-    chunks = [
-        {"index": 0, "headers": [], "text": "alpha"},
-        {"index": 1, "headers": [], "text": "beta"},
-    ]
-    vectors = np.array([[1, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0]], dtype=np.float32)
-    replace_document(conn, "a.md", "hash", chunks, vectors)
+    vector = np.zeros((1, 8), dtype=np.float32)
+    replace_document(conn, "a.md", "h1", [{"index": 0, "headers": [], "text": "alpha"}], vector)
+    replace_document(conn, "a.md", "h2", [{"index": 0, "headers": [], "text": "beta"}], vector)
 
-    hits = vector_search(conn, np.array([0, 1, 0, 0, 0, 0, 0, 0], dtype=np.float32), 2)
-
-    assert [h["text"] for h in hits] == ["beta", "alpha"]
+    assert keyword_search(conn, "alpha", 5) == []
+    assert [h["text"] for h in keyword_search(conn, "beta", 5)] == ["beta"]

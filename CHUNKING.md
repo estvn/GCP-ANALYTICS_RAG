@@ -13,7 +13,7 @@ techniques side by side in [eval/results.md](eval/results.md).
 
 ## Settings of this run
 
-- Chunker: `SemanticChunker(embedder, 440, 100, 90, split_on_headers=False)` (maximum 440 tokens, minimum 100 tokens where they apply).
+- Chunker: `SemanticChunker(embedder, 440, 100, 90)` (maximum 440 tokens, minimum 100 tokens where they apply).
 - Embedding model: `bge-m3` (int8 ONNX, local) for both cutting (where the chunker uses embeddings) and retrieval.
 - Corpus: `data/md`, 310 files (309 with chunks), 5 courses. Database `full_SEM_bge`.
 - Cost: indexing resumed from 69 documents: 241 added in 1240 s (about 5 s per document, bge-m3).
@@ -24,7 +24,7 @@ from rag.embed import load_embedder
 from rag.ingestion.pipeline import ingest
 
 embedder = load_embedder("bge-m3")
-ingest("data/md", conn, embedder, chunker=SemanticChunker(embedder, 440, 100, 90, split_on_headers=False))
+ingest("data/md", conn, embedder, chunker=SemanticChunker(embedder, 440, 100, 90))
 ```
 
 Indexing is incremental by content hash and the chunker settings are part of the hash, so the same call resumes an
@@ -54,7 +54,7 @@ repository** (see the reproducibility map in `eval/experiments.md`).
 | community two-stage | 97 / .508 | 113 / .584 |
 | user's hybrid (two-stage + merge) | 95 / .552 | 109 / .592 |
 
-A difference of 2 to 4 questions out of 130 is below the standard error (about 4 points): it is not conclusive.
+Differences under about 8 points (about 10 of the 130 questions) are not conclusive.
 
 ## Limits
 

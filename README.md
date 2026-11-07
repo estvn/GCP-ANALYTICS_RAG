@@ -25,6 +25,7 @@ Written up in [eval/experiments.md](https://github.com/estvn/GCP-ANALYTICS_RAG/b
 - **E21**: How structure and meaning share the cuts
 - **E27**: bge-m3 with structure + semantic chunking
 - **E29**: All chunking techniques on one common method
+- **E31**: Returning 30 chunks and a larger candidate pool
 
 ## Results (E29: hybrid search, 130 questions, hits / MRR)
 
@@ -38,6 +39,27 @@ Written up in [eval/experiments.md](https://github.com/estvn/GCP-ANALYTICS_RAG/b
 
 Hits are questions answered out of 130, with about 9,000 characters returned per query. Differences under about 8 points
 (about 10 of the 130 questions) are not conclusive.
+
+## Results returning 30 chunks (E31)
+
+Index `full_SEMH_bge` (`bge-m3`), the same 130 questions; each query returns up to 30 chunks (about 26,356 characters). Questions answered out of 130 within the first 10, 20 and 30 chunks, with 30 and with 100 candidates per search (the pool of chunks each search contributes before fusion):
+
+| retrieval technique | @10 (30 cand.) | @30 (30 cand.) | @10 (100 cand.) | @20 (100 cand.) | @30 (100 cand.) | MRR (100 cand.) |
+|---|---|---|---|---|---|---|
+| vector | 112 | 125 | 112 | 122 | 125 | 0.637 |
+| vector + ES/EN 1:1 | 116 | 126 | 117 | 123 | 127 | 0.645 |
+| vector + ES/EN 2:1 | 116 | 125 | 115 | 124 | 127 | 0.644 |
+| keyword | 75 | 94 | 75 | 88 | 94 | 0.365 |
+| keyword + ES/EN 1:1 | 75 | 102 | 73 | 89 | 102 | 0.297 |
+| keyword + ES/EN 2:1 | 73 | 96 | 74 | 91 | 98 | 0.312 |
+| hybrid | 114 | 127 | 105 | 121 | 126 | 0.580 |
+| hybrid + ES/EN 1:1 | 122 | 128 | 119 | 127 | 130 | 0.553 |
+| hybrid + ES/EN 2:1 | 121 | 127 | 122 | 127 | 129 | 0.601 |
+
+- Best technique on this index: hybrid + ES/EN 1:1, 130 of 130 answered with 100 candidates (MRR 0.553); still missing: [].
+- At 20 chunks (about 17,571 characters) the best technique answers 127 of 130 with 100 candidates.
+- Returning 30 chunks instead of about 10 answers more questions in every technique. A pool of 100 candidates helps at 30 chunks but hurts the top 10: plain hybrid goes from 114 to 105 answered at 10 chunks.
+- Differences under about 8 points (about 10 of the 130 questions) are not conclusive. The 130 questions also chose the settings, so the figures are optimistic for new questions. Raw output: [eval/runs/e31_k30_candidates100.log](eval/runs/e31_k30_candidates100.log) and [eval/runs/e31_k30_candidates30.log](eval/runs/e31_k30_candidates30.log).
 
 ## Layout
 

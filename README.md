@@ -1,6 +1,6 @@
 # Hybrid search with ES/EN RRF fusion (vector + keyword, question and translation)
 
-Branch `retrieval/hybrid-es-en-rrf`. Hybrid retrieval (Postgres full-text + vectors) over the Google Cloud Data Analytics
+Branch `retrieval/hybrid-es-en-rrf`. Retrieval over the Google Cloud Data Analytics
 course, built to run on a laptop within a small CPU/RAM budget (no GPU). Results use the `bge-m3` embedding model
 (int8, ONNX Runtime) and the three most precise chunking techniques (E30).
 
@@ -15,8 +15,8 @@ obtained with the question and with its translation, because embedding models ma
 2. Run the same hybrid search with the translation of the question (Spanish to English or the reverse).
 3. Fuse the two result lists with RRF, weights `original:translation`: **1:1** (equal) or **2:1** (the original
    counts double). Score of a chunk = `weight / (60 + position)` in each list, added.
-4. Return the top `k`. The repository implements the 1:1 case as `HybridRetriever.search_many`; the 2:1 weights
-   were evaluated with a scratch script.
+4. Return the top `k`. Both weightings are implemented in this branch: `rrf(..., weights=...)` and
+   `HybridRetriever.search_many(..., weights=...)`.
 
 ## Experiments
 
@@ -50,14 +50,16 @@ first correct chunk (1 = always first, 0 if absent).
 - It lifts the cross-lingual questions of `SEMH` from .727 (plain hybrid) to .955 (1:1) and .864 (2:1).
 - It helps only `SEMH`: on `SEM` it goes from 113 to 110 / 111 and on `STSEM` from 113 to 114 / 112.
 - Needs the question translated: a real system pays one extra call and two searches per query.
-- Differences of 2 to 4 questions out of 130 are below the standard error (about 4 points): not conclusive.
+- Differences under about 8 points (about 10 of the 130 questions) are not conclusive.
 
 ## Limits
 
 - Single run, 130 questions. The second phrasing is a hand translation (`eval/golden_translations.json`); the cost of
   producing it in a real system is not measured.
-- The evaluation used a keyword document-frequency cap of 0.05 and the weights above from scratch scripts (not in the
-  repo). The repo defaults are `MAX_DOC_FREQUENCY = 0.15` and an unweighted `rrf`.
+- The scripts that produced the E30 tables are not in the repository; the report of this branch (`--translations`)
+  evaluates the same modes with the translations in `eval/golden_translations.json`.
+- The keyword leg ignores words found in more than 5% of the chunks (`MAX_DOC_FREQUENCY = 0.05` in `store.py`),
+  the value used in the evaluation.
 - The user's hybrid chunking and the e5-small indexes were not run through these modes.
 
 ## Layout

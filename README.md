@@ -45,6 +45,7 @@ Written up in [eval/experiments.md](https://github.com/estvn/GCP-ANALYTICS_RAG/b
 - **E27**: bge-m3 with structure + semantic chunking
 - **E28**: Weighted RRF over two phrasings
 - **E30**: Retrieval techniques on the three best chunking indexes
+- **E31**: Returning 30 chunks and a larger candidate pool
 
 ## Results (E30: questions answered out of 130 / MRR, bge-m3)
 
@@ -77,6 +78,22 @@ chunk length). MRR is the mean of 1 / position of the first correct chunk (1 = a
 - Single run, 130 questions. The second phrasing is a hand translation; a real system needs a translation step.
 - The rows with ES/EN come from the branch `retrieval/vector-es-en-rrf`; the keyword leg does not exist in this branch.
 - The user's hybrid chunking and the e5-small indexes were not run through these retrieval modes.
+
+## Results returning 30 chunks (E31)
+
+Same 130 questions; each query returns up to 30 chunks and the candidate pool is 30 or 100 per search. Answered out of 130; rows are the technique of this branch on the five bge-m3 indexes (the e5-small indexes are in the raw output):
+
+| chunking technique (bge-m3 index) | retrieval | @10 (30 cand.) | @20 (100 cand.) | @30 (30 cand.) | @30 (100 cand.) | MRR (100 cand.) |
+|---|---|---|---|---|---|---|
+| semantic + header cuts | vector | 112 | 122 | 125 | 125 | 0.637 |
+| structural | vector | 109 | 122 | 124 | 124 | 0.617 |
+| user's hybrid (two-stage + merge) | vector | 108 | 118 | 124 | 124 | 0.602 |
+| semantic only | vector | 108 | 114 | 119 | 119 | 0.587 |
+| community two-stage | vector | 107 | 116 | 120 | 120 | 0.602 |
+
+- Best row: vector on the semantic + header cuts index, 125 of 130 answered (MRR 0.637); still missing: ['k10', 'v15', 'v24', 'v31', 'f40'].
+- Returning 30 chunks answers more questions than about 10; a pool of 100 candidates helps at 30 chunks but can hurt the top 10 and the MRR.
+- Differences under about 8 points (about 10 of the 130 questions) are not conclusive; the 130 questions also chose the settings, so the figures are optimistic for new questions. Raw output: [eval/runs/e31_k30_candidates100.log](eval/runs/e31_k30_candidates100.log).
 
 ## Layout
 

@@ -54,3 +54,24 @@ def test_headerless_text_still_chunks():
 
 def test_empty_text_gives_no_chunks():
     assert chunk_markdown("  \n", source="mod/empty.md") == []
+
+
+def test_oversized_sections_are_cut_between_sentences_not_inside_them():
+    paragraph = " ".join(f"Sentence number {i} is complete." for i in range(60))
+
+    chunks = chunk_markdown("# Doc\n\n" + paragraph, source="mod/doc.md", chunk_size=300, overlap=60)
+
+    bodies = [c["text"].split("\n", 1)[1].strip() for c in chunks]
+    assert len(bodies) > 3
+    assert all(body.endswith(".") for body in bodies)
+    assert all(body.startswith(("Sentence", "# Doc")) for body in bodies)
+
+
+def test_a_header_is_never_left_alone_in_its_own_chunk():
+    paragraph = " ".join(f"Sentence number {i} is complete." for i in range(60))
+
+    chunks = chunk_markdown("# Doc\n\n" + paragraph, source="mod/doc.md", chunk_size=300, overlap=60)
+
+    assert chunks[0]["text"].split("\n", 1)[1].startswith("# Doc\nSentence number 0")
+    assert all(len(c["text"].split("\n", 1)[1]) > 40 for c in chunks)
+    assert all(len(c["text"].split("\n", 1)[1]) <= 300 for c in chunks)

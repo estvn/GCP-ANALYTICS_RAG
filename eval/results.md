@@ -121,6 +121,24 @@ Cells are hit / MRR.
 - The grid was run with an ad-hoc script that is not part of the repository (the keyword-leg variants were
   hard-coded there); `uv run python -m rag.evaluation.report` reproduces the main table.
 
+## Where the chunks are cut
+
+Checked on course 1 by looking, in the source markdown, at what follows each chunk end.
+
+| chunker | chunks | cut mid-word | cut inside a sentence |
+|---|---|---|---|
+| structural 2400 | 162 | 0 | 7 (4%) |
+| structural 1800 | 198 | 0 | 15 (8%) |
+| semantic p90, min 100 | 248 | 0 | 10 (4%) |
+
+- No chunker splits words: the recursive splitter only falls back to characters when a single word exceeds the
+  chunk size.
+- The structural splitter now tries paragraph, line and sentence ends (`. `, `? `, `! `, `; `) before a plain
+  space, and keeps a section's header attached to its first piece instead of leaving it alone in a chunk. On course 1
+  this did not change the number of cuts or the retrieval scores (162 chunks, same hit/MRR within 0.015).
+- The remaining cuts come from the PDF conversion, which sometimes inserts a paragraph break (or a page number)
+  in the middle of a sentence: 22 such breaks in 2 of the 70 files. Both structural and semantic chunking inherit them.
+
 ## Limits
 
 - Small sets (a single question moves hit@5 by 2.5 points on the main set; ignore differences under about 7 points).

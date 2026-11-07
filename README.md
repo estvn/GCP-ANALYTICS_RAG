@@ -63,6 +63,17 @@ Everything in `main` runs these choices by default. Each one links to the experi
 
 Why this and not something simpler: keyword search alone is the weakest (it answers 94 to 100 of 130 questions and cannot cross languages); vector search alone has a slightly better order but misses exact terms; fusing both finds more questions; and fusing the translation rescues the questions asked in the other language (with this chunker, from 16 to 21 of the 22 original questions that cross languages, E30). The translation is always fused, with both models.
 
+### There is no reranker: what takes its place
+
+A *reranker* is a second model that reads the question and one chunk together and scores how well the chunk answers it; it is used to reorder a long list of candidates and keep only the best few. `main` does not use one. Two techniques do its job:
+
+1. **Rank fusion (RRF) reorders the results.** The ranking of the vector search, the ranking of the keyword search and the rankings of the question and of its translation are merged by position (hybrid + ES/EN 1:1). A chunk that ranks well in several lists rises and one that appears in a single list falls, which corrects what each search gets wrong on its own.
+2. **Returning 30 chunks makes the order less critical.** Instead of reordering to keep 5 to 10 chunks, the correct chunk only has to be among the first 30: with bge-m3 and this chunker it is in the first 30 for 98% of the 180 questions, in the first 10 for 91% and in the first 5 for 76% (E36).
+
+The price of the second technique is text: 30 chunks are about 26,000 characters for the language model to read, against about 8,800 for 10. That is the saving a reranker would give.
+
+Why there is none: the first specification said "only if the evaluation demands it"; the one measurement (E10, course 1 only) found little room, because the misses of that time were chunks that never entered the candidate list, and a reranker only reorders what the search already found. It was never repeated on the whole corpus. Today the room is different: the correct chunk is in the first 30 for 98% of the questions but in the first 10 for 91% and in the first 5 for 76%, so a perfect reranker could recover up to 7 points with 10 chunks and up to 22 with 5. How much a real one recovers, and what it costs in memory and time, is not measured yet.
+
 ### If bge-m3 makes the machine slow: switch to e5-small
 
 `main` uses bge-m3 for now. If it proves too heavy, `multilingual-e5-small` is the fallback and the price is known:

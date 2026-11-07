@@ -1,7 +1,5 @@
 """Postgres + pgvector storage. The only module that knows about the database."""
 
-import re
-
 import psycopg
 from pgvector import HalfVector
 from pgvector.psycopg import register_vector
@@ -77,13 +75,10 @@ def delete_documents(conn: psycopg.Connection, sources: set[str]) -> None:
 
 
 EF_SEARCH = 100  # HNSW recall/latency knob; starting point from the pgvector skill
-MIN_WORD_LENGTH = 3  # shorter words ("es", "de", "to") only add noise to the keyword leg
-MAX_DOC_FREQUENCY = 0.05  # a word in more than this share of chunks does not discriminate (E19, E30)
-MIN_COMMON_COUNT = 5  # ...but a tiny corpus cannot tell what is common
 
 
-def _hit(row, distance=None, kw_score=None) -> dict:
-    chunk_id, source, idx, headers, text = row[:5]
+def _hit(row) -> dict:
+    chunk_id, source, idx, headers, text, distance = row
     return {
         "id": chunk_id,
         "source": source,
@@ -91,7 +86,6 @@ def _hit(row, distance=None, kw_score=None) -> dict:
         "headers": headers,
         "text": text,
         "distance": distance,
-        "kw_score": kw_score,
     }
 
 
@@ -107,38 +101,4 @@ def vector_search(conn: psycopg.Connection, query_vector, limit: int) -> list[di
             (vector, vector, limit),
         ).fetchall()
     conn.commit()
-    return [_hit(row, distance=row[5]) for row in rows]
-
-
-def _discriminating(conn: psycopg.Connection, words: list[str]) -> list[str]:
-    """Drop words found in too many chunks. Postgres full-text ranking has no IDF, so we approximate it."""
-    if not words:
-        return []
-    total = conn.execute("SELECT count(*) FROM chunks").fetchone()[0]
-    rows = conn.execute(
-        "SELECT w, (SELECT count(*) FROM chunks WHERE tsv @@ plainto_tsquery('simple', w)) "
-        "FROM unnest(%s::text[]) AS w",
-        (words,),
-    ).fetchall()
-    limit = max(MAX_DOC_FREQUENCY * total, MIN_COMMON_COUNT)
-    return [word for word, frequency in rows if frequency <= limit]
-
-
-def keyword_search(conn: psycopg.Connection, query: str, limit: int) -> list[dict]:
-    """Chunks sharing a discriminating word with the query, ranked by ts_rank_cd.
-
-    Not true BM25. Returns nothing when every query word is too common to be informative.
-    """
-    words = list(dict.fromkeys(re.findall(rf"\w{{{MIN_WORD_LENGTH},}}", query.lower())))
-    words = _discriminating(conn, words)
-    conn.commit()
-    if not words:
-        return []
-    rows = conn.execute(
-        "SELECT id, source, idx, headers, text, ts_rank_cd(tsv, q) AS rank "
-        "FROM chunks, websearch_to_tsquery('simple', %s) AS q "
-        "WHERE tsv @@ q ORDER BY rank DESC, id LIMIT %s",
-        (" or ".join(words), limit),
-    ).fetchall()
-    conn.commit()
-    return [_hit(row, kw_score=row[5]) for row in rows]
+    return [_hit(row) for row in rows]

@@ -65,16 +65,16 @@ first correct chunk (1 = always first, 0 if absent).
 ```
 src/rag/
 ├── embed.py          # ONNX embedder (shared by ingestion and retrieval)
-├── store.py          # the only module that talks to Postgres
+├── store.py          # the only module that talks to Postgres (schema, vector_search)
 ├── ingestion/        # offline pipeline
 │   ├── parse.py      # PDF/MD -> markdown
 │   ├── chunk.py      # header-aware chunking (default)
 │   ├── semantic.py   # semantic chunking under a token cap (option)
 │   └── pipeline.py   # incremental ingest (hash-based)
 ├── retrieval/        # online path
-│   ├── fusion.py     # Reciprocal Rank Fusion
-│   └── search.py     # HybridRetriever: vector leg + keyword leg, multi-phrasing search
-└── evaluation/       # golden sets, hit@k / MRR, comparison report
+│   ├── fusion.py     # Reciprocal Rank Fusion, optionally weighted per list
+│   └── search.py     # VectorRetriever: vector search; search_many fuses the question and its translation
+└── evaluation/       # golden sets, hit@k / MRR, vector report with ES/EN translation (1:1, 2:1)
 eval/                 # golden sets, results.md and experiments.md (full ledger)
 docs/                 # study guides (Spanish)
 tests/                # mirrors src/

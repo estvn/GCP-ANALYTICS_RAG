@@ -1,10 +1,39 @@
-# GCP Analytics RAG
+# Hybrid chunking (two-stage + merge of neighbours)
 
-Hybrid retrieval (Postgres full-text + vectors) over the Google Cloud Data Analytics course, built to run on a laptop
-within a small CPU/RAM budget (no GPU). Postgres + pgvector for storage, `multilingual-e5-small`
-(int8, ONNX Runtime) for embeddings.
+Branch `chunking/structure-semantic-merge-e5-small`. Hybrid retrieval (Postgres full-text + vectors) over the Google Cloud Data Analytics course,
+built to run on a laptop within a small CPU/RAM budget (no GPU). Postgres + pgvector for storage. Embedding model of
+this branch's results: `e5-small` (int8, ONNX Runtime).
 
-Status: ingestion, hybrid retrieval and evaluation work. The MCP server is next.
+Full description, settings and how to reproduce: [CHUNKING.md](CHUNKING.md). Raw evaluation lines:
+[eval/runs/structure-semantic-merge-e5-small.log](eval/runs/structure-semantic-merge-e5-small.log).
+
+## Technique applied
+
+1. **Structural stage:** split by markdown headers.
+2. **Semantic stage:** a section above 440 tokens is subdivided by the semantic cut chunker.
+3. **Merge step:** embed every piece and repeatedly merge the most similar pair of neighbours in the document. A pair
+   merges when its similarity reaches the threshold (a percentile, here 25, of the document's own neighbour
+   similarities) or when one side is below 100 tokens, and never past 440 tokens. Merging may cross a section
+   boundary; the merged chunk keeps the headers of its first piece. Nothing is discarded.
+
+## Experiments
+
+Written up in [eval/experiments.md](https://github.com/estvn/GCP-ANALYTICS_RAG/blob/main/eval/experiments.md) (the file on `main` is the complete log):
+
+- **E29**: All chunking techniques on one common method
+
+## Results (E29: hybrid search, 130 questions, hits / MRR)
+
+| technique | e5-small | bge-m3 |
+|---|---|---|
+| structural 2400 | 95 / .561 | 107 / .612 |
+| semantic | 96 / .517 | 113 / .576 |
+| semantic + header cuts | 99 / .557 | 114 / .580 |
+| community two-stage | 97 / .508 | 113 / .584 |
+| user's hybrid (two-stage + merge) | 95 / .552 **◀ this branch** | 109 / .592 |
+
+Hits are questions answered out of 130, with about 9,000 characters returned per query. A gap of 2 to 4 questions is
+below the standard error (about 4 points): it is not conclusive.
 
 ## Layout
 

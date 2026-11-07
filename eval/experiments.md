@@ -452,6 +452,32 @@ Weights are original : translation; the translation always comes from `golden_tr
 - **Caveats**: single run per index; `k` differs by technique; the chunk counts of the three e5 indexes (741, 1144, 1408) differ from the ones in the older branch documents (755, 1173, 1443) while the hit counts match, and the cause was **not verified** (the working tree has uncommitted changes in `parse.py`); `full_STMERGE_bge` was first evaluated with 289 of 309 documents and `full_SEM_bge` with 69, then both were completed (resume with the same chunker settings: 20 and 241 documents added, the rest skipped) before the numbers above.
 - **Status**: accepted (single run, n = 130). **Branches**: one per technique and model, each with a `CHUNKING.md` (see "Branches and commits").
 
+### E30. Retrieval techniques on the three best chunking indexes (bge-m3, 130 questions)
+- **Question**: how do vector, keyword and hybrid search compare on the three most precise chunking techniques, and does fusing the question with its translation (ES/EN RRF) help each of them?
+- **Setup**: indexes `full_SEMH_bge` (semantic + header cuts), `full_SEM_bge` (semantic), `full_STSEM_bge` (community two-stage); embedding model bge-m3; the 130 questions; `k` from the 9,000-character budget (10, 9, 10). Techniques: vector (cosine over halfvec, HNSW), keyword (Postgres full-text `ts_rank_cd`, document-frequency cap 0.05), hybrid (vector + keyword, 30 candidates each, RRF k = 60). ES/EN RRF runs the same search with the question and its hand translation (`eval/golden_translations.json`) and fuses the two lists with weights `original:translation` of 1:1 or 2:1; score = weight / (60 + position). Scripts `retrieval_modes.py` and `retrieval_modes2.py` (session scratchpad, **not in the repo**); raw output `eval/runs/e30_retrieval_modes.log`.
+- **Result** (questions answered out of 130 / MRR):
+
+| retrieval | semantic + headers (`SEMH`) | semantic (`SEM`) | community two-stage (`STSEM`) |
+|---|---|---|---|
+| vector | 112 / 0.631 | 107 / 0.581 | 107 / 0.595 |
+| vector + ES/EN 1:1 | 116 / 0.639 | 104 / 0.548 | 105 / 0.594 |
+| vector + ES/EN 2:1 | 116 / 0.638 | 105 / 0.564 | 106 / 0.588 |
+| keyword | 75 / 0.355 | 77 / 0.374 | 80 / 0.351 |
+| keyword + ES/EN 1:1 | 75 / 0.300 | 79 / 0.313 | 73 / 0.319 |
+| keyword + ES/EN 2:1 | 73 / 0.296 | 75 / 0.312 | 76 / 0.320 |
+| hybrid | 114 / 0.580 | 113 / 0.576 | 113 / 0.584 |
+| hybrid + ES/EN 1:1 | 122 / 0.591 | 110 / 0.551 | 114 / 0.576 |
+| hybrid + ES/EN 2:1 | 121 / 0.607 | 111 / 0.591 | 112 / 0.605 |
+
+- **Findings**:
+  - `SEMH` is the best chunking technique in 6 of the 9 rows (every vector and hybrid row, none of the keyword rows, where it comes last); the hybrid with ES/EN 1:1 on `SEMH` answers the most questions (122), vector with ES/EN on `SEMH` has the best MRR (0.639) with 116 answers and no keyword leg.
+  - Translation helps only `SEMH` (vector 112 to 116, hybrid 114 to 122); on `SEM` and `STSEM` it is neutral or worse.
+  - Keyword alone is the weakest (75 to 80 answered). Translation does not raise its total: it rescues cross-lingual questions (`SEMH`: .091 to .818 with 1:1) and loses same-language ones (.676 to .528).
+  - RRF is not a search technique by itself: it only fuses lists; here it was applied on top of vector, keyword and hybrid.
+  - The 6-question gap between hybrid + ES/EN and vector + ES/EN on `SEMH` is at the edge of the ~4 point standard error: not conclusive. Vector leads in MRR.
+- **Caveats**: single run; the second phrasing is a hand translation, so a real system would need a translation step (extra call, two searches per query), which this does not measure; the keyword leg uses a document-frequency cap of 0.05 and the 2:1 weights come from scratch scripts, while the repo defaults are 0.15 (`MAX_DOC_FREQUENCY`) and unweighted `rrf`; the user's hybrid chunking and the e5-small indexes were not run through these modes.
+- **Status**: accepted (single run, n = 130). **Branches**: `retrieval/vector`, `retrieval/keyword`, `retrieval/hybrid`.
+
 ## Corrections log (things said or measured wrongly, and what replaced them)
 
 | # | Claim or measurement | Reality | Where fixed |
@@ -490,7 +516,7 @@ Weights are original : translation; the translation always comes from `golden_tr
 ## Branches and commits
 
 Branches: `main` (all techniques) and one branch per technique and model, each with a `CHUNKING.md`, the raw eval lines in `eval/runs/` and a README that leads with the technique (E29):
-`chunking/structural-{e5-small,bge-m3}`, `chunking/semantic-{e5-small,bge-m3}`, `chunking/structure-semantic-{e5-small,bge-m3}` (semantic + header cuts, not the hybrid), `chunking/structure-then-semantic-{e5-small,bge-m3}` (community two-stage), `chunking/structure-semantic-merge-{e5-small,bge-m3}` (the user's hybrid), and `chunking/recursive-e5-small` (E20, no E29 index). The older `chunking/structure-then-semantic` (no model in the name) is the base of the two two-stage branches and can be deleted.
+`chunking/structural-{e5-small,bge-m3}`, `chunking/semantic-{e5-small,bge-m3}`, `chunking/structure-semantic-{e5-small,bge-m3}` (semantic + header cuts, not the hybrid), `chunking/structure-then-semantic-{e5-small,bge-m3}` (community two-stage), `chunking/structure-semantic-merge-{e5-small,bge-m3}` (the user's hybrid), and `chunking/recursive-e5-small` (E20, no E29 index). Retrieval techniques (E30): `retrieval/vector`, `retrieval/keyword`, `retrieval/hybrid`. The older `chunking/structure-then-semantic` (no model in the name) is the base of the two two-stage branches and can be deleted.
 Main commits in order: `c499977` scaffold, `b9edd96` parse, `cb7adda` chunk, `6373e84` embed, `8c40b66` ingest, `4f5fb05` refactor, `6de9c0a` README, `0a087c0` retrieval,
 `24d02f4` docs, `8655b7e` golden set, `3c4bb27` keyword df cap + search_many, `bc8b097` report + terms set, `5cbf826` results, `8fcbbdf` chunker injection, `3bd7110` semantic chunker,
 `0846a24` docs, `f5afaa8` structure-first option, `033f9af` validation + grid docs, `f912c1c` sentence-aware splitter, `bfc178c` courses 2-5 set,

@@ -201,6 +201,26 @@ Hybrid search (df cap 0.05), 130 questions, about 9,000 characters returned per 
 - bge-m3 beats e5-small on every technique; at least half of the gain comes from the 22 cross-lingual questions.
 - The user's hybrid makes the largest chunks (average 1268 characters), so at equal returned text it gets the smallest `k` (7 against 10).
 
+## Retrieval techniques on the three best chunking indexes (E30)
+
+bge-m3, 130 questions, about 9,000 characters returned per query. Cells are questions answered out of 130 / MRR. Settings, caveats and raw output: [experiments.md](experiments.md) E30, [runs/e30_retrieval_modes.log](runs/e30_retrieval_modes.log).
+
+| retrieval | semantic + headers (`SEMH`) | semantic (`SEM`) | community two-stage (`STSEM`) |
+|---|---|---|---|
+| vector | 112 / 0.631 | 107 / 0.581 | 107 / 0.595 |
+| vector + ES/EN 1:1 | 116 / 0.639 | 104 / 0.548 | 105 / 0.594 |
+| vector + ES/EN 2:1 | 116 / 0.638 | 105 / 0.564 | 106 / 0.588 |
+| keyword | 75 / 0.355 | 77 / 0.374 | 80 / 0.351 |
+| keyword + ES/EN 1:1 | 75 / 0.300 | 79 / 0.313 | 73 / 0.319 |
+| keyword + ES/EN 2:1 | 73 / 0.296 | 75 / 0.312 | 76 / 0.320 |
+| hybrid | 114 / 0.580 | 113 / 0.576 | 113 / 0.584 |
+| hybrid + ES/EN 1:1 | 122 / 0.591 | 110 / 0.551 | 114 / 0.576 |
+| hybrid + ES/EN 2:1 | 121 / 0.607 | 111 / 0.591 | 112 / 0.605 |
+
+- Best chunking technique in 6 of the 9 rows (every vector and hybrid row): semantic + header cuts (`SEMH`); in the keyword rows it comes last.
+- Most questions answered: hybrid + ES/EN 1:1 on `SEMH` (122). Best MRR: vector + ES/EN on `SEMH` (.639), with no keyword leg.
+- Translating the question helps only `SEMH`; keyword alone is the weakest; RRF only fuses lists, it is not a search technique by itself.
+
 ## Limits
 
 - Small sets (a single question moves hit@5 by 2.5 points on the main set; ignore differences under about 7 points).

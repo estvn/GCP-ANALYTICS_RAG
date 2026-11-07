@@ -1,6 +1,6 @@
 # Chunking technique: structural
 
-Branch `chunking/structural`. This is the default technique on `main`; this branch keeps only its code.
+Branch `chunking/structural-e5-small`. This is the default technique on `main`; this branch keeps only its code.
 
 ## How it works
 

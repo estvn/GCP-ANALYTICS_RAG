@@ -1,5 +1,7 @@
 """Postgres + pgvector storage. The only module that knows about the database."""
 
+import re
+
 import psycopg
 from pgvector import HalfVector
 from pgvector.psycopg import register_vector
@@ -65,3 +67,52 @@ def delete_documents(conn: psycopg.Connection, sources: set[str]) -> None:
     if sources:
         conn.execute("DELETE FROM documents WHERE source = ANY(%s)", (list(sources),))
         conn.commit()
+
+
+EF_SEARCH = 100  # HNSW recall/latency knob; starting point from the pgvector skill
+MIN_WORD_LENGTH = 3  # shorter words ("es", "de", "to") only add noise to the keyword leg
+
+
+def _hit(row, distance=None, kw_score=None) -> dict:
+    chunk_id, source, idx, headers, text = row[:5]
+    return {
+        "id": chunk_id,
+        "source": source,
+        "idx": idx,
+        "headers": headers,
+        "text": text,
+        "distance": distance,
+        "kw_score": kw_score,
+    }
+
+
+def vector_search(conn: psycopg.Connection, query_vector, limit: int) -> list[dict]:
+    """Nearest chunks by cosine distance (0 = identical, 2 = opposite)."""
+    vector = HalfVector(query_vector.tolist())
+    with conn.transaction():
+        conn.execute("SELECT set_config('hnsw.ef_search', %s, true)", (str(max(EF_SEARCH, limit)),))
+        rows = conn.execute(
+            "SELECT id, source, idx, headers, text, embedding <=> %s::halfvec(384) AS distance "
+            "FROM chunks ORDER BY embedding <=> %s::halfvec(384) LIMIT %s",
+            (vector, vector, limit),
+        ).fetchall()
+    conn.commit()
+    return [_hit(row, distance=row[5]) for row in rows]
+
+
+def keyword_search(conn: psycopg.Connection, query: str, limit: int) -> list[dict]:
+    """Chunks sharing at least one word with the query, ranked by ts_rank_cd.
+
+    Not true BM25: Postgres full-text ranking has no IDF weighting.
+    """
+    words = re.findall(rf"\w{{{MIN_WORD_LENGTH},}}", query.lower())
+    if not words:
+        return []
+    rows = conn.execute(
+        "SELECT id, source, idx, headers, text, ts_rank_cd(tsv, q) AS rank "
+        "FROM chunks, websearch_to_tsquery('simple', %s) AS q "
+        "WHERE tsv @@ q ORDER BY rank DESC, id LIMIT %s",
+        (" or ".join(words), limit),
+    ).fetchall()
+    conn.commit()
+    return [_hit(row, kw_score=row[5]) for row in rows]

@@ -4,7 +4,7 @@ Hybrid retrieval (BM25 + vectors) over the Google Cloud Data Analytics course, b
 within a small CPU/RAM budget (no GPU). Postgres + pgvector for storage, `multilingual-e5-small`
 (int8, ONNX Runtime) for embeddings.
 
-Status: ingestion is done (parse, chunk, embed, store). Hybrid retrieval, evaluation and the MCP server are next.
+Status: ingestion and hybrid retrieval work (vector + keyword legs fused with RRF). Evaluation and the MCP server are next.
 
 ## Layout
 
@@ -12,10 +12,13 @@ Status: ingestion is done (parse, chunk, embed, store). Hybrid retrieval, evalua
 src/rag/
 ├── embed.py          # ONNX embedder (shared by ingestion and retrieval)
 ├── store.py          # the only module that talks to Postgres
-└── ingestion/        # offline pipeline
-    ├── parse.py      # PDF/MD -> markdown
-    ├── chunk.py      # header-aware chunking
-    └── pipeline.py   # incremental ingest (hash-based)
+├── ingestion/        # offline pipeline
+│   ├── parse.py      # PDF/MD -> markdown
+│   ├── chunk.py      # header-aware chunking
+│   └── pipeline.py   # incremental ingest (hash-based)
+└── retrieval/        # online path
+    ├── fusion.py     # Reciprocal Rank Fusion
+    └── search.py     # HybridRetriever: vector leg + keyword leg
 tests/                # mirrors src/
 infra/                # container definitions
 data/  models/        # local only, git-ignored (course files, ONNX model)

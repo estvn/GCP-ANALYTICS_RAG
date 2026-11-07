@@ -136,8 +136,9 @@ Measured on 60 real chunks, 4 threads, int8 ONNX on CPU.
   a translation step: one extra call and two searches per question. `search_many` takes the phrasings from the caller,
   so a client that can write both versions (such as an LLM) provides them; with a single phrasing it is the plain hybrid.
 - The runner scripts that produced the full-course tables are not in this repository (see the reproducibility map in
-  [eval/experiments.md](eval/experiments.md)); the raw output is in `eval/runs/`. The 2:1 weights were evaluated with
-  one of those scripts: `main` only has the unweighted fusion.
+  [eval/experiments.md](eval/experiments.md)); the raw output is in `eval/runs/`. `main` only has the unweighted
+  fusion (1:1); the 2:1 weights are implemented in the branches `retrieval/hybrid-es-en-rrf` and
+  `retrieval/vector-es-en-rrf`, whose report (`--translations`) evaluates the same modes.
 - The author's hybrid chunking and the e5-small indexes were not run through the retrieval modes of E30.
 
 ## Tools and what each is for

@@ -593,6 +593,7 @@ e5-small:
   - The chunks are practically the same with both models (E29 counts: 741 and 741, 1,408 and 1,416, 1,335 and 1,336, 907 and 906), and the gap remains on the structural index, which uses no model to cut: the difference comes from the embeddings, not from the chunking (E24 also measured a related/unrelated similarity gap of 0.17 for e5-small and 0.53 for bge-m3).
   - bge-m3 needs no translation step; e5-small does.
 - **Caveats**: the gaps with the translation (2.7 to 4.5 points) are inside the noise of 180 questions (about 6 points, about 10 questions); no end-to-end test of the answer of a language model; text measured in characters; the questions of E32 were written by a language model.
+- **Decision (the user)**: the ES/EN translation fusion is always used, with both models; the rows without translation stay in this entry only as the record of the analysis.
 - **Status**: accepted (analysis of single runs). **Recommendation**: bge-m3 for production; e5-small when RAM or indexing time are the limit.
 
 ## Corrections log (things said or measured wrongly, and what replaced them)

@@ -152,23 +152,21 @@ The 130 questions also chose the chunker, `k` and the pool size, so they oversta
 
 ### Which embedding model: bge-m3 or e5-small (E33)
 
-Both models were run on the same five chunking techniques with the 130 original questions and the 50 new ones (180 in total), 30 candidates per search. Share of questions answered within the first 10, 20 and 30 chunks, and MRR, averaged over the five chunking techniques ([eval/experiments.md](eval/experiments.md) E33 and the raw output of E31 and E32 in `eval/runs/`):
+Both models were run on the same five chunking techniques with the 130 original questions and the 50 new ones (180 in total), 30 candidates per search, with the translation fused (the setting the project always uses). Share of questions answered within the first 10, 20 and 30 chunks, and MRR, averaged over the five chunking techniques ([eval/experiments.md](eval/experiments.md) E33 and the raw output of E31 and E32 in `eval/runs/`):
 
 | retrieval | model | first 10 chunks | first 20 | first 30 | MRR |
 |---|---|---|---|---|---|
-| hybrid + ES/EN 1:1 (with translation) | e5-small | 83.4% | 91.7% | 93.6% | 0.49 |
-| hybrid + ES/EN 1:1 (with translation) | bge-m3 | 87.9% | 94.8% | 96.3% | 0.58 |
-| hybrid (one phrasing, no translation) | e5-small | 76.9% | 81.9% | 85.4% | 0.55 |
-| hybrid (one phrasing, no translation) | bge-m3 | 86.7% | 93.8% | 95.1% | 0.58 |
+| hybrid + ES/EN 1:1 | e5-small | 83.4% | 91.7% | 93.6% | 0.49 |
+| hybrid + ES/EN 1:1 | bge-m3 | 87.9% | 94.8% | 96.3% | 0.58 |
 
 - **Reading more chunks helps both models**: from 10 to 30 chunks each gains 8 to 10 points. The question is how many chunks each one needs.
-- **e5-small needs about twice the chunks.** With the translation fused, e5-small reads 20 chunks (91.7%) to pass what bge-m3 answers with 10 (87.9%); 20 chunks of semantic + header cuts are about 17,600 characters, against about 8,800 for 10. Without the translation, e5-small does not reach bge-m3's 10 chunks (86.7%) even with 30 (85.4%).
+- **e5-small needs about twice the chunks.** With the translation fused, e5-small reads 20 chunks (91.7%) to pass what bge-m3 answers with 10 (87.9%); 20 chunks of semantic + header cuts are about 17,600 characters, against about 8,800 for 10.
 - **bge-m3 ranks the correct chunk higher.** MRR with the translation: 0.58 against 0.49. This is not an effect of chunking: the chunks are practically the same with both models (741 and 741 structural chunks; 1,408 and 1,416 semantic + header cuts; 907 and 906 for the user's hybrid), and the gap stays on the structural index (structural vector-only on the 130 questions: e5-small answers 107 (MRR 0.50) and bge-m3 124 (MRR 0.62) with the same 741 chunks).
 - **Why, from this project's measurements and code**: with a Spanish question against English passages, e5-small scores related and unrelated passages at 0.88 and 0.71 (a gap of 0.17) and bge-m3 at 0.74 and 0.21 (a gap of 0.53), so bge-m3 separates the correct passage better (E24). e5-small also reads only 512 tokens of each chunk and 34% of the structural chunks are longer, and its vectors have 384 numbers against 1,024. That bge-m3 is a much larger model trained for search across many languages is general knowledge, not measured here.
-- **bge-m3 needs no translation step.** With e5-small the translation is not optional (without it, about 8 points fewer questions are answered at 30 chunks); it costs one extra call and two searches per question. bge-m3 without translation answers 95.1% at 30 chunks, close to e5-small with it (93.6%).
+- **The translation is always fused, with both models.** It costs one extra call and two searches per question. It matters much more for e5-small, which answers about 8 points fewer questions at 30 chunks without it, than for bge-m3, where it adds about 1 point (inside the noise); the project fuses it with both models so the pipeline is the same.
 - **What bge-m3 costs** (E24): a 542 MB file against 113 MB, a peak of 1,591 MB of RAM against 912 MB, indexing at 0.6 chunks per second against 5.6, and 59 ms per query against 12 ms. The query time is small next to a call to a language model; the indexing time and the RAM are what weigh.
-- **Choice for production: bge-m3**, because it gives the same coverage with about half the text for the language model and with no translation step. e5-small is the option when the RAM is very tight or the whole corpus is re-indexed often; then use 20 to 30 chunks and fuse the translation.
-- **Limits**: with 180 questions, differences under about 6 points (about 10 questions) are not conclusive: the gaps with the translation (2.7 to 4.5 points) are inside the noise, the gaps without it (10 to 12 points) are not. Only the position of the correct chunk was measured, not whether a language model answers better with less text; the amount of text is given in characters, not tokens.
+- **Choice for production: bge-m3**, because, with the translation fused, it answers a similar share of questions (the gap is inside the noise) and ranks the correct chunk higher, so the language model gets the same coverage with about half the chunks and the text. e5-small is the option when the RAM is very tight or the whole corpus is re-indexed often; then use 20 to 30 chunks and fuse the translation.
+- **Limits**: with 180 questions, differences under about 6 points (about 10 questions) are not conclusive: the gaps between the two models with the translation (2.7 to 4.5 points) are inside the noise: they answer a similar share of questions and differ in the order of the results and in the text they need. Only the position of the correct chunk was measured, not whether a language model answers better with less text; the amount of text is given in characters, not tokens.
 
 ### What the models cost (E24)
 
@@ -187,9 +185,10 @@ Measured on 60 real chunks, 4 threads, int8 ONNX on CPU.
   (about 10 of the 130 questions) are **not conclusive**. The conclusive gaps are: bge-m3 against e5-small (12 to 17
   questions), and semantic + headers against the other two chunkers on vector + ES/EN (11 to 12 questions) and against
   semantic only on hybrid + ES/EN (12 questions).
-- The translation of each question is the hand translation in `eval/golden_translations.json`. A real deployment needs
-  a translation step: one extra call and two searches per question. `search_many` takes the phrasings from the caller,
-  so a client that can write both versions (such as an LLM) provides them; with a single phrasing it is the plain hybrid.
+- The translation of each question is the hand translation in `eval/golden_translations.json`. The translation is
+  always fused in production (one extra call and two searches per question). `search_many` takes the phrasings from the
+  caller, so a client that can write both versions (such as an LLM) provides them; `search` with a single phrasing is the
+  building block of `search_many` and is meant for comparisons.
 - The runner scripts that produced the full-course tables are not in this repository (see the reproducibility map in
   [eval/experiments.md](eval/experiments.md)); the raw output is in `eval/runs/`. `main` only has the unweighted
   fusion (1:1); the 2:1 weights are implemented in the branches `retrieval/hybrid-es-en-rrf` and

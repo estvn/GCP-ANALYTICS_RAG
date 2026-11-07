@@ -4,7 +4,7 @@ Hybrid retrieval (Postgres full-text + vectors) over the Google Cloud Data Analy
 within a small CPU/RAM budget (no GPU). Postgres + pgvector for storage, `multilingual-e5-small`
 (int8, ONNX Runtime) for embeddings.
 
-Status: ingestion and hybrid retrieval work (vector + keyword legs fused with RRF). Evaluation and the MCP server are next.
+Status: ingestion, hybrid retrieval and evaluation work. The MCP server is next.
 
 ## Layout
 
@@ -16,9 +16,11 @@ src/rag/
 │   ├── parse.py      # PDF/MD -> markdown
 │   ├── chunk.py      # header-aware chunking
 │   └── pipeline.py   # incremental ingest (hash-based)
-└── retrieval/        # online path
-    ├── fusion.py     # Reciprocal Rank Fusion
-    └── search.py     # HybridRetriever: vector leg + keyword leg
+├── retrieval/        # online path
+│   ├── fusion.py     # Reciprocal Rank Fusion
+│   └── search.py     # HybridRetriever: vector leg + keyword leg, multi-phrasing search
+└── evaluation/       # golden sets, hit@k / MRR, comparison report
+eval/                 # golden sets and results.md
 tests/                # mirrors src/
 infra/                # container definitions
 data/  models/        # local only, git-ignored (course files, ONNX model)
@@ -43,3 +45,14 @@ uv run pytest
 
 The embedding model goes in `models/multilingual-e5-small/` (`onnx/model_quantized.onnx` and
 `tokenizer.json` from `Xenova/multilingual-e5-small` on Hugging Face).
+
+## Results
+
+On 40 paraphrased questions plus 10 exact-term queries from course 1, hybrid retrieval reaches hit@5 0.70 and
+1.00. Within a language it answers 26 of 26 questions; the weak spot is cross-language search, which is handled by
+querying in both languages (`HybridRetriever.search_many`, hit@5 0.925). Full tables, what each experiment
+changed and the limits of the evaluation are in [eval/results.md](eval/results.md). Reproduce with:
+
+```bash
+uv run python -m rag.evaluation.report
+```

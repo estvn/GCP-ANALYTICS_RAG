@@ -3,7 +3,7 @@
 import hashlib
 from pathlib import Path
 
-from rag.chunk import chunk_markdown
+from rag.ingestion.chunk import chunk_markdown
 from rag.store import delete_documents, get_hashes, replace_document
 
 

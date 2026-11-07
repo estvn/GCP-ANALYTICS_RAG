@@ -1,4 +1,4 @@
-from rag.chunk import chunk_markdown
+from rag.ingestion.chunk import chunk_markdown
 
 SMALL = "# Doc\n\n## A\n\nalpha text.\n\n## B\n\nbeta text.\n\n## C\n\ngamma text.\n"
 

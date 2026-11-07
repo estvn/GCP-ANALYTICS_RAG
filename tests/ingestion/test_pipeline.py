@@ -5,7 +5,7 @@ import numpy as np
 import psycopg
 import pytest
 
-from rag.ingest import ingest
+from rag.ingestion.pipeline import ingest
 from rag.store import init_schema
 
 ADMIN = "postgresql://rag:rag@127.0.0.1:5433/postgres"

@@ -1,6 +1,6 @@
 import pymupdf
 
-from rag.parse import convert_corpus
+from rag.ingestion.parse import convert_corpus
 
 
 def _make_pdf(path, text):

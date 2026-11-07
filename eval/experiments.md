@@ -530,6 +530,51 @@ e5-small:
 - **Caveats**: single run; the second phrasing is a hand translation; the 130 questions were also used to choose chunker, `k` and pool size, so 130 of 130 is optimistic for unseen questions and is not a promise of answering every question in use; 30 chunks of about 880 characters are about 26,000 characters, three times the text of the earlier runs, which a language model must read; no reranker was tried (E10 measured its room only on course 1); the diagnosis of unreachable evidence covers one index; differences under about 8 points are not conclusive.
 - **Status**: accepted (single run, n = 130). **Branches**: every technique branch has the section "Results returning 30 chunks (E31)".
 
+### E32. Questions nobody used to choose a setting (50 new questions, 10 indexes)
+- **Question**: do the choices made on the 130 questions (chunker, `k`, pool size, ES/EN fusion) hold on new questions about the course content?
+- **Setup**: 54 course files that no earlier question used as evidence (picked per course with a fixed seed: 10, 14, 12, 14 and 4 files), one question each, written by two language-model drafts and then verified by a script: 4 questions were dropped because their file is a list of citations, 50 remain (33 in Spanish, 17 in English, 12 asked in the other language than the file). Each question has its evidence copied verbatim from the file (checked by script against the corpus; 10 questions share the same evidence text with a second file, and any of the files counts) and a translation written by the draft for the ES/EN fusion. Same ten indexes, nine retrieval techniques, 30 chunks returned and pools of 30 and 100 candidates as in E31. Files `eval/golden_heldout.json` and `eval/golden_heldout_translations.json`; scripts `make_assignments.py`, `build_heldout.py` and `heldout_eval.py` (session scratchpad, **not in the repo**); raw output `eval/runs/e32_heldout_candidates30.log` and `eval/runs/e32_heldout_candidates100.log`.
+- **Result** (hybrid + ES/EN 1:1, answered; bge-m3 first, then e5-small):
+
+| chunking technique | answered of the 130 (30 / 100 candidates) | answered of the 50 new questions at 10, 20, 30 chunks (30 candidates) | at 30 chunks (100 candidates) |
+|---|---|---|---|
+| semantic + header cuts | 128 / 130 | 41, 46, 48 | 46 |
+| structural | 126 / 127 | 45, 48, 50 | 49 |
+| user's hybrid (two-stage + merge) | 126 / 127 | 43, 47, 48 | 47 |
+| semantic only | 124 / 124 | 39, 45, 46 | 43 |
+| community two-stage | 123 / 125 | 42, 48, 48 | 47 |
+
+| chunking technique | answered of the 130 (30 / 100 candidates) | answered of the 50 new questions at 10, 20, 30 chunks (30 candidates) | at 30 chunks (100 candidates) |
+|---|---|---|---|
+| structural | 122 / 121 | 45, 49, 50 | 50 |
+| user's hybrid (two-stage + merge) | 122 / 121 | 46, 49, 50 | 49 |
+| semantic only | 121 / 120 | 42, 45, 47 | 45 |
+| community two-stage | 118 / 120 | 46, 47, 47 | 48 |
+| semantic + header cuts | 117 / 119 | 45, 47, 48 | 47 |
+
+  All nine techniques on `full_SEMH_bge` (semantic + header cuts), 50 new questions:
+
+| retrieval technique | @10 (30 cand.) | @20 (30 cand.) | @30 (30 cand.) | @10 (100 cand.) | @20 (100 cand.) | @30 (100 cand.) | MRR (100 cand.) |
+|---|---|---|---|---|---|---|---|
+| vector | 39 | 42 | 44 | 39 | 42 | 44 | 0.534 |
+| vector + ES/EN 1:1 | 37 | 44 | 44 | 37 | 43 | 44 | 0.505 |
+| vector + ES/EN 2:1 | 37 | 44 | 44 | 37 | 44 | 44 | 0.527 |
+| keyword | 32 | 36 | 38 | 32 | 36 | 38 | 0.471 |
+| keyword + ES/EN 1:1 | 41 | 42 | 44 | 36 | 42 | 44 | 0.444 |
+| keyword + ES/EN 2:1 | 34 | 37 | 39 | 33 | 36 | 39 | 0.460 |
+| hybrid | 39 | 46 | 46 | 38 | 41 | 46 | 0.516 |
+| hybrid + ES/EN 1:1 | 41 | 46 | 48 | 42 | 44 | 46 | 0.583 |
+| hybrid + ES/EN 2:1 | 42 | 46 | 46 | 41 | 45 | 46 | 0.544 |
+
+- **Findings**:
+  - The 130 of 130 was optimistic. On the 50 new questions the same combination (semantic + header cuts, hybrid + ES/EN 1:1, 30 chunks) answers 48 with 30 candidates and 46 with 100, against 128 and 130 of 130 on the questions that chose the settings.
+  - No chunking technique is conclusively better. The best technique of every index answers 45 to 50 of 50 with 100 candidates; with 50 questions one question is 2 points and differences under about 6 questions are not conclusive. The structural bge-m3 index answers 50 of 50 with 30 candidates, semantic + header cuts 48. The earlier lead of semantic + header cuts is not confirmed; what it keeps is the smaller text (about 26,000 characters in 30 chunks, against 47,000 for structural).
+  - Over all 180 questions the top combinations are within two questions of each other: structural with hybrid + ES/EN 2:1, 100 candidates: 178/180; user's hybrid (two-stage + merge) with hybrid + ES/EN 2:1, 100 candidates: 177/180; structural with hybrid + ES/EN 1:1, 30 candidates: 176/180; semantic + header cuts with hybrid + ES/EN 1:1, 30 candidates: 176/180.
+  - A pool of 100 candidates is not better than 30 on the new questions: with hybrid + ES/EN 1:1, 30 candidates answer the same or more in 9 of 10 indexes (strictly more in 8); over the 180 questions the best indexes tie (176 and 176). It also lowers the top 10 and the MRR (E31).
+  - e5-small catches up with bge-m3 once the translation is fused: its best index answers up to 50 of 50, and it answers 11 or 12 of the 12 questions asked in the other language. The 5 to 11 question lead of bge-m3 on the 130 questions is not seen here, and 50 questions cannot separate them.
+  - Keyword search alone stays last (36 to 41 of 50 at 30 chunks).
+- **Caveats**: 50 questions and a single run; the questions and their translations were written by a language model, not by a person, so they may be easier or phrased differently from real questions; only 12 questions cross languages; the evidence snippets are short; the files differ from those of the 130 questions, so topics differ too. The defaults of `search` and `search_many` (30 chunks, 100 candidates) were set after E31; this experiment finds no gain from the pool of 100.
+- **Status**: accepted (single run, n = 50). **Branches**: every technique branch has the section "Results on 50 new questions (E32)".
+
 ## Corrections log (things said or measured wrongly, and what replaced them)
 
 | # | Claim or measurement | Reality | Where fixed |

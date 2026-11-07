@@ -248,6 +248,23 @@ Best retrieval technique per bge-m3 index (30 chunks, 100 candidates; answered /
 - The unanswered questions at 10 chunks were ranking misses: all 130 evidence snippets sit complete in a chunk of the best index.
 - A pool of 100 candidates helps the recall at 30 and hurts the top 10 and the MRR. The 130 questions also chose these settings, so 130 of 130 is optimistic.
 
+## New questions (E32)
+
+50 questions about files that no earlier question used, written by a language model and checked by script against the corpus. Same indexes and techniques as E31, 30 chunks returned. Settings, caveats and raw output: [experiments.md](experiments.md) E32; [runs/e32_heldout_candidates30.log](runs/e32_heldout_candidates30.log), [runs/e32_heldout_candidates100.log](runs/e32_heldout_candidates100.log).
+
+Hybrid + ES/EN 1:1 on the bge-m3 indexes (answered):
+
+| chunking technique | answered of the 130 (30 / 100 candidates) | answered of the 50 new questions at 10, 20, 30 chunks (30 candidates) | at 30 chunks (100 candidates) |
+|---|---|---|---|
+| semantic + header cuts | 128 / 130 | 41, 46, 48 | 46 |
+| structural | 126 / 127 | 45, 48, 50 | 49 |
+| user's hybrid (two-stage + merge) | 126 / 127 | 43, 47, 48 | 47 |
+| semantic only | 124 / 124 | 39, 45, 46 | 43 |
+| community two-stage | 123 / 125 | 42, 48, 48 | 47 |
+
+- The 130 of 130 of E31 does not repeat: the best combination of that run answers 48 or 46 of 50 here.
+- No chunking technique is conclusively better (differences under about 6 of 50 questions); a pool of 100 candidates is not better than 30; e5-small catches up with bge-m3 when the translation is fused.
+
 ## Limits
 
 - Small sets (a single question moves hit@5 by 2.5 points on the main set; ignore differences under about 7 points).

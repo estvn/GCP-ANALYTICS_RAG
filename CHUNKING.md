@@ -1,6 +1,6 @@
 # Chunking technique: structure first, semantic inside
 
-Branch `chunking/structure-semantic`. Combines the two ideas: the document structure decides the coarse cuts and
+Branch `chunking/structure-semantic-e5-small`. Combines the two ideas: the document structure decides the coarse cuts and
 meaning decides the fine ones.
 
 ## How it works

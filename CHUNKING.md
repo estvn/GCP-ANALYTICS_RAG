@@ -34,6 +34,18 @@ questions used to tune; V = 40 further paraphrased questions used only to valida
 
 Smaller (1200) did worse in hybrid on the first set, and 4000 was clearly the worst at equal returned text.
 
+## Results on the full course (311 files, all 5 courses)
+
+Hit rate / MRR at equal returned text (about 9,000 characters per query). Pooled over 130 questions: 40 + 10 + 40 from
+course 1 and 40 from courses 2 to 5. One question is 0.77 points; the standard error of a hit rate near 0.75 is about
+3.8 points, so differences under about 4 points are not conclusive.
+
+| technique | chunks | over 512 tokens | vector | hybrid (df cap 0.15) | hybrid (df cap 0.05) |
+|---|---|---|---|---|---|
+| structural 2400 | 755 | 260 (34%) | 0.662 / 0.489 | 0.708 / 0.542 | 0.731 / 0.565 |
+| semantic | 1173 | 1 | 0.700 / 0.465 | 0.731 / 0.496 | 0.738 / 0.521 |
+| structure + semantic | 1443 | 0 | 0.723 / 0.500 | 0.754 / 0.493 | **0.762** / 0.562 |
+
 ## Boundaries and limits
 
 - Words cut in half: 0 (every chunk on course 1).

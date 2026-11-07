@@ -3,7 +3,7 @@
 import hashlib
 from pathlib import Path
 
-from rag.ingestion.chunk import StructuralChunker
+from rag.ingestion.semantic import SemanticChunker
 from rag.store import delete_documents, get_hashes, replace_document
 
 
@@ -12,7 +12,7 @@ def ingest(md_root, conn, embedder, chunker=None) -> dict[str, int]:
 
     A chunker has `chunk(text, source)` and a `fingerprint` that changes with its configuration.
     """
-    chunker = chunker or StructuralChunker()
+    chunker = chunker or SemanticChunker(embedder)
     root = Path(md_root)
     stats = {"added": 0, "updated": 0, "removed": 0, "skipped": 0}
     known = get_hashes(conn)

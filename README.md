@@ -6,6 +6,8 @@ within a small CPU/RAM budget (no GPU). Postgres + pgvector for storage, `multil
 
 Status: ingestion, hybrid retrieval and evaluation work. The MCP server is next.
 
+**This branch (`chunking/semantic`) contains only the semantic chunking technique.** See [CHUNKING.md](CHUNKING.md).
+
 ## Layout
 
 ```
@@ -14,8 +16,7 @@ src/rag/
 ├── store.py          # the only module that talks to Postgres
 ├── ingestion/        # offline pipeline
 │   ├── parse.py      # PDF/MD -> markdown
-│   ├── chunk.py      # header-aware chunking (default)
-│   ├── semantic.py   # semantic chunking under a token cap (option)
+│   ├── semantic.py   # semantic chunking under a token cap
 │   └── pipeline.py   # incremental ingest (hash-based)
 ├── retrieval/        # online path
 │   ├── fusion.py     # Reciprocal Rank Fusion

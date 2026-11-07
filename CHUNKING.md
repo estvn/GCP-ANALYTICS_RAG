@@ -1,6 +1,6 @@
 # Chunking technique: structural
 
-Branch `chunking/structural-e5-small`. This is the default technique on `main`; this branch keeps only its code.
+Branch `chunking/structural-e5-small`. This technique is not in `main` (the default there is semantic + header cuts); its code lives only in this branch and in `chunking/structural-bge-m3`.
 
 ## How it works
 
@@ -24,7 +24,7 @@ ingest("data/md", conn, embedder, chunker=StructuralChunker(chunk_size=2400, ove
 
 ## Results (course 1, 70 files, equal returned text of about 9,000 characters per query)
 
-Hit rate / MRR, hybrid retrieval (document-frequency cap 0.15, RRF 1:1). A+T = 40 paraphrased + 10 exact-term
+Hit rate / MRR, hybrid retrieval (document-frequency cap 0.15 at the time; `main` uses 0.05 now; RRF 1:1). A+T = 40 paraphrased + 10 exact-term
 questions used to tune; V = 40 further paraphrased questions used only to validate.
 
 | chunk size | chunks | A+T | V |
@@ -38,7 +38,7 @@ Smaller (1200) did worse in hybrid on the first set, and 4000 was clearly the wo
 
 Hit rate / MRR at equal returned text (about 9,000 characters per query). Pooled over 130 questions: 40 + 10 + 40 from
 course 1 and 40 from courses 2 to 5. One question is 0.77 points; the standard error of a hit rate near 0.75 is about
-3.8 points, so differences under about 4 points are not conclusive.
+3.8 points, so differences under about 8 points (two standard errors, about 10 of the 130 questions) are not conclusive.
 
 | technique | chunks | over 512 tokens | vector | hybrid (df cap 0.15) | hybrid (df cap 0.05) |
 |---|---|---|---|---|---|
@@ -58,8 +58,7 @@ course 1 and 40 from courses 2 to 5. One question is 0.77 points; the standard e
 ## Compared with the other techniques
 
 Hit rates tie with the semantic techniques within the noise of the evaluation sets; this one has the best MRR, is
-the simplest and the fastest to index. Full comparison: [eval/results.md](eval/results.md). Other branches:
-`chunking/semantic`, `chunking/structure-semantic`.
+the simplest and the fastest to index. Full comparison: [eval/results.md](eval/results.md). Other branches: `chunking/structural-e5-small`, `chunking/semantic-e5-small`, `chunking/structure-semantic-e5-small` (and the `-bge-m3` versions).
 
 ## Common-method comparison (E29)
 

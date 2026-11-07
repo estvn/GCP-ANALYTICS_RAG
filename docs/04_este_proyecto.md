@@ -112,7 +112,7 @@ src/rag/
 tests/  eval/  infra/  docs/        (data/ y models/ fuera de git)
 ```
 
-Ramas: `main` (todo), `chunking/recursive`, `chunking/structural`, `chunking/semantic`, `chunking/structure-semantic`. La
+Ramas: `main` (todo), `chunking/recursive-e5-small`, `chunking/structural-e5-small`, `chunking/semantic-e5-small`, `chunking/structure-semantic-e5-small`. La
 idea de trabajo: lo que gane en cada comparación queda como único camino en `main`, y las alternativas quedan en sus ramas.
 
 ## 9. Cómo ejecutarlo

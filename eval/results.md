@@ -148,8 +148,8 @@ semantic 0.700 / 0.900 / 0.625 / 0.850, structure + semantic 0.725 / 1.000 / 0.6
   still uses 0.15; it was tuned on 162 chunks and should probably shrink as the index grows.
 - **The plain recursive splitter (no headers, one of the four techniques) is last in hit rate** (0.700 at df 0.05) and
   has the most chunks over the embedder limit (44%); `k` is 5 for it (larger average chunk), 6 to 10 for the others.
-- Each technique lives in its own branch (`chunking/recursive`, `chunking/structural`, `chunking/semantic`,
-  `chunking/structure-semantic`) with its code, tests and a `CHUNKING.md`.
+- Each technique lives in its own branch (`chunking/recursive-e5-small`, `chunking/structural-e5-small`, `chunking/semantic-e5-small`,
+  `chunking/structure-semantic-e5-small`) with its code, tests and a `CHUNKING.md`.
 
 ## How structure and meaning share the cuts (structure + semantic)
 

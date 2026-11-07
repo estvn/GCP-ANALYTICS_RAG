@@ -40,10 +40,10 @@ tokens por texto (sección 5).
 
 | Técnica | Cómo corta | ¿Usa modelo? |
 |---|---|---|
-| **Recursivo solo** (`chunking/recursive`) | `RecursiveCharacterTextSplitter` sobre todo el documento: prueba corte en párrafo, línea, fin de oración (`. ? ! ;`), espacio y, al final, carácter; solape de 200. No mira los headers | No |
-| **Estructural + recursivo** (`chunking/structural`) | 1) corta por headers `#`, `##`, `###`; 2) fusiona secciones vecinas chicas hasta el tamaño límite; 3) las secciones largas se parten con el recursivo y el header queda pegado al primer trozo | No |
-| **Semántico** (`chunking/semantic`) | Parte el texto en oraciones y viñetas; calcula el embedding de ventanas de 3 unidades; corta donde la distancia entre ventanas vecinas supera el percentil 90 del documento; mínimo 100 tokens, máximo 440 tokens reales | Sí, para decidir dónde cortar |
-| **Estructura + semántica** (`chunking/structure-semantic`) | Igual que el semántico, y además cada header es un punto de corte (si el chunk ya tiene 100 tokens) | Sí, para decidir dónde cortar |
+| **Recursivo solo** (`chunking/recursive-e5-small`) | `RecursiveCharacterTextSplitter` sobre todo el documento: prueba corte en párrafo, línea, fin de oración (`. ? ! ;`), espacio y, al final, carácter; solape de 200. No mira los headers | No |
+| **Estructural + recursivo** (`chunking/structural-e5-small`) | 1) corta por headers `#`, `##`, `###`; 2) fusiona secciones vecinas chicas hasta el tamaño límite; 3) las secciones largas se parten con el recursivo y el header queda pegado al primer trozo | No |
+| **Semántico** (`chunking/semantic-e5-small`) | Parte el texto en oraciones y viñetas; calcula el embedding de ventanas de 3 unidades; corta donde la distancia entre ventanas vecinas supera el percentil 90 del documento; mínimo 100 tokens, máximo 440 tokens reales | Sí, para decidir dónde cortar |
+| **Estructura + semántica** (`chunking/structure-semantic-e5-small`) | Igual que el semántico, y además cada header es un punto de corte (si el chunk ya tiene 100 tokens) | Sí, para decidir dónde cortar |
 
 No se probaron: el **tamaño fijo puro** (cortar cada N caracteres sin mirar nada) y el **agrupamiento por clustering**
 (unir piezas parecidas aunque estén lejos en el documento).
@@ -55,8 +55,8 @@ cambia la dirección en que se usa esa medida.
 
 | Variante | Dirección | Cómo funciona | Estado en este proyecto |
 |---|---|---|---|
-| **Corte por quiebre** (top-down) | Parte de oraciones y **corta** | Embebe cada oración con sus vecinas, mide la distancia entre vecinas consecutivas y corta donde supera un umbral (aquí, percentil 90). Es la variante estándar | Probada: `chunking/semantic` |
-| **Estructura primero, semántica dentro** (híbrido) | Corte por quiebre + títulos | Una sola pasada: cada header `#` es también un punto de corte, y entre headers manda el cambio de significado. El chunk guarda su ruta de títulos | Probada: `chunking/structure-semantic` |
+| **Corte por quiebre** (top-down) | Parte de oraciones y **corta** | Embebe cada oración con sus vecinas, mide la distancia entre vecinas consecutivas y corta donde supera un umbral (aquí, percentil 90). Es la variante estándar | Probada: `chunking/semantic-e5-small` |
+| **Estructura primero, semántica dentro** (híbrido) | Corte por quiebre + títulos | Una sola pasada: cada header `#` es también un punto de corte, y entre headers manda el cambio de significado. El chunk guarda su ruta de títulos | Probada: `chunking/structure-semantic-e5-small` |
 | **Fusión** (bottom-up, merge) | Parte de trozos chicos y **fusiona** | 1) se crean trozos chicos (oraciones o párrafos); 2) se embebe cada uno; 3) se recorre el documento y se une el trozo siguiente al actual mientras su similitud supere el umbral y no se pase del tope de tokens; si no, se abre un chunk nuevo | Descartada (decisión del proyecto, no se implementó en `main`; la rama `chunking/semantic-merge` queda como prototipo) |
 | **Estructural en dos etapas** | Estructura y luego semántica | 1) se corta por headers en secciones; 2) solo las secciones que superan el tope se subdividen con el corte por quiebre | En prueba: `chunking/structure-then-semantic` (E29) |
 | **Clustering** | Agrupa piezas **no vecinas** | Une piezas parecidas aunque estén lejos; rompe el orden de lectura | No probada |

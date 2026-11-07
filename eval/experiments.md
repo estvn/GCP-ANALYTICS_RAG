@@ -305,7 +305,7 @@ Cells `hit / MRR`. Variants: vector; hybrid with df cap 0.10 / 0.15 / 0.30 and R
 | hybrid df .05 | .600/.443 | .900/.717 | .625/.466 | .825/.677 | .700/.543 |
 - **Finding**: last in hit rate on the full index (0.700 vs 0.731 / 0.738 / 0.762), suggesting that using headers helps. A header can end alone in a chunk when the next paragraph exceeds the size
   limit (documented by a test; 0 of 648 chunks under 60 characters on the real course); no header path in the chunk. **Status**: accepted.
-  **Commits**: `46bca68`, `a9e0e3b`; branch `chunking/recursive` (`8495c16`).
+  **Commits**: `46bca68`, `a9e0e3b`; branch `chunking/recursive-e5-small` (`8495c16`).
 
 ### E21. How structure and meaning share the cuts (structure + semantic, sample of 24 course 1 files, 101 chunks, median 153 tokens)
 | cause | chunks | share of 77 real decisions |
@@ -457,7 +457,7 @@ Weights are original : translation; the translation always comes from `golden_tr
 
 ## Branches and commits
 
-Branches: `main` (all techniques), `chunking/recursive` (`8495c16`), `chunking/structural` (`4d4352b`), `chunking/semantic` (`c418c67`), `chunking/structure-semantic` (`84c5341`).
+Branches: `main` (all techniques), `chunking/recursive-e5-small` (`8495c16`), `chunking/structural-e5-small` (`4d4352b`), `chunking/semantic-e5-small` (`c418c67`), `chunking/structure-semantic-e5-small` (`84c5341`).
 Main commits in order: `c499977` scaffold, `b9edd96` parse, `cb7adda` chunk, `6373e84` embed, `8c40b66` ingest, `4f5fb05` refactor, `6de9c0a` README, `0a087c0` retrieval,
 `24d02f4` docs, `8655b7e` golden set, `3c4bb27` keyword df cap + search_many, `bc8b097` report + terms set, `5cbf826` results, `8fcbbdf` chunker injection, `3bd7110` semantic chunker,
 `0846a24` docs, `f5afaa8` structure-first option, `033f9af` validation + grid docs, `f912c1c` sentence-aware splitter, `bfc178c` courses 2-5 set,

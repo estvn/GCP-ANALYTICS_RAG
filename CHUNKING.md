@@ -1,20 +1,21 @@
-# Chunking technique: structure first, semantic inside
+# Chunking technique: semantic + header cuts
 
-Branch `chunking/structure-semantic-e5-small`. Combines the two ideas: the document structure decides the coarse cuts and
-meaning decides the fine ones.
+Branch `chunking/structure-semantic-e5-small`. Semantic chunking with one extra cut point: every header. It is one pass
+over the sentences, not two stages (the two-stage recipe is in `chunking/structure-then-semantic-*`) and it is not the
+user's hybrid (that is `chunking/structure-semantic-merge-*`).
 
 ## How it works
 
 Same pipeline as `chunking/semantic` (units, 3-unit windows embedded with `multilingual-e5-small`, cut where the
 distance between consecutive windows exceeds the 90th percentile, `min_tokens` 100, hard cap of 440 real tokens), plus:
 
-- **Every header is also a cut point** (`split_on_headers=True`, the default in this branch), provided the current
+- **Every header is also a cut point** (always on in this branch; it is what `main` does too), provided the current
   chunk already has `min_tokens`. A tiny section is therefore merged into the next one instead of standing alone.
 
 ```python
 from rag.ingestion import SemanticChunker, ingest
 
-ingest("data/md", conn, embedder)  # SemanticChunker(embedder, split_on_headers=True) by default
+ingest("data/md", conn, embedder)  # SemanticChunker(embedder) by default
 ```
 
 ## Results (course 1 only, 70 files)
@@ -30,7 +31,7 @@ Hit rate / MRR, equal returned text (about 9,000 characters). A+T = tuning sets,
 
 Hit rate / MRR at equal returned text (about 9,000 characters per query). Pooled over 130 questions: 40 + 10 + 40 from
 course 1 and 40 from courses 2 to 5. One question is 0.77 points; the standard error of a hit rate near 0.75 is about
-3.8 points, so differences under about 4 points are not conclusive.
+3.8 points, so differences under about 8 points (two standard errors, about 10 of the 130 questions) are not conclusive.
 
 | technique | chunks | over 512 tokens | vector | hybrid (df cap 0.15) | hybrid (df cap 0.05) |
 |---|---|---|---|---|---|
@@ -50,7 +51,7 @@ course 1 and 40 from courses 2 to 5. One question is 0.77 points; the standard e
 Best pooled hit rate on the full course (0.762 with the lower document-frequency cap) with a ranking quality
 equal to the structural chunker (MRR 0.562 vs 0.565), at the price of a slower first indexing. The gap to the structural
 chunker is about 3 points, within the noise of 130 questions. Full comparison in [eval/results.md](eval/results.md).
-Other branches: `chunking/structural`, `chunking/semantic`.
+Other branches: `chunking/structural-e5-small`, `chunking/semantic-e5-small`, `chunking/structure-semantic-e5-small` (and the `-bge-m3` versions).
 
 ## Common-method comparison (E29)
 

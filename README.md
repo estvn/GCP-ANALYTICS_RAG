@@ -27,6 +27,7 @@ Written up in [eval/experiments.md](https://github.com/estvn/GCP-ANALYTICS_RAG/b
 - **E28**: Weighted RRF over two phrasings
 - **E30**: Retrieval techniques on the three best chunking indexes
 - **E31**: Returning 30 chunks and a larger candidate pool
+- **E32**: Questions nobody used to choose a setting (50 new questions)
 
 ## Results (E30, bge-m3, 130 questions: 108 same-language and 22 cross-lingual)
 
@@ -83,6 +84,26 @@ Same 130 questions; each query returns up to 30 chunks and the candidate pool is
 - Best row: hybrid + ES/EN 1:1 on the semantic + header cuts index, 130 of 130 answered (MRR 0.553); still missing: [].
 - Returning 30 chunks answers more questions than about 10; a pool of 100 candidates helps at 30 chunks but can hurt the top 10 and the MRR.
 - Differences under about 8 points (about 10 of the 130 questions) are not conclusive; the 130 questions also chose the settings, so the figures are optimistic for new questions. Raw output: [eval/runs/e31_k30_candidates100.log](eval/runs/e31_k30_candidates100.log).
+
+## Results on 50 new questions (E32)
+
+50 questions about files that no earlier question used (written by a language model, evidence checked by script), so none of them chose a setting; 30 chunks returned, pool of 30 or 100 candidates. Answered out of 50; rows are the technique of this branch on the five bge-m3 indexes (the e5-small indexes are in the raw output):
+
+| chunking technique (bge-m3 index) | retrieval | @10 (30 cand.) | @30 (30 cand.) | @30 (100 cand.) | MRR (100 cand.) |
+|---|---|---|---|---|---|
+| semantic + header cuts | hybrid + ES/EN 1:1 | 41 | 48 | 46 | 0.583 |
+| semantic + header cuts | hybrid + ES/EN 2:1 | 42 | 46 | 46 | 0.544 |
+| structural | hybrid + ES/EN 1:1 | 45 | 50 | 49 | 0.553 |
+| structural | hybrid + ES/EN 2:1 | 45 | 49 | 49 | 0.574 |
+| user's hybrid (two-stage + merge) | hybrid + ES/EN 1:1 | 43 | 48 | 47 | 0.534 |
+| user's hybrid (two-stage + merge) | hybrid + ES/EN 2:1 | 43 | 46 | 48 | 0.560 |
+| semantic only | hybrid + ES/EN 1:1 | 39 | 46 | 43 | 0.513 |
+| semantic only | hybrid + ES/EN 2:1 | 39 | 45 | 44 | 0.529 |
+| community two-stage | hybrid + ES/EN 1:1 | 42 | 48 | 47 | 0.529 |
+| community two-stage | hybrid + ES/EN 2:1 | 43 | 47 | 48 | 0.566 |
+
+- Best row with 100 candidates: hybrid + ES/EN 2:1 on the structural index, 49 of 50 answered (MRR 0.574); still missing: ['h35'].
+- With 50 questions one question is 2 points; differences under about 6 questions are not conclusive. Raw output: [eval/runs/e32_heldout_candidates100.log](eval/runs/e32_heldout_candidates100.log).
 
 ## Layout
 

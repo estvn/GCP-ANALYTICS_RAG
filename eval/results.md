@@ -230,6 +230,24 @@ bge-m3, 130 questions, about 9,000 characters returned per query. Cells are ques
 - With the ES/EN translation, `SEMH` answers 11-12 more questions than the other two chunkers on vector (116 against 104/105) and 12 more than semantic-only on hybrid (122 against 110): conclusive at the 8-point rule. Against two-stage on hybrid (122 against 114) the gap is 8 questions (6 points): not conclusive. Hybrid + ES/EN against vector + ES/EN on `SEMH` is 6 questions: not conclusive. 1:1 against 2:1 is tied (1 question).
 - Translating the question helps only `SEMH`; keyword alone is the weakest; RRF only fuses lists, it is not a search technique by itself.
 
+## Returning 30 chunks (E31)
+
+Same ten indexes and nine retrieval techniques; each query returns up to 30 chunks (about 26,000 to 47,000 characters, depending on the chunk size) and the candidate pool is 30 or 100 per search. Settings, the diagnosis of the unanswered questions and caveats: [experiments.md](experiments.md) E31; raw output: [runs/e31_k30_candidates100.log](runs/e31_k30_candidates100.log) and [runs/e31_k30_candidates30.log](runs/e31_k30_candidates30.log).
+
+Best retrieval technique per bge-m3 index (30 chunks, 100 candidates; answered / 130 and MRR):
+
+| chunking technique | best retrieval technique | answered / 130 | MRR | characters in 30 chunks |
+|---|---|---|---|---|
+| semantic + header cuts | hybrid + ES/EN 1:1 | 130 | 0.553 | about 26,356 |
+| user's hybrid (two-stage + merge) | hybrid + ES/EN 2:1 | 129 | 0.589 | about 38,052 |
+| structural | hybrid + ES/EN 2:1 | 129 | 0.579 | about 47,005 |
+| community two-stage | hybrid + ES/EN 2:1 | 125 | 0.591 | about 27,321 |
+| semantic only | hybrid + ES/EN 2:1 | 125 | 0.574 | about 31,725 |
+
+- 130 of 130 only for semantic + header cuts with hybrid + ES/EN 1:1; the rest answer 125 to 129, inside the noise of each other.
+- The unanswered questions at 10 chunks were ranking misses: all 130 evidence snippets sit complete in a chunk of the best index.
+- A pool of 100 candidates helps the recall at 30 and hurts the top 10 and the MRR. The 130 questions also chose these settings, so 130 of 130 is optimistic.
+
 ## Limits
 
 - Small sets (a single question moves hit@5 by 2.5 points on the main set; ignore differences under about 7 points).

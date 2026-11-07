@@ -479,6 +479,57 @@ Weights are original : translation; the translation always comes from `golden_tr
 - **Caveats**: single run; the second phrasing is a hand translation, so a real system would need a translation step (extra call, two searches per query), which this does not measure; the keyword leg uses a document-frequency cap of 0.05 and the scripts of this run are scratch files (the 2:1 weights and the translations option are now implemented in the branches `retrieval/hybrid-es-en-rrf` and `retrieval/vector-es-en-rrf`), while the repo default of `MAX_DOC_FREQUENCY` is 0.05 (changed after this run; it was 0.15) and `search_many` uses unweighted `rrf` (1:1); the user's hybrid chunking and the e5-small indexes were not run through these modes.
 - **Status**: accepted (single run, n = 130). **Branches**: `retrieval/vector`, `retrieval/keyword`, `retrieval/hybrid`, and the two ES/EN RRF variants that did best, `retrieval/hybrid-es-en-rrf` and `retrieval/vector-es-en-rrf`.
 
+### E31. Returning 30 chunks and a larger candidate pool (10 indexes, 130 questions)
+- **Question**: how many of the 130 questions are answered when a query returns 30 chunks instead of about 10, and what does the size of the candidate pool (chunks taken from each search before fusion) change?
+- **Setup**: the ten indexes and nine retrieval techniques of E29-E30. Every query returns up to 30 chunks (`k = 30`); two pool sizes, 30 candidates per search (the default of `HybridRetriever`) and 100. Each phrasing is searched on its own, its list is cut at the pool size, and the lists are fused (hybrid: vector + keyword; ES/EN: the lists of the two phrasings). A question is answered when a returned chunk contains its evidence (the E29 rule). `@10`, `@20` and `@30` count the questions answered within the first 10, 20 and 30 chunks of the same ranking. Scripts `matrix_k30.py` and `diagnose_misses.py` (session scratchpad, **not in the repo**); raw output `eval/runs/e31_k30_candidates30.log` and `eval/runs/e31_k30_candidates100.log`.
+- **Result** (best retrieval technique per index, 30 chunks, 100 candidates; answered / 130 and MRR of the first 30 chunks):
+
+bge-m3:
+
+| chunking technique | best retrieval technique | answered / 130 | MRR | characters in 30 chunks |
+|---|---|---|---|---|
+| semantic + header cuts | hybrid + ES/EN 1:1 | 130 | 0.553 | about 26,356 |
+| user's hybrid (two-stage + merge) | hybrid + ES/EN 2:1 | 129 | 0.589 | about 38,052 |
+| structural | hybrid + ES/EN 2:1 | 129 | 0.579 | about 47,005 |
+| community two-stage | hybrid + ES/EN 2:1 | 125 | 0.591 | about 27,321 |
+| semantic only | hybrid + ES/EN 2:1 | 125 | 0.574 | about 31,725 |
+
+e5-small:
+
+| chunking technique | best retrieval technique | answered / 130 | MRR | characters in 30 chunks |
+|---|---|---|---|---|
+| user's hybrid (two-stage + merge) | hybrid + ES/EN 1:1 | 121 | 0.387 | about 38,009 |
+| structural | hybrid + ES/EN 1:1 | 121 | 0.380 | about 47,005 |
+| semantic only | hybrid + ES/EN 1:1 | 120 | 0.367 | about 31,363 |
+| community two-stage | hybrid + ES/EN 1:1 | 120 | 0.367 | about 27,336 |
+| semantic + header cuts | hybrid + ES/EN 1:1 | 119 | 0.386 | about 26,489 |
+
+  All nine techniques on the best index (`full_SEMH_bge`, semantic + header cuts):
+
+| retrieval technique | @10 (30 cand.) | @30 (30 cand.) | @10 (100 cand.) | @20 (100 cand.) | @30 (100 cand.) | MRR (100 cand.) |
+|---|---|---|---|---|---|---|
+| vector | 112 | 125 | 112 | 122 | 125 | 0.637 |
+| vector + ES/EN 1:1 | 116 | 126 | 117 | 123 | 127 | 0.645 |
+| vector + ES/EN 2:1 | 116 | 125 | 115 | 124 | 127 | 0.644 |
+| keyword | 75 | 94 | 75 | 88 | 94 | 0.365 |
+| keyword + ES/EN 1:1 | 75 | 102 | 73 | 89 | 102 | 0.297 |
+| keyword + ES/EN 2:1 | 73 | 96 | 74 | 91 | 98 | 0.312 |
+| hybrid | 114 | 127 | 105 | 121 | 126 | 0.580 |
+| hybrid + ES/EN 1:1 | 122 | 128 | 119 | 127 | 130 | 0.553 |
+| hybrid + ES/EN 2:1 | 121 | 127 | 122 | 127 | 129 | 0.601 |
+
+- **Where the unanswered questions go** (diagnosis on `full_SEMH_bge`, hybrid + ES/EN 1:1, 100 candidates per search): the evidence of all 130 questions sits complete inside at least one chunk (0 unreachable), so no chunker cut through an evidence snippet. Questions answered within the first 5, 10, 20 and 30 chunks: 97, 119, 127 and 130. The 11 questions missed at 10 chunks had their first correct chunk between positions 11 and 30: they are a ranking problem, not a chunking problem. This diagnosis was run on that index only.
+- **At 20 chunks** (the same rankings cut at position 20; about 17,600 characters for semantic + header cuts): the best retrieval technique answers 127 of 130 on `full_SEMH_bge` and on `full_S2400_bge` (31,300 characters), 126 on the user's hybrid, 125 on semantic only and 123 on two-stage (bge-m3); the best e5-small index answers 117 to 118 with 30 candidates. The 3 questions that `full_SEMH_bge` still misses at 20 chunks have their first correct chunk at positions 22, 24 and 30: they are beyond 20 by construction, since 30 chunks answer all 130.
+- **Findings**:
+  - Returning 30 chunks instead of about 10 answers more questions in every combination. On `full_SEMH_bge` with hybrid + ES/EN 1:1: 122 answered at 10 chunks and 128 at 30 with 30 candidates; 130 at 30 with 100 candidates.
+  - A larger pool helps the recall at 30 but hurts the top of the ranking: hybrid on `full_SEMH_bge` goes from 114 to 105 answered at 10 chunks, and hybrid + ES/EN 1:1 loses MRR (0.594 to 0.553) because deeper keyword lists add noise to the fusion.
+  - Only one combination answers all 130: semantic + header cuts, hybrid + ES/EN 1:1, 30 chunks, 100 candidates. The next ones answer 129 (structural and the user's hybrid, both hybrid + ES/EN 2:1) and 125 (semantic only and two-stage). Gaps of 1 to 5 questions are inside the noise: at 30 chunks no chunking technique is conclusively better. What differs is the text returned: about 26,000 characters for semantic + header cuts, 38,000 for the user's hybrid and 47,000 for structural.
+  - bge-m3 stays ahead of e5-small technique by technique (5 to 11 questions): the best e5-small index answers 121 of 130.
+  - Keyword search alone stays last (94 to 100 answered at 30 chunks with bge-m3 indexes).
+  - Vector search has the best MRR in the best index (0.645 with ES/EN 1:1 against 0.553 for the hybrid).
+- **Caveats**: single run; the second phrasing is a hand translation; the 130 questions were also used to choose chunker, `k` and pool size, so 130 of 130 is optimistic for unseen questions and is not a promise of answering every question in use; 30 chunks of about 880 characters are about 26,000 characters, three times the text of the earlier runs, which a language model must read; no reranker was tried (E10 measured its room only on course 1); the diagnosis of unreachable evidence covers one index; differences under about 8 points are not conclusive.
+- **Status**: accepted (single run, n = 130). **Branches**: every technique branch has the section "Results returning 30 chunks (E31)".
+
 ## Corrections log (things said or measured wrongly, and what replaced them)
 
 | # | Claim or measurement | Reality | Where fixed |

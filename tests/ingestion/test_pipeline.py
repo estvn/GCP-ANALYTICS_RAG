@@ -3,8 +3,8 @@ import hashlib
 import numpy as np
 import pytest
 
-from rag.ingestion.chunk import StructuralChunker
 from rag.ingestion.pipeline import ingest
+from rag.ingestion.semantic import SemanticChunker
 
 
 class FakeEmbedder:
@@ -12,6 +12,9 @@ class FakeEmbedder:
 
     def __init__(self):
         self.calls = 0
+
+    def count_tokens(self, text):
+        return len(text.split())
 
     def embed(self, texts, kind):
         self.calls += len(texts)
@@ -102,11 +105,19 @@ def test_failed_embedding_keeps_previous_data(conn, docs):
 
 
 def test_changing_the_chunker_configuration_reindexes_everything(conn, docs):
-    ingest(docs, conn, FakeEmbedder(), chunker=StructuralChunker(chunk_size=2400))
+    ingest(docs, conn, FakeEmbedder(), chunker=SemanticChunker(FakeEmbedder(), max_tokens=440))
 
-    stats = ingest(docs, conn, FakeEmbedder(), chunker=StructuralChunker(chunk_size=1200))
+    stats = ingest(docs, conn, FakeEmbedder(), chunker=SemanticChunker(FakeEmbedder(), max_tokens=300))
 
     assert stats["updated"] == 2 and stats["skipped"] == 0
+
+
+def test_the_default_chunker_is_the_semantic_one_with_header_cuts(conn, docs):
+    ingest(docs, conn, FakeEmbedder())
+
+    stats = ingest(docs, conn, FakeEmbedder(), chunker=SemanticChunker(FakeEmbedder()))
+
+    assert stats["skipped"] == 2
 
 
 def test_any_object_with_chunk_and_fingerprint_can_chunk(conn, docs):

@@ -4,9 +4,9 @@ The full ledger of every experiment (including retracted and pending ones) is in
 
 Corpus: course 1 of the Google Cloud Data Analytics certificate (70 markdown files, 162 chunks at the default
 chunk size of 2400 characters). Embeddings: `multilingual-e5-small`, int8, ONNX. Reproduce the main table with
-`uv run python -m rag.evaluation.report`.
+`uv run python -m rag.evaluation.report --model e5-small` (the report now defaults to `--model bge-m3`).
 
-Two golden sets, both answered by the passages they cite (a hit is a top-5 chunk that contains the evidence):
+Three golden sets, all answered by the passages they cite (a hit is a top-5 chunk that contains the evidence):
 
 - `golden_set.json`: 40 paraphrased questions (22 Spanish, 18 English, 14 of them cross-lingual).
   Drafted by an LLM from the corpus, every evidence snippet verified verbatim against the files.
@@ -86,7 +86,8 @@ Cells are hit@5 / MRR on the 40 paraphrased questions unless noted. Compared at 
 - No chunk exceeds the 512-token limit, unlike 31% of the structural 2400 chunks.
 - With semantic chunks the best paraphrase result is vector only; the keyword leg was tuned on structural 2400 and
   adds noise to smaller chunks (hybrid MRR 0.42 vs 0.56). The structural 2400 hybrid remains the best single
-  configuration across both sets, so it stays the default.
+  configuration across both sets, so it stayed the default at the time (superseded: see the E29 section; the
+  default on main is now semantic with header cuts).
 - Cost: ingestion is 2 to 3 times slower (every unit is embedded, in windows of three).
 - Not tried: re-tuning the keyword leg or the RRF weights for semantic chunks. Differences of one or two questions
   are noise on these sets.
@@ -114,20 +115,24 @@ Cells are hit / MRR.
 - **Rank quality favours the structural 2400 chunks** (best MRR on the tuning sets with hybrid, and with vectors
   on V): smaller semantic chunks compete with similar neighbours and the right one lands lower.
 - **A document-frequency cap of 0.30 is worse than 0.10 or 0.15 for every chunker.** Weighting vectors 2:1 gives no
-  consistent gain, so the default (0.15, 1:1) stays.
+  consistent gain, so the default (0.15, 1:1) stayed at the time (since changed: 0.05 on main).
 - **Semantic and structure-first chunks fit the embedder** (none above 512 tokens, against 31% of the structural
   2400 chunks), but retrieval quality did not improve in proportion, and ingestion is slower (every unit is
   embedded). Timings on this loaded machine were too unstable to quote.
-- **Decision:** keep structural 2400 as the default (same hit rate, best MRR, simplest, fastest to ingest);
+- **Decision at the time:** keep structural 2400 as the default (same hit rate, best MRR, simplest, fastest to ingest);
   `SemanticChunker` stays available as an option. Revisit with a larger corpus and more questions.
+  (Superseded: the reverse is true on main now. `SemanticChunker` is the only chunker and the default of `ingest()`;
+  the structural chunker lives only in the `chunking/structural-*` branches.)
 - The grid was run with an ad-hoc script that is not part of the repository (the keyword-leg variants were
   hard-coded there); `uv run python -m rag.evaluation.report` reproduces the main table.
 
-## Full course (311 files, 5 courses) and the three chunking techniques
+## Full course (310 files, 5 courses) and the three chunking techniques
 
-The three techniques were indexed over the whole course and evaluated on 130 questions (the 40 + 10 + 40 from course 1
+The three techniques were indexed over the whole course (310 files, 309 with chunks) and evaluated on 130 questions (the 40 + 10 + 40 from course 1
 with their source paths prefixed, plus `golden_courses_2_5.json`: 40 questions on courses 2 to 5), at equal returned
-text (about 9,000 characters per query). Hit / MRR:
+text (about 9,000 characters per query). Hit / MRR. The chunk counts below (755 / 1173 / 1443) come from this older run;
+the E29 run further down counts 741 / 1144 / 1408 for the same three e5-small techniques, and the cause of the
+difference was not verified.
 
 | technique | chunks | over 512 tokens | first indexing | vector | hybrid (df 0.15) | hybrid (df 0.05) |
 |---|---|---|---|---|---|---|
@@ -145,11 +150,13 @@ semantic 0.700 / 0.900 / 0.625 / 0.850, structure + semantic 0.725 / 1.000 / 0.6
 - **Scores on the course 1 questions dropped** (for example set A, structural: 0.70 on course 1 alone, 0.60 on the
   full index) because the other courses repeat topics and add look-alike passages. Courses 2 to 5 score 0.85 to 0.90.
 - **A lower document-frequency cap (0.05) beat 0.15** for all three techniques (pooled +0.8 to +2.3 points). The code
-  still uses 0.15; it was tuned on 162 chunks and should probably shrink as the index grows.
+  was 0.15 at the time (tuned on 162 chunks; now 0.05 on main).
 - **The plain recursive splitter (no headers, one of the four techniques) is last in hit rate** (0.700 at df 0.05) and
   has the most chunks over the embedder limit (44%); `k` is 5 for it (larger average chunk), 6 to 10 for the others.
-- Each technique lives in its own branch (`chunking/recursive-e5-small`, `chunking/structural-e5-small`, `chunking/semantic-e5-small`,
-  `chunking/structure-semantic-e5-small`) with its code, tests and a `CHUNKING.md`.
+  The recursive chunker is not in the repository now and has no branch.
+- Three of the techniques live in their own branches (`chunking/structural-e5-small`, `chunking/semantic-e5-small`,
+  `chunking/structure-semantic-e5-small`) with their code, tests and a `CHUNKING.md`. The recursive baseline has no branch
+  (`chunking/recursive-e5-small`, tip `66b0c8f`, was deleted).
 
 ## How structure and meaning share the cuts (structure + semantic)
 
@@ -178,8 +185,9 @@ Checked on course 1 by looking, in the source markdown, at what follows each chu
 
 - No chunker splits words: the recursive splitter only falls back to characters when a single word exceeds the
   chunk size.
-- The structural splitter now tries paragraph, line and sentence ends (`. `, `? `, `! `, `; `) before a plain
-  space, and keeps a section's header attached to its first piece instead of leaving it alone in a chunk. On course 1
+- The structural splitter tried paragraph, line and sentence ends (`. `, `? `, `! `, `; `) before a plain
+  space, and kept a section's header attached to its first piece instead of leaving it alone in a chunk (it now lives
+  only in the `chunking/structural-*` branches). On course 1
   this did not change the number of cuts or the retrieval scores (162 chunks, same hit/MRR within 0.015).
 - The remaining cuts come from the PDF conversion, which sometimes inserts a paragraph break (or a page number)
   in the middle of a sentence: 22 such breaks in 2 of the 70 files. Both structural and semantic chunking inherit them.
@@ -196,9 +204,9 @@ Hybrid search (df cap 0.05), 130 questions, about 9,000 characters returned per 
 | community two-stage (headers, then semantic on big sections) | 97 / .508 | 113 / .584 |
 | user's hybrid (two-stage + merge of neighbours) | 95 / .552 | 109 / .592 |
 
-- The community recipe has more hits than the user's hybrid in both models (by 2 and 4 questions); the hybrid has the higher MRR. The gaps are inside the noise (about 4 points of standard error), so neither wins on this evidence.
-- The best index is semantic + header cuts with bge-m3. It is not the user's hybrid.
-- bge-m3 beats e5-small on every technique; at least half of the gain comes from the 22 cross-lingual questions.
+- The community recipe has more hits than the user's hybrid in both models (by 2 and 4 questions); the hybrid has the slightly higher MRR. Differences under about 8 points (about 10 of the 130 questions) are not conclusive, so neither is better on this evidence.
+- Among the chunkers, semantic + header cuts has the highest count in both models (e5 99 against 95-97; bge-m3 114 against 107-113), but every gap is 1 to 7 questions, inside the noise: no chunker is conclusively better. It is the default because it is the highest measured and also leads in the vector and translation rows. It is not the user's hybrid.
+- bge-m3 beats e5-small on every technique (12 to 17 more questions, 9 to 13 points): conclusive. At least half of the gain comes from the 22 cross-lingual questions.
 - The user's hybrid makes the largest chunks (average 1268 characters), so at equal returned text it gets the smallest `k` (7 against 10).
 
 ## Retrieval techniques on the three best chunking indexes (E30)
@@ -217,8 +225,9 @@ bge-m3, 130 questions, about 9,000 characters returned per query. Cells are ques
 | hybrid + ES/EN 1:1 | 122 / 0.591 | 110 / 0.551 | 114 / 0.576 |
 | hybrid + ES/EN 2:1 | 121 / 0.607 | 111 / 0.591 | 112 / 0.605 |
 
-- Best chunking technique in 6 of the 9 rows (every vector and hybrid row): semantic + header cuts (`SEMH`); in the keyword rows it comes last.
-- Most questions answered: hybrid + ES/EN 1:1 on `SEMH` (122). Best MRR: vector + ES/EN on `SEMH` (.639), with no keyword leg.
+- Highest count in 6 of the 9 rows (every vector and hybrid row): semantic + header cuts (`SEMH`); in two of the three keyword rows it comes last (two-stage is last in the 1:1 row).
+- Most questions answered: hybrid + ES/EN 1:1 on `SEMH` (122), the best measured configuration. Best MRR: vector + ES/EN on `SEMH` (.639), with no keyword leg.
+- With the ES/EN translation, `SEMH` answers 11-12 more questions than the other two chunkers on vector (116 against 104/105) and 12 more than semantic-only on hybrid (122 against 110): conclusive at the 8-point rule. Against two-stage on hybrid (122 against 114) the gap is 8 questions (6 points): not conclusive. Hybrid + ES/EN against vector + ES/EN on `SEMH` is 6 questions: not conclusive. 1:1 against 2:1 is tied (1 question).
 - Translating the question helps only `SEMH`; keyword alone is the weakest; RRF only fuses lists, it is not a search technique by itself.
 
 ## Limits
@@ -227,4 +236,4 @@ bge-m3, 130 questions, about 9,000 characters returned per query. Cells are ques
 - One correct passage per question: another file that also answers it (for example a summary) counts as a
   miss, so scores are conservative.
 - LLM-written questions; paraphrasing was requested, which favours vectors over the keyword leg.
-- Only course 1 (70 of the roughly 100 files). int8 vs fp32 embeddings and larger models were not compared.
+- The first sections (up to the tuning grid) use only the course 1 index (70 files); the full course has 310 files. int8 vs fp32 embeddings and larger models were not compared.

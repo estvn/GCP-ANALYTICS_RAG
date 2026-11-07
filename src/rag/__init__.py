@@ -1,1 +1,1 @@
-"""Hybrid RAG (BM25 + vectors) over the Google Cloud Data Analytics course."""
+"""Hybrid RAG (full-text + vectors) over the Google Cloud Data Analytics course."""

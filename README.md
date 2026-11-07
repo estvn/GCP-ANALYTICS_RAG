@@ -132,6 +132,23 @@ The tables above return about 10 chunks. Returning 30 chunks answers more questi
 - The 11 questions missed at 10 chunks had their correct chunk between positions 11 and 30: a ranking problem, not a chunking problem (all 130 evidence snippets sit complete inside a chunk of that index).
 - A larger pool (100 candidates) helps at 30 chunks and hurts the top 10 and the MRR. The same 130 questions chose chunker, `k` and pool size, so 130 of 130 is optimistic for new questions.
 
+### New questions (E32)
+
+The 130 questions also chose the chunker, `k` and the pool size, so they overstate the result. E32 asks 50 new questions about files that no earlier question used (written by a language model and checked by script against the corpus; details in [eval/experiments.md](eval/experiments.md) E32). Hybrid + ES/EN 1:1, 30 chunks, answered of 130 (30 / 100 candidates) and of the 50 new questions (30 candidates):
+
+| chunking technique | answered of the 130 (30 / 100 candidates) | answered of the 50 new questions at 10, 20, 30 chunks (30 candidates) | at 30 chunks (100 candidates) |
+|---|---|---|---|
+| semantic + header cuts | 128 / 130 | 41, 46, 48 | 46 |
+| structural | 126 / 127 | 45, 48, 50 | 49 |
+| user's hybrid (two-stage + merge) | 126 / 127 | 43, 47, 48 | 47 |
+| semantic only | 124 / 124 | 39, 45, 46 | 43 |
+| community two-stage | 123 / 125 | 42, 48, 48 | 47 |
+
+- The 130 of 130 does not repeat on new questions: semantic + header cuts answers 48 of 50 with 30 candidates and 46 with 100.
+- No chunking technique is conclusively better on the 50 new questions (one question is 2 points; under about 6 questions is noise); the structural index answers all 50, semantic + header cuts keeps the smaller text.
+- A pool of 100 candidates is not better than 30 on the new questions.
+- e5-small catches up with bge-m3 when the translation is fused, so its 5 times smaller file is a serious option; 50 questions cannot separate them.
+
 ### What the models cost (E24)
 
 Measured on 60 real chunks, 4 threads, int8 ONNX on CPU.

@@ -44,6 +44,43 @@ Hybrid is the robust choice: vectors alone miss exact terms, the keyword leg alo
    the questions (vs 0.70 at 5), and the misses are cross-lingual candidates that never enter the top 30, which a
    reranker cannot recover. Revisit only if a new golden set shows a gap between hit@30 and hit@5.
 
+## Semantic chunking
+
+`SemanticChunker` (`src/rag/ingestion/semantic.py`) splits text into sentences, bullets and header-led units,
+embeds each unit with its neighbours, and cuts where the distance between consecutive windows is above a
+percentile. It adds a hard cap in real model tokens (440, under the 512-token limit) and a minimum size so
+segments are not tiny. The cap is our own code; it uses the model tokenizer, and LangChain's
+`RecursiveCharacterTextSplitter` (with a token `length_function`) only splits the rare single unit above the cap.
+
+Same two golden sets, k=5. Ingest times were measured on a loaded machine (the structural default took 14 s when idle).
+
+| chunker | chunks | median / max tokens | over 512 | vector | hybrid | hybrid (terms) |
+|---|---|---|---|---|---|---|
+| structural 1200 | 268 | 272 / 508 | 0 | 0.700 / 0.481 | 0.550 / 0.383 | 1.0 / 0.733 |
+| structural 2400 (default) | 162 | 390 / 983 | 50 | 0.650 / 0.528 | **0.700 / 0.540** | 1.0 / 0.833 |
+| semantic p90, min 100 | 257 | 249 / 493 | 0 | 0.700 / 0.548 | 0.625 / 0.414 | 1.0 / 0.750 |
+| semantic p75, min 100 | 338 | 186 / 484 | 0 | 0.650 / 0.506 | 0.575 / 0.396 | 1.0 / 0.633 |
+| semantic p90, min 200 | 217 | 298 / 493 | 0 | 0.650 / 0.508 | 0.650 / 0.455 | 1.0 / 0.700 |
+
+Cells are hit@5 / MRR on the 40 paraphrased questions unless noted. Compared at equal returned text
+(about 9,000 characters per query, since semantic chunks are smaller):
+
+| chunker | mode | paraphrased hit / MRR | terms hit / MRR | chars returned |
+|---|---|---|---|---|
+| structural 2400, k=5 | hybrid | 0.700 / 0.540 | 1.000 / 0.833 | 9,253 |
+| semantic p90 min 100, k=8 | vector only | **0.750** / 0.555 | 1.000 / 0.575 | 8,793 |
+| semantic p90 min 100, k=8 | hybrid | 0.675 / 0.422 | 1.000 / 0.750 | 10,491 |
+
+- At the same chunk size semantic cuts are more precise than structural ones (vs structural 1200, about 990
+  characters each: hybrid 0.625 vs 0.550, vector MRR 0.548 vs 0.481).
+- No chunk exceeds the 512-token limit, unlike 31% of the structural 2400 chunks.
+- With semantic chunks the best paraphrase result is vector only; the keyword leg was tuned on structural 2400 and
+  adds noise to smaller chunks (hybrid MRR 0.42 vs 0.56). The structural 2400 hybrid remains the best single
+  configuration across both sets, so it stays the default.
+- Cost: ingestion is 2 to 3 times slower (every unit is embedded, in windows of three).
+- Not tried: re-tuning the keyword leg or the RRF weights for semantic chunks. Differences of one or two questions
+  are noise on these sets.
+
 ## Limits
 
 - Small sets (a single question moves hit@5 by 2.5 points on the main set; ignore differences under about 7 points).

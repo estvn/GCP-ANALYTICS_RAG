@@ -14,7 +14,8 @@ src/rag/
 ├── store.py          # the only module that talks to Postgres
 ├── ingestion/        # offline pipeline
 │   ├── parse.py      # PDF/MD -> markdown
-│   ├── chunk.py      # header-aware chunking
+│   ├── chunk.py      # header-aware chunking (default)
+│   ├── semantic.py   # semantic chunking under a token cap (option)
 │   └── pipeline.py   # incremental ingest (hash-based)
 ├── retrieval/        # online path
 │   ├── fusion.py     # Reciprocal Rank Fusion

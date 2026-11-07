@@ -9,9 +9,6 @@ from rag.store import connect
 class WordEmbedder:
     """Puts a text on one axis chosen by its first letter, so retrieval is predictable."""
 
-    def count_tokens(self, text):
-        return len(text.split())
-
     def embed(self, texts, kind):
         rows = []
         for t in texts:

@@ -11,9 +11,6 @@ TOPICS = {"bigquery": 0, "storage": 1, "pasta": 2}
 class TopicEmbedder:
     """Vectors point at the topic words a text mentions, so similarity is predictable."""
 
-    def count_tokens(self, text):
-        return len(text.split())
-
     def embed(self, texts, kind):
         rows = []
         for t in texts:

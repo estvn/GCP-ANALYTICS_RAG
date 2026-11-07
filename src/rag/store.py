@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS chunks (
   idx       int  NOT NULL,
   headers   text[] NOT NULL,
   text      text NOT NULL,
-  embedding halfvec(384) NOT NULL,
+  embedding halfvec({dim}) NOT NULL,
   -- 'simple' = no stemming: the corpus mixes Spanish and English
   tsv       tsvector GENERATED ALWAYS AS (to_tsvector('simple', text)) STORED,
   UNIQUE (source, idx)
@@ -39,8 +39,8 @@ def connect(url: str) -> psycopg.Connection:
     return conn
 
 
-def init_schema(conn: psycopg.Connection) -> None:
-    conn.execute(SCHEMA)
+def init_schema(conn: psycopg.Connection, dim: int = 384) -> None:
+    conn.execute(SCHEMA.format(dim=int(dim)))
     conn.commit()
     register_vector(conn)
 
@@ -98,11 +98,12 @@ def _hit(row, distance=None, kw_score=None) -> dict:
 def vector_search(conn: psycopg.Connection, query_vector, limit: int) -> list[dict]:
     """Nearest chunks by cosine distance (0 = identical, 2 = opposite)."""
     vector = HalfVector(query_vector.tolist())
+    dim = len(query_vector)
     with conn.transaction():
         conn.execute("SELECT set_config('hnsw.ef_search', %s, true)", (str(max(EF_SEARCH, limit)),))
         rows = conn.execute(
-            "SELECT id, source, idx, headers, text, embedding <=> %s::halfvec(384) AS distance "
-            "FROM chunks ORDER BY embedding <=> %s::halfvec(384) LIMIT %s",
+            f"SELECT id, source, idx, headers, text, embedding <=> %s::halfvec({dim}) AS distance "
+            f"FROM chunks ORDER BY embedding <=> %s::halfvec({dim}) LIMIT %s",
             (vector, vector, limit),
         ).fetchall()
     conn.commit()

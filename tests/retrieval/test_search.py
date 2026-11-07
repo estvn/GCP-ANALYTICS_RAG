@@ -151,3 +151,13 @@ def test_a_chunk_found_by_several_phrasings_appears_once(retriever):
 
 def test_no_phrasings_gives_no_results(retriever):
     assert retriever.search_many([]) == []
+
+
+def test_the_heavier_phrasing_decides_the_first_hit(retriever):
+    assert sources(retriever.search_many(["bigquery", "pasta"], weights=(9, 1)))[0] == "m/bq.md"
+    assert sources(retriever.search_many(["bigquery", "pasta"], weights=(1, 9)))[0] == "m/pasta.md"
+
+
+def test_weights_must_match_the_number_of_phrasings(retriever):
+    with pytest.raises(ValueError):
+        retriever.search_many(["bigquery", "pasta"], weights=(1,))

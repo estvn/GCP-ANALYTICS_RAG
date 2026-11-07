@@ -1,3 +1,5 @@
+import pytest
+
 from rag.retrieval.fusion import rrf
 
 
@@ -33,3 +35,33 @@ def test_empty_inputs_give_empty_output():
 
 def test_single_list_keeps_its_order():
     assert ids(rrf([ranked("a", "b", "c")])) == ["a", "b", "c"]
+
+
+def test_without_weights_every_list_counts_the_same():
+    lists = [ranked("a", "b", "c"), ranked("b", "d", "a")]
+
+    assert rrf(lists) == rrf(lists, weights=[1, 1])
+
+
+def test_a_heavier_list_ranks_its_first_hit_above_the_other_lists_first_hit():
+    lists = [ranked("original"), ranked("translation")]
+
+    assert ids(rrf(lists, weights=[2, 1])) == ["original", "translation"]
+    assert ids(rrf(lists, weights=[1, 2])) == ["translation", "original"]
+
+
+def test_equal_weights_tie_the_first_hits_of_two_lists():
+    first, second = rrf([ranked("original"), ranked("translation")], weights=[1, 1])
+
+    assert first["score"] == second["score"]
+
+
+def test_weight_scales_the_score_of_every_hit_of_its_list():
+    result = rrf([ranked("a")], k=60, weights=[3])
+
+    assert result[0]["score"] == 3 / 61
+
+
+def test_weights_must_match_the_number_of_lists():
+    with pytest.raises(ValueError):
+        rrf([ranked("a"), ranked("b")], weights=[1])

@@ -72,9 +72,9 @@ src/rag/
 │   ├── semantic.py   # semantic chunking under a token cap (option)
 │   └── pipeline.py   # incremental ingest (hash-based)
 ├── retrieval/        # online path
-│   ├── fusion.py     # Reciprocal Rank Fusion
-│   └── search.py     # HybridRetriever: vector leg + keyword leg, multi-phrasing search
-└── evaluation/       # golden sets, hit@k / MRR, comparison report
+│   ├── fusion.py     # Reciprocal Rank Fusion, optionally weighted per list
+│   └── search.py     # HybridRetriever: vector + keyword legs; search_many fuses the question and its translation
+└── evaluation/       # golden sets, hit@k / MRR, hybrid report with ES/EN translation (1:1, 2:1)
 eval/                 # golden sets, results.md and experiments.md (full ledger)
 docs/                 # study guides (Spanish)
 tests/                # mirrors src/

@@ -279,6 +279,19 @@ uv run python -m rag.evaluation.report --model bge-m3
 The golden sets of course 1 list their sources without the course folder prefix, so the report matches an index built
 from that course alone; the full-course tables above used a prefix that the command does not apply.
 
+### Keeping an index
+
+The two indexes of the author's hybrid chunking (`full_STMERGE_bge`: 906 chunks, bge-m3; `full_STMERGE_e5`: 907 chunks,
+e5-small; both 309 documents) are dumped to `data/backups/` (git-ignored) and were restored into a temporary database to
+check them. Save or restore one like this; each index is queried with its own model (1,024-number vectors for bge-m3,
+384 for e5-small):
+
+```bash
+podman exec rag-db pg_dump -U rag -Fc full_STMERGE_bge > data/backups/full_STMERGE_bge.dump
+podman exec rag-db psql -U rag -d postgres -c 'create database full_STMERGE_bge'
+podman exec -i rag-db pg_restore -U rag -d full_STMERGE_bge --no-owner < data/backups/full_STMERGE_bge.dump
+```
+
 ## Layout
 
 ```

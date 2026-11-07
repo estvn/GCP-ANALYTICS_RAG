@@ -615,6 +615,7 @@ e5-small:
 ## Operational notes
 
 - `rag-db` would not start: it mounted `rag/sql/init.sql`, which no longer exists. Recreated with `podman run` on the same volume `rag_pgdata` and without that mount (the script only runs on first initialisation); all ten databases were intact.
+- The indexes `full_STMERGE_bge` and `full_STMERGE_e5` (the author's hybrid chunking with each model) are dumped to `rag/data/backups/` (git-ignored); both dumps were restored into a temporary database and had the same chunks and documents as the originals. The other indexes live only in the `rag_pgdata` volume.
 - Tooling quirk: `\n` escapes written through shell heredocs were turned into real newlines inside source files (broke `chunk.py` twice); use the editor tool for code with backslash escapes.
 - The machine slowed 5-10x for periods (background apps): indexing times are noisy; quote only the ones marked as measured idle.
 - `uv init` created a nested git repo inside `rag/`, which became the project repo (remote `estvn/GCP-ANALYTICS_RAG`); `mcp/` and `mcp-drawio/` have their own empty repos.

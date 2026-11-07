@@ -1,0 +1,3 @@
+## full_S2400: 741 chunks, avg 1567 chars, k=6
+  vector         A 0.600/0.488 T 0.600/0.350 V 0.625/0.436 F 0.775/0.577 | pooled 0.662/0.489 | same-language(108) 0.769 | cross-lingual(22) 0.136
+  hybrid df0.05  A 0.625/0.442 T 0.900/0.600 V 0.675/0.495 F 0.850/0.738 | pooled 0.731/0.561 | same-language(108) 0.861 | cross-lingual(22) 0.091

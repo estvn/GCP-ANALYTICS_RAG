@@ -1,4 +1,4 @@
-"""Compare vector-only, keyword-only and hybrid retrieval on golden sets.
+"""Score hybrid retrieval (vector + keyword, fused with RRF) on golden sets.
 
     uv run python -m rag.evaluation.report
 """
@@ -10,7 +10,7 @@ from rag.embed import MODELS, load_embedder
 from rag.evaluation.golden import Question, load_golden
 from rag.evaluation.metrics import evaluate
 from rag.retrieval import HybridRetriever
-from rag.store import connect, keyword_search, vector_search
+from rag.store import connect
 
 DEFAULT_DB = "postgresql://rag:rag@127.0.0.1:5433/rag"
 DEFAULT_SETS = [
@@ -22,15 +22,9 @@ DEFAULT_SETS = [
 
 def run(conn, embedder, golden_sets: dict[str, list[Question]], k: int = 5) -> list[dict]:
     retriever = HybridRetriever(conn, embedder)
-    modes = {
-        "vector": lambda query, limit: vector_search(conn, embedder.embed([query], kind="query")[0], limit),
-        "keyword": lambda query, limit: keyword_search(conn, query, limit),
-        "hybrid": lambda query, limit: retriever.search(query, k=limit),
-    }
     return [
-        {"set": set_name, "mode": mode, **evaluate(search, questions, k)}
+        {"set": set_name, "mode": "hybrid", **evaluate(retriever.search, questions, k)}
         for set_name, questions in golden_sets.items()
-        for mode, search in modes.items()
     ]
 
 

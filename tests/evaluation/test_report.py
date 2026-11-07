@@ -21,7 +21,7 @@ class WordEmbedder:
         return np.array(rows)
 
 
-def test_run_scores_every_mode_on_every_set(conn, tmp_path):
+def test_run_scores_hybrid_on_every_set(conn, tmp_path):
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "a.md").write_text("# Z\n\nThe zorblax protocol is rare.", encoding="utf-8")
     (tmp_path / "docs" / "b.md").write_text("# B\n\nSomething else entirely.", encoding="utf-8")
@@ -35,8 +35,8 @@ def test_run_scores_every_mode_on_every_set(conn, tmp_path):
 
     rows = run(conn, WordEmbedder(), {"terms": load_golden(golden)}, k=5)
 
-    assert [(r["set"], r["mode"]) for r in rows] == [("terms", "vector"), ("terms", "keyword"), ("terms", "hybrid")]
-    assert next(r for r in rows if r["mode"] == "keyword")["hit_rate"] == 1.0
+    assert [(r["set"], r["mode"]) for r in rows] == [("terms", "hybrid")]
+    assert rows[0]["hit_rate"] == 1.0
 
 
 def test_markdown_table_has_one_line_per_row():

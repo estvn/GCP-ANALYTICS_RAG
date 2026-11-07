@@ -89,8 +89,8 @@ src/rag/
 │   └── pipeline.py   # incremental ingest (hash-based)
 ├── retrieval/        # online path
 │   ├── fusion.py     # Reciprocal Rank Fusion
-│   └── search.py     # HybridRetriever: vector leg + keyword leg, multi-phrasing search
-└── evaluation/       # golden sets, hit@k / MRR, comparison report
+│   └── search.py     # HybridRetriever: vector leg + keyword leg
+└── evaluation/       # golden sets, hit@k / MRR, hybrid report
 eval/                 # golden sets, results.md and experiments.md (full ledger)
 docs/                 # study guides (Spanish)
 tests/                # mirrors src/

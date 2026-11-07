@@ -134,20 +134,3 @@ def test_small_corpus_keeps_every_word(conn, retriever):
     hits = keyword_search(conn, "storage buckets", 5)
 
     assert sources(hits) == ["m/st.md"]
-
-
-def test_several_phrasings_are_fused_into_one_ranking(retriever):
-    hits = retriever.search_many(["zorblax", "bigquery data warehouse"], k=4)
-
-    assert {"m/rare.md", "m/bq.md"} <= set(sources(hits))
-
-
-def test_a_chunk_found_by_several_phrasings_appears_once(retriever):
-    hits = retriever.search_many(["bigquery", "bigquery data warehouse"], k=10)
-
-    ids = [h["id"] for h in hits]
-    assert len(ids) == len(set(ids))
-
-
-def test_no_phrasings_gives_no_results(retriever):
-    assert retriever.search_many([]) == []

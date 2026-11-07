@@ -43,6 +43,34 @@ repository and is the next step.
   finds exact terms, and RRF merges both rankings by position. Running that on the question and on its translation, and
   fusing again, is what rescues questions asked in the other language.
 
+## The winning techniques, and why
+
+Everything in `main` runs these choices by default. Each one links to the experiment that decided it.
+
+| layer | choice in `main` | why it won |
+|---|---|---|
+| chunking | **semantic + header cuts** (`SemanticChunker`) | It answered the most questions with both models on the 130 original questions (99 with e5-small and 114 with bge-m3, E29) and it returns the least text for the same coverage: 30 chunks are about 26,000 characters, against 38,000 for the author's hybrid chunking and 47,000 for structural chunking (E31). On new questions the chunking techniques are inside the noise of each other (E32), so it was kept as the highest measured with the smallest text. |
+| embedding model | **bge-m3** | With this chunker it answers 90% of the 180 questions with 10 chunks, where e5-small needs 17; with 30 chunks it answers 176 and e5-small 165; the correct chunk ranks higher (MRR 0.59 against 0.50) (E36). |
+| retrieval | **hybrid + ES/EN 1:1** (`HybridRetriever.search_many`) | The best measured combination: 122 of 130 questions with about 10 chunks, 130 of 130 with 30 chunks, and 46 to 48 of 50 on the new questions (E30, E31, E32). It is described below. |
+| chunks returned | **30** | More chunks answer more questions: 163 of 180 with 10, 172 with 20 and 176 with 30 (bge-m3, E36); the price is the text the language model has to read (30 chunks are about 26,000 characters). |
+
+### The retrieval technique: hybrid + ES/EN 1:1
+
+1. **Each phrasing of the question** (the original and its translation) **is searched in two ways**: a vector search (similarity between embeddings, which finds passages by meaning) and a keyword search (PostgreSQL full-text, which finds exact terms), 100 candidates each by default.
+2. **Both lists are fused with RRF** (a chunk scores `1 / (60 + position)` in each list it appears in, and the scores add up), which gives one ranking per phrasing.
+3. **The rankings of the two phrasings are fused again with RRF**, with equal weight (1:1).
+4. **The first 30 chunks of that ranking are returned.**
+
+Why this and not something simpler: keyword search alone is the weakest (it answers 94 to 100 of 130 questions and cannot cross languages); vector search alone has a slightly better order but misses exact terms; fusing both finds more questions; and fusing the translation rescues the questions asked in the other language (with this chunker, from 16 to 21 of the 22 original questions that cross languages, E30). The translation is always fused, with both models.
+
+### If bge-m3 makes the machine slow: switch to e5-small
+
+`main` uses bge-m3 for now. If it proves too heavy, `multilingual-e5-small` is the fallback and the price is known:
+
+- **What is lost:** with this chunker and 30 chunks e5-small answers 165 of 180 questions and bge-m3 176, **11 fewer** (about 6 points); with 20 chunks, 164 against 172. To answer 90% of the questions it needs 17 chunks instead of 10, so the language model reads more text for the same coverage (E36).
+- **What is gained:** about 435 MB less memory while loaded (699 MB against 1,135 MB), 4.7 times less CPU time to embed each query (32 against 150 ms), indexing 9 times faster, and a model file of 113 MB instead of 542 MB (E24, E34, E35).
+- **How to switch:** load it with `load_embedder("e5-small")`; create a new database with `init_schema(conn, dim=384)` (the vectors have another length, so an index cannot mix both models) and index again with `ingest` using that embedder; keep the translation fusion; use 30 candidates per search and not 100, because with 100 e5-small needs 23 chunks for 90% (E36).
+
 ## Why these choices: the results
 
 All numbers come from the same 130 hand-checked questions (`eval/golden_*.json`): 108 asked in the language of the

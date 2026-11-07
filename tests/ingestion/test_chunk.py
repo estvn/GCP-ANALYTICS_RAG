@@ -1,4 +1,4 @@
-from rag.ingestion.chunk import chunk_markdown
+from rag.ingestion.chunk import RecursiveChunker, chunk_markdown
 
 SMALL = "# Doc\n\n## A\n\nalpha text.\n\n## B\n\nbeta text.\n\n## C\n\ngamma text.\n"
 
@@ -75,3 +75,34 @@ def test_a_header_is_never_left_alone_in_its_own_chunk():
     assert chunks[0]["text"].split("\n", 1)[1].startswith("# Doc\nSentence number 0")
     assert all(len(c["text"].split("\n", 1)[1]) > 40 for c in chunks)
     assert all(len(c["text"].split("\n", 1)[1]) <= 300 for c in chunks)
+
+
+LONG_TEXT = "# Doc\n\n## Part\n\n" + " ".join(f"Sentence number {i} is complete." for i in range(60))
+
+
+def test_recursive_chunker_ignores_headers_and_keeps_only_the_file_in_the_prefix():
+    chunks = RecursiveChunker(chunk_size=300, overlap=60).chunk(LONG_TEXT, "mod/doc.md")
+
+    assert len(chunks) > 3
+    assert all(c["headers"] == [] for c in chunks)
+    assert all(c["text"].startswith("mod/doc\n") for c in chunks)
+
+
+def test_recursive_chunker_respects_the_size_and_cuts_between_sentences():
+    chunks = RecursiveChunker(chunk_size=300, overlap=60).chunk(LONG_TEXT, "mod/doc.md")
+
+    bodies = [c["text"].split("\n", 1)[1] for c in chunks]
+    assert all(len(body) <= 300 for body in bodies)
+    assert all(body.rstrip().endswith(".") or body.rstrip() == "## Part" for body in bodies[1:])
+
+
+def test_recursive_chunker_overlaps_neighbouring_chunks():
+    chunks = RecursiveChunker(chunk_size=300, overlap=60).chunk(LONG_TEXT, "mod/doc.md")
+
+    first, second = (c["text"].split("\n", 1)[1] for c in chunks[1:3])
+    assert first.split()[-1] in second
+
+
+def test_recursive_chunker_fingerprint_and_empty_text():
+    assert RecursiveChunker(300, 60).fingerprint != RecursiveChunker(400, 60).fingerprint
+    assert RecursiveChunker().chunk("  \n", "mod/empty.md") == []

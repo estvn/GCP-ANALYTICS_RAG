@@ -7,15 +7,19 @@ HEADERS = [("#", "h1"), ("##", "h2"), ("###", "h3")]
 SEPARATORS = ["\n\n", "\n", ". ", "? ", "! ", "; ", " ", ""]
 
 
+def _recursive_split(text: str, size: int, overlap: int) -> list[str]:
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=size, chunk_overlap=overlap, separators=SEPARATORS, keep_separator="end"
+    )
+    return splitter.split_text(text)
+
+
 def chunk_markdown(text: str, source: str, chunk_size: int = 2400, overlap: int = 200) -> list[dict]:
     """Chunk one Markdown document. Sizes are in characters (~4 chars per token)."""
     sections = MarkdownHeaderTextSplitter(HEADERS, strip_headers=False).split_text(text)
 
     def split(text: str, size: int) -> list[str]:
-        splitter = RecursiveCharacterTextSplitter(
-            chunk_size=size, chunk_overlap=overlap, separators=SEPARATORS, keep_separator="end"
-        )
-        return splitter.split_text(text)
+        return _recursive_split(text, size, overlap)
 
     def split_keeping_header(body: str) -> list[str]:
         """Split an oversized section; its header lines stay attached to the first piece."""
@@ -79,3 +83,22 @@ class StructuralChunker:
 
     def chunk(self, text: str, source: str) -> list[dict]:
         return chunk_markdown(text, source, self.chunk_size, self.overlap)
+
+
+class RecursiveChunker:
+    """Plain recursive splitting of the whole document, blind to headers: the baseline technique."""
+
+    def __init__(self, chunk_size: int = 2400, overlap: int = 200):
+        self.chunk_size = chunk_size
+        self.overlap = overlap
+
+    @property
+    def fingerprint(self) -> str:
+        return f"recursive:{self.chunk_size}:{self.overlap}"
+
+    def chunk(self, text: str, source: str) -> list[dict]:
+        label = source.removesuffix(".md")
+        return [
+            {"text": f"{label}\n{piece}", "source": source, "headers": [], "index": i}
+            for i, piece in enumerate(_recursive_split(text, self.chunk_size, self.overlap))
+        ]

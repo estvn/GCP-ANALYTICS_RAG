@@ -729,6 +729,10 @@ e5-small:
 - Skills installed globally from skills.sh and audited before install: `langchain-rag`, `rag-implementation`, `pgvector-semantic-search`, `mcp-builder`,
   `python-project-structure`, `auditing-python-security`, `python-performance-optimization`, `postgres`, `python-clean-code`.
   Not installed: NVIDIA RAG skills (GPU/NIM stack), generic vector-database skills, `secure-coding`, `scalability-playbook`.
+- Skills added for the MCP server, each read in full and copied from a pinned commit: `uv` (`astral-sh/claude-code-plugins@f3ce88a`, the authors of uv) and `pytest`
+  (`gentleman-programming/gentleman-skills@c8036a3`, Apache-2.0). No FastMCP skill was installed: the most installed one (`jezweb/claude-skills`) is no longer in its
+  repository, and the other (`ovachiever/droid-tings`, last updated 2025-11) predates FastMCP 4 and ships deployment scripts; the server was built with `mcp-builder`
+  and the FastMCP documentation instead. No pydantic skill: the official one covers Pydantic AI and instrumentation only.
 
 ## Reproducibility map
 

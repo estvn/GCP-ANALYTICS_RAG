@@ -42,6 +42,7 @@ Written up in [eval/experiments.md](https://github.com/estvn/GCP-ANALYTICS_RAG/b
 - **E25**: e5-small on the full index: same-language vs cross-lingual, and ES+EN fusion
 - **E28**: Weighted RRF over two phrasings
 - **E30**: Retrieval techniques on the three best chunking indexes
+- **E31**: Returning 30 chunks and a larger candidate pool
 
 ## Results (E30: questions answered out of 130 / MRR, bge-m3)
 
@@ -74,6 +75,22 @@ chunk length). MRR is the mean of 1 / position of the first correct chunk (1 = a
 - Single run, 130 questions. The second phrasing is a hand translation; a real system needs a translation step.
 - The keyword leg ignores words found in more than 5% of the chunks (`MAX_DOC_FREQUENCY = 0.05` in `store.py`), the value used in the evaluation.
 - The user's hybrid chunking and the e5-small indexes were not run through these retrieval modes.
+
+## Results returning 30 chunks (E31)
+
+Same 130 questions; each query returns up to 30 chunks and the candidate pool is 30 or 100 per search. Answered out of 130; rows are the technique of this branch on the five bge-m3 indexes (the e5-small indexes are in the raw output):
+
+| chunking technique (bge-m3 index) | retrieval | @10 (30 cand.) | @20 (100 cand.) | @30 (30 cand.) | @30 (100 cand.) | MRR (100 cand.) |
+|---|---|---|---|---|---|---|
+| semantic + header cuts | keyword | 75 | 88 | 94 | 94 | 0.365 |
+| structural | keyword | 81 | 95 | 100 | 100 | 0.395 |
+| user's hybrid (two-stage + merge) | keyword | 85 | 95 | 100 | 100 | 0.390 |
+| semantic only | keyword | 81 | 91 | 96 | 96 | 0.384 |
+| community two-stage | keyword | 80 | 94 | 98 | 98 | 0.359 |
+
+- Best row: keyword on the structural index, 100 of 130 answered (MRR 0.395); still missing: ['q01', 'q03', 'q06', 'q08', 'q10', 'q14', 'q21', 'q23', 'q24', 'q26', 'q30', 'q34', 'q35', 'q40', 'k09', 'v01', 'v02', 'v03', 'v05', 'v06', 'v08', 'v17', 'v19', 'v20', 'v30', 'f12', 'f18', 'f35', 'f36', 'f40'].
+- Returning 30 chunks answers more questions than about 10; a pool of 100 candidates helps at 30 chunks but can hurt the top 10 and the MRR.
+- Differences under about 8 points (about 10 of the 130 questions) are not conclusive; the 130 questions also chose the settings, so the figures are optimistic for new questions. Raw output: [eval/runs/e31_k30_candidates100.log](eval/runs/e31_k30_candidates100.log).
 
 ## Layout
 

@@ -57,8 +57,8 @@ cambia la dirección en que se usa esa medida.
 |---|---|---|---|
 | **Corte por quiebre** (top-down) | Parte de oraciones y **corta** | Embebe cada oración con sus vecinas, mide la distancia entre vecinas consecutivas y corta donde supera un umbral (aquí, percentil 90). Es la variante estándar | Probada: `chunking/semantic` |
 | **Estructura primero, semántica dentro** (híbrido) | Corte por quiebre + títulos | Una sola pasada: cada header `#` es también un punto de corte, y entre headers manda el cambio de significado. El chunk guarda su ruta de títulos | Probada: `chunking/structure-semantic` |
-| **Fusión** (bottom-up, merge) | Parte de trozos chicos y **fusiona** | 1) se crean trozos chicos (oraciones o párrafos); 2) se embebe cada uno; 3) se recorre el documento y se une el trozo siguiente al actual mientras su similitud supere el umbral y no se pase del tope de tokens; si no, se abre un chunk nuevo | Por probar: `chunking/semantic-merge` |
-| **Estructural en dos etapas** | Estructura y luego semántica | 1) se corta por headers en secciones; 2) solo las secciones que superan el tope se subdividen con el corte por quiebre | Por probar: `chunking/structure-then-semantic` |
+| **Fusión** (bottom-up, merge) | Parte de trozos chicos y **fusiona** | 1) se crean trozos chicos (oraciones o párrafos); 2) se embebe cada uno; 3) se recorre el documento y se une el trozo siguiente al actual mientras su similitud supere el umbral y no se pase del tope de tokens; si no, se abre un chunk nuevo | Descartada (decisión del proyecto, no se implementó en `main`; la rama `chunking/semantic-merge` queda como prototipo) |
+| **Estructural en dos etapas** | Estructura y luego semántica | 1) se corta por headers en secciones; 2) solo las secciones que superan el tope se subdividen con el corte por quiebre | En prueba: `chunking/structure-then-semantic` (E29) |
 | **Clustering** | Agrupa piezas **no vecinas** | Une piezas parecidas aunque estén lejos; rompe el orden de lectura | No probada |
 
 **Qué hace el híbrido hoy.** El código es de una sola pasada. El chunker semántico recibe el documento markdown
@@ -71,8 +71,8 @@ quedaron demasiado grandes.
 pieza. La diferencia está en la decisión. El corte compara contra la **distribución de distancias de todo el documento**
 (un percentil), así que se adapta a cada texto. La fusión compara contra un **umbral fijo** y contra el chunk que se está
 armando, por lo que es más sensible al valor elegido y puede crecer por deriva (cada pieza se parece a la anterior pero
-la primera y la última ya no). No hay datos propios que digan cuál es más eficiente: es una hipótesis a medir en los
-experimentos E29 (fusión) y E30 (estructura en dos etapas), con el mismo índice, las mismas preguntas y el mismo texto devuelto.
+la primera y la última ya no). Las fusiones se descartaron sin medirlas, así que no hay datos propios que digan cuál es más eficiente. La fusión secuencial se parece al método publicado Max-Min (2025), pero la implementación del proyecto es propia y no está validada contra el paper. Lo que sí queda por medir en los
+experimento E29 (estructura en dos etapas), con el mismo índice, las mismas preguntas y el mismo texto devuelto.
 
 ### Cómo decide el chunking semántico (en lenguaje simple)
 Se divide el texto en piezas chicas; el modelo compara cada pieza (con sus vecinas) con la siguiente; si hablan de lo

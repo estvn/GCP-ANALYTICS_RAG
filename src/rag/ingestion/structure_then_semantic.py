@@ -2,8 +2,9 @@
 
 from langchain_text_splitters import MarkdownHeaderTextSplitter
 
-from rag.ingestion.chunk import HEADERS
 from rag.ingestion.semantic import SemanticChunker
+
+HEADERS = [("#", "h1"), ("##", "h2"), ("###", "h3")]
 
 
 class StructureThenSemanticChunker:

@@ -64,3 +64,26 @@ course 1 and 40 from courses 2 to 5. One question is 0.77 points; the standard e
 Smaller chunks (median 268 tokens) that rank the right passage lower than the structural 2400 chunks (MRR 0.521 vs
 0.565) with a slightly higher hit rate (0.738 vs 0.731). Full comparison in [eval/results.md](eval/results.md).
 Other branches: `chunking/structural`, `chunking/structure-semantic`.
+
+## Common-method comparison (E29)
+
+Index `full_SEM` (1144 chunks, avg 1045 chars, k=9), embedding model `e5-small`, 130 questions, about 9,000 characters returned per query.
+
+| search | hits / 130 | hit rate | MRR |
+|---|---|---|---|
+| vector only | 92 | 0.708 | 0.467 |
+| **hybrid (df cap 0.05)** | **96** | **0.738** | **0.517** |
+
+Hybrid by question set (hit/MRR): A 0.700/0.433 | T 0.900/0.508 | V 0.625/0.452 | F 0.850/0.667. Same-language questions (108): 0.852. Cross-lingual questions (22): 0.182.
+
+Raw lines: [eval/runs/semantic-e5-small.log](eval/runs/semantic-e5-small.log). Table of all techniques (hybrid, hits / MRR):
+
+| technique | e5-small hits / MRR | bge-m3 hits / MRR |
+|---|---|---|
+| structural 2400 | 95 / .561 | 107 / .612 |
+| semantic | 96 / .517 | 113 / .576 |
+| semantic + header cuts | 99 / .557 | **114** / .580 |
+| community two-stage | 97 / .508 | 113 / .584 |
+| user's hybrid (two-stage + merge) | 95 / .552 | 109 / .592 |
+
+The chunk count here (from the E29 database) differs from the one in the sections above and the cause was not verified.

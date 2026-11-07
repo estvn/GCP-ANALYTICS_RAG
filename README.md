@@ -49,10 +49,12 @@ The embedding model goes in `models/multilingual-e5-small/` (`onnx/model_quantiz
 
 ## Results
 
-On 40 paraphrased questions plus 10 exact-term queries from course 1, hybrid retrieval reaches hit@5 0.70 and
-1.00. Within a language it answers 26 of 26 questions; the weak spot is cross-language search, which is handled by
-querying in both languages (`HybridRetriever.search_many`, hit@5 0.925). Full tables, what each experiment
-changed and the limits of the evaluation are in [eval/results.md](eval/results.md). Reproduce with:
+On exact-term queries hybrid retrieval reaches hit@5 1.00; on paraphrased questions hybrid and vector-only are
+equivalent (about 0.70 hit@5 on two independent sets of 40). Within a language it answers 26 of 26 questions of the
+first set; the weak spot is cross-language search, handled by querying in both languages
+(`HybridRetriever.search_many`, hit@5 0.925). Structural, semantic and structure-first chunking tie within the noise
+of these sets, so the simplest one is the default. Full tables, what each experiment changed and the limits of the
+evaluation are in [eval/results.md](eval/results.md). Reproduce with:
 
 ```bash
 uv run python -m rag.evaluation.report

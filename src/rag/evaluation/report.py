@@ -14,7 +14,11 @@ from rag.store import connect, keyword_search, vector_search
 
 DEFAULT_DB = "postgresql://rag:rag@127.0.0.1:5433/rag"
 DEFAULT_MODEL_DIR = Path("models/multilingual-e5-small")
-DEFAULT_SETS = [Path("eval/golden_set.json"), Path("eval/golden_terms.json")]
+DEFAULT_SETS = [
+    Path("eval/golden_set.json"),
+    Path("eval/golden_terms.json"),
+    Path("eval/golden_validation.json"),
+]
 
 
 def run(conn, embedder, golden_sets: dict[str, list[Question]], k: int = 5) -> list[dict]:

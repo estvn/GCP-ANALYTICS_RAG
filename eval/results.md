@@ -9,6 +9,8 @@ Two golden sets, both answered by the passages they cite (a hit is a top-5 chunk
 - `golden_set.json`: 40 paraphrased questions (22 Spanish, 18 English, 14 of them cross-lingual).
   Drafted by an LLM from the corpus, every evidence snippet verified verbatim against the files.
 - `golden_terms.json`: 10 short exact-term queries (acronyms, service names such as `HIPAA`, `IAM`, `Looker`).
+- `golden_validation.json`: 40 further paraphrased questions (20 ES, 20 EN), drafted separately and **not used to
+  choose any parameter**, so it checks whether a choice made on the other two sets holds up.
 
 ## Main result (hit@5 and MRR)
 
@@ -20,8 +22,14 @@ Two golden sets, both answered by the passages they cite (a hit is a top-5 chunk
 | golden_terms | vector | 10 | 0.900 | 0.628 |
 | golden_terms | keyword | 10 | 1.000 | 0.950 |
 | golden_terms | hybrid | 10 | 1.000 | 0.833 |
+| golden_validation | vector | 40 | 0.700 | 0.574 |
+| golden_validation | keyword | 40 | 0.475 | 0.295 |
+| golden_validation | hybrid | 40 | 0.675 | 0.486 |
 
-Hybrid is the robust choice: vectors alone miss exact terms, the keyword leg alone misses paraphrases.
+On exact terms the keyword leg matters (vectors alone miss `Google Gemini`). On paraphrased questions hybrid and
+vector-only are equivalent: hybrid led on the first set (0.700 vs 0.650) but not on the validation set
+(0.675 vs 0.700, MRR 0.486 vs 0.574), so that first advantage was partly tuning noise. Hybrid is kept as the
+default because users also type acronyms and service names, not because it wins on paraphrases.
 
 ## What the experiments showed
 
@@ -80,6 +88,38 @@ Cells are hit@5 / MRR on the 40 paraphrased questions unless noted. Compared at 
 - Cost: ingestion is 2 to 3 times slower (every unit is embedded, in windows of three).
 - Not tried: re-tuning the keyword leg or the RRF weights for semantic chunks. Differences of one or two questions
   are noise on these sets.
+
+## Structure first, semantic inside, and a tuning grid
+
+`SemanticChunker(split_on_headers=True)` makes every header a cut point (structure first) and then cuts inside
+each section on meaning shifts, under the token cap. Six chunkers were compared with seven search variants each
+(vector only; hybrid with a document-frequency cap of 0.10, 0.15 or 0.30 and RRF weights 1:1 or 2:1), at equal
+returned text (about 9,000 characters per query, so `k` differs per chunker). Parameters were chosen on the
+tuning sets (A+T: 40 paraphrased plus 10 exact-term questions) and then checked on the validation set (V).
+Cells are hit / MRR.
+
+| chunker | chunks | k | vector, A+T | vector, V | hybrid (df 0.15, 1:1), A+T | hybrid, V |
+|---|---|---|---|---|---|---|
+| structural 2400 (default) | 162 | 6 | 0.740 / 0.555 | 0.725 / 0.578 | 0.760 / **0.598** | 0.750 / 0.498 |
+| structural 1800 | 198 | 7 | 0.740 / 0.542 | 0.700 / 0.580 | 0.760 / 0.553 | 0.700 / 0.516 |
+| semantic p90, min 100 | 257 | 9 | 0.800 / 0.559 | 0.725 / 0.558 | 0.740 / 0.488 | 0.775 / 0.504 |
+| structure + semantic p90, min 100 | 310 | 11 | 0.780 / 0.525 | 0.750 / 0.535 | 0.760 / 0.495 | 0.775 / 0.505 |
+| structure + semantic p90, min 200 | 231 | 8 | 0.760 / 0.529 | 0.750 / 0.526 | 0.740 / 0.485 | 0.700 / 0.521 |
+| structure + semantic p75, min 200 | 252 | 9 | 0.800 / 0.525 | 0.750 / 0.486 | 0.760 / 0.487 | 0.700 / 0.467 |
+
+- **No chunker is clearly better.** Hit rates sit between 0.70 and 0.80 and the gaps are a few questions. The
+  best tuning result does not carry over: semantic p90 min 100 with vectors scores 0.800 on A+T and 0.725 on V.
+- **Rank quality favours the structural 2400 chunks** (best MRR on the tuning sets with hybrid, and with vectors
+  on V): smaller semantic chunks compete with similar neighbours and the right one lands lower.
+- **A document-frequency cap of 0.30 is worse than 0.10 or 0.15 for every chunker.** Weighting vectors 2:1 gives no
+  consistent gain, so the default (0.15, 1:1) stays.
+- **Semantic and structure-first chunks fit the embedder** (none above 512 tokens, against 31% of the structural
+  2400 chunks), but retrieval quality did not improve in proportion, and ingestion is slower (every unit is
+  embedded). Timings on this loaded machine were too unstable to quote.
+- **Decision:** keep structural 2400 as the default (same hit rate, best MRR, simplest, fastest to ingest);
+  `SemanticChunker` stays available as an option. Revisit with a larger corpus and more questions.
+- The grid was run with an ad-hoc script that is not part of the repository (the keyword-leg variants were
+  hard-coded there); `uv run python -m rag.evaluation.report` reproduces the main table.
 
 ## Limits
 

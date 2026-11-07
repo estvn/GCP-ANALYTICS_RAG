@@ -6,7 +6,7 @@ user's hybrid (that is `chunking/structure-semantic-merge-*`).
 
 ## How it works
 
-Same pipeline as `chunking/semantic` (units, 3-unit windows embedded with `multilingual-e5-small`, cut where the
+Same pipeline as `chunking/semantic-e5-small` (units, 3-unit windows embedded with `multilingual-e5-small`, cut where the
 distance between consecutive windows exceeds the 90th percentile, `min_tokens` 100, hard cap of 440 real tokens), plus:
 
 - **Every header is also a cut point** (always on in this branch; it is what `main` does too), provided the current
@@ -43,7 +43,7 @@ course 1 and 40 from courses 2 to 5. One question is 0.77 points; the standard e
 
 - Words cut in half: 0. No chunk exceeds the 512-token limit (0 of 1443).
 - Smallest chunks of the three techniques (median 217 tokens, 1443 chunks).
-- **Cost:** same as `chunking/semantic` (embedding every window). The full-course indexing time we measured for this
+- **Cost:** same as `chunking/semantic-e5-small` (embedding every window). The full-course indexing time we measured for this
   technique (115 s) is not representative: it reused the window embeddings already computed for the semantic run.
 
 ## Compared with the other techniques

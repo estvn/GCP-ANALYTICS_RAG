@@ -1,6 +1,6 @@
 # Chunking technique: semantic
 
-Branch `chunking/semantic`. Cuts where the meaning changes, under a hard token cap. Header structure is used only
+Branch `chunking/semantic-e5-small`. Cuts where the meaning changes, under a hard token cap. Header structure is used only
 as context (each chunk keeps its header path); headers are not cut points here.
 
 ## How it works

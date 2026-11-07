@@ -45,6 +45,7 @@ Written up in [eval/experiments.md](https://github.com/estvn/GCP-ANALYTICS_RAG/b
 - **E28**: Weighted RRF over two phrasings
 - **E29**: All chunking techniques on one common method
 - **E30**: Retrieval techniques on the three best chunking indexes
+- **E31**: Returning 30 chunks and a larger candidate pool
 
 ## Results (E30: questions answered out of 130 / MRR, bge-m3)
 
@@ -78,6 +79,22 @@ chunk length). MRR is the mean of 1 / position of the first correct chunk (1 = a
 - The keyword leg ignores words found in more than 5% of the chunks (`MAX_DOC_FREQUENCY = 0.05` in `store.py`), the value used in the evaluation.
   The rows with ES/EN come from the branch `retrieval/hybrid-es-en-rrf`.
 - The user's hybrid chunking and the e5-small indexes were not run through these retrieval modes.
+
+## Results returning 30 chunks (E31)
+
+Same 130 questions; each query returns up to 30 chunks and the candidate pool is 30 or 100 per search. Answered out of 130; rows are the technique of this branch on the five bge-m3 indexes (the e5-small indexes are in the raw output):
+
+| chunking technique (bge-m3 index) | retrieval | @10 (30 cand.) | @20 (100 cand.) | @30 (30 cand.) | @30 (100 cand.) | MRR (100 cand.) |
+|---|---|---|---|---|---|---|
+| semantic + header cuts | hybrid | 114 | 121 | 127 | 126 | 0.580 |
+| structural | hybrid | 119 | 122 | 125 | 126 | 0.605 |
+| user's hybrid (two-stage + merge) | hybrid | 115 | 120 | 124 | 127 | 0.596 |
+| semantic only | hybrid | 114 | 118 | 124 | 123 | 0.566 |
+| community two-stage | hybrid | 113 | 120 | 123 | 123 | 0.577 |
+
+- Best row: hybrid on the user's hybrid (two-stage + merge) index, 127 of 130 answered (MRR 0.596); still missing: ['q14', 'v02', 'f40'].
+- Returning 30 chunks answers more questions than about 10; a pool of 100 candidates helps at 30 chunks but can hurt the top 10 and the MRR.
+- Differences under about 8 points (about 10 of the 130 questions) are not conclusive; the 130 questions also chose the settings, so the figures are optimistic for new questions. Raw output: [eval/runs/e31_k30_candidates100.log](eval/runs/e31_k30_candidates100.log).
 
 ## Layout
 

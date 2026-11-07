@@ -1,6 +1,6 @@
 # Hybrid search (vector + keyword fused with RRF)
 
-Branch `retrieval/hybrid`. Hybrid retrieval (Postgres full-text + vectors) over the Google Cloud Data Analytics course,
+Branch `retrieval/hybrid`. Retrieval over the Google Cloud Data Analytics course,
 built to run on a laptop within a small CPU/RAM budget (no GPU). Postgres + pgvector for storage. Results below use the
 `bge-m3` embedding model (int8, ONNX Runtime) and the three most precise chunking techniques.
 
@@ -27,6 +27,9 @@ the question as written (original) and with its translation, and fuses the two l
 It helps cross-language questions, because models match much better inside one language; the cost is a translation step
 and two searches per query (the evaluation used hand translations from `eval/golden_translations.json`, so that cost is
 not measured).
+
+This branch holds the single-phrasing technique. The code of the ES/EN variant is in the branch
+`retrieval/hybrid-es-en-rrf`.
 
 ## Experiments
 
@@ -67,13 +70,13 @@ chunk length). MRR is the mean of 1 / position of the first correct chunk (1 = a
 - Most questions answered of all combinations: hybrid + ES/EN 1:1 on `SEMH` (122 out of 130, MRR 0.591).
 - Without translation the three indexes are tied (113 to 114 answered): the chunking technique barely matters for the plain hybrid.
 - With ES/EN 1:1 it jumps on `SEMH` (114 to 122) and stays flat on the others (`SEM` 113 to 110, `STSEM` 113 to 114).
-- Differences of 2 to 4 questions out of 130 are below the standard error (about 4 points): not conclusive.
+- Differences under about 8 points (about 10 of the 130 questions) are not conclusive.
 
 ## Limits
 
 - Single run, 130 questions. The second phrasing is a hand translation; a real system needs a translation step.
-- The evaluation used a keyword document-frequency cap of 0.05 and ES/EN weights of 2:1 from scratch scripts (not in the
-  repo). The repo defaults are `MAX_DOC_FREQUENCY = 0.15` in `store.py` and an unweighted `rrf`.
+- The keyword leg ignores words found in more than 5% of the chunks (`MAX_DOC_FREQUENCY = 0.05` in `store.py`), the value used in the evaluation.
+  The rows with ES/EN come from the branch `retrieval/hybrid-es-en-rrf`.
 - The user's hybrid chunking and the e5-small indexes were not run through these retrieval modes.
 
 ## Layout

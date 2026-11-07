@@ -165,8 +165,36 @@ Both models were run on the same five chunking techniques with the 130 original 
 - **Why, from this project's measurements and code**: with a Spanish question against English passages, e5-small scores related and unrelated passages at 0.88 and 0.71 (a gap of 0.17) and bge-m3 at 0.74 and 0.21 (a gap of 0.53), so bge-m3 separates the correct passage better (E24). e5-small also reads only 512 tokens of each chunk and 34% of the structural chunks are longer, and its vectors have 384 numbers against 1,024. That bge-m3 is a much larger model trained for search across many languages is general knowledge, not measured here.
 - **The translation is always fused, with both models.** It costs one extra call and two searches per question. It matters much more for e5-small, which answers about 8 points fewer questions at 30 chunks without it, than for bge-m3, where it adds about 1 point (inside the noise); the project fuses it with both models so the pipeline is the same.
 - **What bge-m3 costs** (E24): a 542 MB file against 113 MB, a peak of 1,591 MB of RAM against 912 MB, indexing at 0.6 chunks per second against 5.6, and 59 ms per query against 12 ms. The query time is small next to a call to a language model; the indexing time and the RAM are what weigh.
-- **Choice for production: bge-m3**, because, with the translation fused, it answers a similar share of questions (the gap is inside the noise) and ranks the correct chunk higher, so the language model gets the same coverage with about half the chunks and the text. e5-small is the option when the RAM is very tight or the whole corpus is re-indexed often; then use 20 to 30 chunks and fuse the translation.
+- **Choice for production: bge-m3** (the gap is larger on the chunker `main` uses, see E36), because, with the translation fused, it answers a similar share of questions (the gap is inside the noise) and ranks the correct chunk higher, so the language model gets the same coverage with about half the chunks and the text. e5-small is the option when the RAM is very tight or the whole corpus is re-indexed often; then use 20 to 30 chunks and fuse the translation.
 - **Limits**: with 180 questions, differences under about 6 points (about 10 questions) are not conclusive: the gaps between the two models with the translation (2.7 to 4.5 points) are inside the noise: they answer a similar share of questions and differ in the order of the results and in the text they need. Only the position of the correct chunk was measured, not whether a language model answers better with less text; the amount of text is given in characters, not tokens.
+
+### The model that fits the chunker of `main`: semantic + header cuts (E36)
+
+On the chunker `main` uses, with the translation fused, 30 candidates per search and the 180 questions (the 130 original and the 50 new ones), questions answered within the first k chunks ([eval/runs/e36_curve_semh.log](eval/runs/e36_curve_semh.log)):
+
+| chunks returned | e5-small | bge-m3 | difference |
+|---|---|---|---|
+| 1 | 60 (33%) | **79** (44%) | +19 |
+| 3 | 111 (62%) | **121** (67%) | +10 |
+| 5 | 127 (71%) | **136** (76%) | +9 |
+| 10 | 146 (81%) | **163** (91%) | +17 |
+| 15 | 161 (89%) | **167** (93%) | +6 |
+| 20 | 164 (91%) | **172** (96%) | +8 |
+| 30 | 165 (92%) | **176** (98%) | +11 |
+
+Chunks needed to answer a given share of the 180 questions:
+
+| coverage | chunks e5-small needs | chunks bge-m3 needs |
+|---|---|---|
+| 85% | 12 | 8 |
+| 90% | 17 | 10 |
+| 95% | >30 | 18 |
+
+- **bge-m3 answers more with fewer chunks.** To answer 90% of the questions e5-small needs 17 chunks and bge-m3 10; with 10 chunks bge-m3 answers 90.6% against 81.1%. e5-small does not reach 95% even with 30 chunks. MRR: 0.586 against 0.496.
+- **With 10 chunks the gap (+17 questions, about 9 points) is larger than the noise of 180 questions (about 6 points); with 15 to 20 chunks it shrinks to 6 to 8 questions, inside the noise.**
+- **A pool of 100 candidates widens the gap**: e5-small then needs 23 chunks for 90% and its MRR falls to 0.438, while bge-m3 hardly changes (11 chunks, MRR 0.561).
+- **This is among e5-small's weakest combinations** (it ties with the two-stage chunker for the fewest answers). Averaged over the five chunking techniques the gap at 20 chunks is smaller (5.6 questions, E33); on this index e5-small answers 165 of 180 with 30 chunks and bge-m3 176, so the choice of model for this chunker is bge-m3.
+- Same limits as E33: only the position of the correct chunk was measured, the 130 original questions chose the settings, and the text is counted in characters.
 
 ### What each model costs, and what changes with more chunks (E34)
 

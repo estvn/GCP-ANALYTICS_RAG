@@ -643,6 +643,32 @@ e5-small:
 - **Caveats**: one machine; memory is the working set of the process (`rss`); the figure for indexing (E24: peak 1,591 MB) was measured with another script; the saving of the lazy tokenizer is a measurement of the tokenizer, not of the changed code.
 - **Status**: accepted (single run, repeated twice).
 
+### E36. e5-small against bge-m3 on the semantic + header cuts index, by number of chunks
+- **Question**: which model answers more questions with fewer chunks on the chunker that `main` uses?
+- **Setup**: indexes `full_SEMH` (e5-small) and `full_SEMH_bge` (bge-m3); hybrid + ES/EN 1:1; the 130 original questions and the 50 new ones of E32 (180 in total); the rank of the first correct chunk was kept for every question and the cut made at k = 1, 3, 5, 8, 10, 15, 20, 25, 30; pools of 30 and 100 candidates per search. Script `curve_semh.py` (session scratchpad, **not in the repo**); raw output `eval/runs/e36_curve_semh.log`; the run was repeated and gave the same numbers.
+- **Result** (30 candidates; answered of 180):
+
+| chunks returned | e5-small | bge-m3 | difference |
+|---|---|---|---|
+| 1 | 60 (33%) | **79** (44%) | +19 |
+| 3 | 111 (62%) | **121** (67%) | +10 |
+| 5 | 127 (71%) | **136** (76%) | +9 |
+| 10 | 146 (81%) | **163** (91%) | +17 |
+| 15 | 161 (89%) | **167** (93%) | +6 |
+| 20 | 164 (91%) | **172** (96%) | +8 |
+| 30 | 165 (92%) | **176** (98%) | +11 |
+
+| coverage | chunks e5-small needs | chunks bge-m3 needs |
+|---|---|---|
+| 85% | 12 | 8 |
+| 90% | 17 | 10 |
+| 95% | >30 | 18 |
+
+  With 100 candidates: e5-small needs 16, 23 and >30 chunks for 85%, 90% and 95%, bge-m3 8, 11 and 19; MRR 0.438 against 0.561.
+- **Findings**: on this index bge-m3 reaches 90% with 10 chunks and e5-small with 17; e5-small does not reach 95% within 30 chunks. The gap at 10 chunks (+17 questions) is conclusive; at 15 to 20 chunks it is inside the noise of 180 questions. A pool of 100 candidates hurts e5-small much more than bge-m3. The average over the five chunking techniques (E33) hides this: semantic + header cuts is among the places where e5-small is weakest (tied with two-stage).
+- **Caveats**: single run; the 130 original questions also chose the settings; only the position of the correct chunk was measured; one machine.
+- **Status**: accepted (single run, repeated once). **Recommendation**: bge-m3 for the chunker of `main`.
+
 ## Corrections log (things said or measured wrongly, and what replaced them)
 
 | # | Claim or measurement | Reality | Where fixed |

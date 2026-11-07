@@ -102,3 +102,29 @@ def test_units_remember_the_header_path():
     units = split_units("# A\n\n## B\n\ntext one.\n\n## C\n\ntext two.\n")
 
     assert [u.headers for u in units] == [("A", "B"), ("A", "C")]
+
+
+TWO_SECTIONS_SAME_TOPIC = (
+    "# A\n\nThe cloud stores data. The cloud scales fast. The cloud is metered.\n\n"
+    "# B\n\nThe cloud has regions. The cloud has zones. The cloud is global.\n"
+)
+
+
+def test_headers_are_cut_points_when_structure_comes_first():
+    by_meaning = chunker(min_tokens=5).chunk(TWO_SECTIONS_SAME_TOPIC, "m/doc.md")
+    by_structure = chunker(min_tokens=5, split_on_headers=True).chunk(TWO_SECTIONS_SAME_TOPIC, "m/doc.md")
+
+    assert len(by_meaning) == 1
+    assert [c["headers"] for c in by_structure] == [["A"], ["B"]]
+
+
+def test_a_tiny_section_is_merged_into_the_next_one_even_with_header_cuts():
+    text = "# A\n\nTiny.\n\n# B\n\nThe cloud has regions. The cloud has zones. The cloud is global.\n"
+
+    chunks = chunker(min_tokens=6, split_on_headers=True).chunk(text, "m/doc.md")
+
+    assert len(chunks) == 1
+
+
+def test_the_fingerprint_changes_with_the_structure_flag():
+    assert chunker().fingerprint != chunker(split_on_headers=True).fingerprint

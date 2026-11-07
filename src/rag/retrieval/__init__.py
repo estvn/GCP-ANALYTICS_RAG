@@ -1,5 +1,5 @@
 """Online path: question -> ranked chunks."""
 
-from rag.retrieval.search import HybridRetriever
+from rag.retrieval.search import VectorRetriever
 
-__all__ = ["HybridRetriever"]
+__all__ = ["VectorRetriever"]

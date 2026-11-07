@@ -489,7 +489,7 @@ Weights are original : translation; the translation always comes from `golden_tr
 | 5 | First mid-sentence audits: 43-47% | Heuristic and a Python bug; real value 4% (E14) | E14 |
 | 6 | Compare sizes at the same `k` | Larger chunks win by returning more text; redone at equal text (E08) | E08 |
 | 7 | Structural + recursive vs recursive only | Recursive alone had never been run; implemented and measured (E20) | E20 |
-| 8 | df cap 0.15 | Tuned on 162 chunks; 0.05 is better on 750-1450 chunks (E19). Code unchanged yet | open |
+| 8 | df cap 0.15 | Tuned on 162 chunks; 0.05 is better on 750-1450 chunks (E19) | `MAX_DOC_FREQUENCY` = 0.05 in `main` |
 | 9 | Reranker not needed | Measured only on course 1 (E10); not repeated on the full index | open |
 | 10 | "Vectors alone miss exact terms almost always" | 9 of 10 on course 1; 0.600 vs 0.900 hybrid on the full index | PDF guide |
 | 11 | First unified run of E29: 0.000 on sets A, T and V for every index | Evaluation bug, not retrieval: the course 1 golden sets lack the `01_INTRODUCTION_GC_DATA_ANALYTICS/` prefix that the indexes have (`load_golden(path, source_prefix)`); redone with the prefix. `python -m rag.evaluation.report` still loads those sets without the prefix | E29 |
@@ -509,7 +509,7 @@ Weights are original : translation; the translation always comes from `golden_tr
 | Reproducible from this repository | Ad hoc (script not in the repo) |
 |---|---|
 | `uv run python -m rag.evaluation.report [--model e5-small\|bge-m3]` (vector / keyword / hybrid on the golden sets) | The chunker x size grids (E06-E08, E15-E17), the full-index runs (E18-E22, E25-E26), the resource and rotation tests (E23-E24) |
-| `ingest(md_root, conn, embedder, chunker=...)` with `RecursiveChunker`, `StructuralChunker`, `SemanticChunker`; `HybridRetriever.search` / `search_many` | Boundary audits (E14), tail-truncation test (E22), cut-cause counting (E21) |
+| `ingest(md_root, conn, embedder, chunker=...)` with `SemanticChunker` (the winner, the default); `HybridRetriever.search` / `search_many`. The structural, recursive, two-stage and merge chunkers are only in their branches | Boundary audits (E14), tail-truncation test (E22), cut-cause counting (E21) |
 | Golden sets and translations under `eval/` (verified evidence) | |
 | 83 automated tests (`uv run pytest`) | |
 
@@ -525,8 +525,8 @@ Main commits in order: `c499977` scaffold, `b9edd96` parse, `cb7adda` chunk, `63
 ## Open experiments and decisions
 
 1. ES+EN fusion and weighted fusion (E28) on the bge-m3 structure + semantic index (E27 is done), and a run that cuts with one model and embeds with the other.
-2. Decide the final configuration (current leader on the data so far: bge-m3 + structural or structure + semantic + hybrid with ES+EN RRF) and keep only that path on `main`; techniques stay in their branches.
+2. Decided (E29, E30): bge-m3 + semantic with header cuts + hybrid with ES/EN RRF 1:1, which is what `main` implements; the other techniques stay in their branches. Still open: make the full-course evaluation (prefix of the course 1 sets, ES/EN fusion) reproducible from the repository.
 3. Done differently: no `embedding/*` branches (deleted, tips `b05e36f` and `5fd2ac0`; they only held `EMBEDDING.md`). The hardware cost of each model (E24) is a `HARDWARE_<model>.md` in every chunking branch that uses it, and each technique has its `CHUNKING.md` and README.
-4. Lower `MAX_DOC_FREQUENCY` (0.15 -> 0.05); store the embedding model name in the database.
+4. Done: `MAX_DOC_FREQUENCY` is 0.05. Still open: store the embedding model name in the database.
 5. Re-measure the reranker ceiling on the full index; fixed-size and clustering chunkers were never tested; int8 vs full precision never compared.
 6. MCP server (`mcp/`) and draw.io MCP (`mcp-drawio/`).

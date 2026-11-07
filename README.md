@@ -26,6 +26,7 @@ Written up in [eval/experiments.md](https://github.com/estvn/GCP-ANALYTICS_RAG/b
 - **E25**: e5-small on the full index: same-language vs cross-lingual, and ES+EN fusion
 - **E28**: Weighted RRF over two phrasings
 - **E30**: Retrieval techniques on the three best chunking indexes
+- **E31**: Returning 30 chunks and a larger candidate pool
 
 ## Results (E30, bge-m3, 130 questions: 108 same-language and 22 cross-lingual)
 
@@ -61,6 +62,27 @@ first correct chunk (1 = always first, 0 if absent).
 - The keyword leg ignores words found in more than 5% of the chunks (`MAX_DOC_FREQUENCY = 0.05` in `store.py`),
   the value used in the evaluation.
 - The user's hybrid chunking and the e5-small indexes were not run through these modes.
+
+## Results returning 30 chunks (E31)
+
+Same 130 questions; each query returns up to 30 chunks and the candidate pool is 30 or 100 per search. Answered out of 130; rows are the technique of this branch on the five bge-m3 indexes (the e5-small indexes are in the raw output):
+
+| chunking technique (bge-m3 index) | retrieval | @10 (30 cand.) | @20 (100 cand.) | @30 (30 cand.) | @30 (100 cand.) | MRR (100 cand.) |
+|---|---|---|---|---|---|---|
+| semantic + header cuts | hybrid + ES/EN 1:1 | 122 | 127 | 128 | 130 | 0.553 |
+| semantic + header cuts | hybrid + ES/EN 2:1 | 121 | 127 | 127 | 129 | 0.601 |
+| structural | hybrid + ES/EN 1:1 | 115 | 127 | 126 | 127 | 0.557 |
+| structural | hybrid + ES/EN 2:1 | 116 | 125 | 125 | 129 | 0.579 |
+| user's hybrid (two-stage + merge) | hybrid + ES/EN 1:1 | 117 | 126 | 126 | 127 | 0.524 |
+| user's hybrid (two-stage + merge) | hybrid + ES/EN 2:1 | 116 | 126 | 124 | 129 | 0.589 |
+| semantic only | hybrid + ES/EN 1:1 | 113 | 121 | 124 | 124 | 0.524 |
+| semantic only | hybrid + ES/EN 2:1 | 113 | 125 | 124 | 125 | 0.574 |
+| community two-stage | hybrid + ES/EN 1:1 | 114 | 122 | 123 | 125 | 0.540 |
+| community two-stage | hybrid + ES/EN 2:1 | 112 | 123 | 123 | 125 | 0.591 |
+
+- Best row: hybrid + ES/EN 1:1 on the semantic + header cuts index, 130 of 130 answered (MRR 0.553); still missing: [].
+- Returning 30 chunks answers more questions than about 10; a pool of 100 candidates helps at 30 chunks but can hurt the top 10 and the MRR.
+- Differences under about 8 points (about 10 of the 130 questions) are not conclusive; the 130 questions also chose the settings, so the figures are optimistic for new questions. Raw output: [eval/runs/e31_k30_candidates100.log](eval/runs/e31_k30_candidates100.log).
 
 ## Layout
 

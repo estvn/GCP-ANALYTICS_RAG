@@ -32,6 +32,13 @@ CREATE INDEX IF NOT EXISTS chunks_tsv_idx ON chunks USING gin (tsv);
 """
 
 
+def connect(url: str) -> psycopg.Connection:
+    """Open a connection that understands the vector types. The schema must already exist."""
+    conn = psycopg.connect(url)
+    register_vector(conn)
+    return conn
+
+
 def init_schema(conn: psycopg.Connection) -> None:
     conn.execute(SCHEMA)
     conn.commit()
@@ -71,6 +78,8 @@ def delete_documents(conn: psycopg.Connection, sources: set[str]) -> None:
 
 EF_SEARCH = 100  # HNSW recall/latency knob; starting point from the pgvector skill
 MIN_WORD_LENGTH = 3  # shorter words ("es", "de", "to") only add noise to the keyword leg
+MAX_DOC_FREQUENCY = 0.15  # a word in more than this share of chunks does not discriminate
+MIN_COMMON_COUNT = 5  # ...but a tiny corpus cannot tell what is common
 
 
 def _hit(row, distance=None, kw_score=None) -> dict:
@@ -100,12 +109,28 @@ def vector_search(conn: psycopg.Connection, query_vector, limit: int) -> list[di
     return [_hit(row, distance=row[5]) for row in rows]
 
 
-def keyword_search(conn: psycopg.Connection, query: str, limit: int) -> list[dict]:
-    """Chunks sharing at least one word with the query, ranked by ts_rank_cd.
+def _discriminating(conn: psycopg.Connection, words: list[str]) -> list[str]:
+    """Drop words found in too many chunks. Postgres full-text ranking has no IDF, so we approximate it."""
+    if not words:
+        return []
+    total = conn.execute("SELECT count(*) FROM chunks").fetchone()[0]
+    rows = conn.execute(
+        "SELECT w, (SELECT count(*) FROM chunks WHERE tsv @@ plainto_tsquery('simple', w)) "
+        "FROM unnest(%s::text[]) AS w",
+        (words,),
+    ).fetchall()
+    limit = max(MAX_DOC_FREQUENCY * total, MIN_COMMON_COUNT)
+    return [word for word, frequency in rows if frequency <= limit]
 
-    Not true BM25: Postgres full-text ranking has no IDF weighting.
+
+def keyword_search(conn: psycopg.Connection, query: str, limit: int) -> list[dict]:
+    """Chunks sharing a discriminating word with the query, ranked by ts_rank_cd.
+
+    Not true BM25. Returns nothing when every query word is too common to be informative.
     """
-    words = re.findall(rf"\w{{{MIN_WORD_LENGTH},}}", query.lower())
+    words = list(dict.fromkeys(re.findall(rf"\w{{{MIN_WORD_LENGTH},}}", query.lower())))
+    words = _discriminating(conn, words)
+    conn.commit()
     if not words:
         return []
     rows = conn.execute(

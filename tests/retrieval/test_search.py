@@ -88,3 +88,47 @@ def test_vector_distance_is_cosine(conn, retriever):
 
     assert 0.0 <= hits[0]["distance"] <= 2.0
     assert hits[0]["source"] == "m/bq.md"
+
+
+@pytest.fixture
+def crowded(conn, tmp_path):
+    """30 chunks all containing 'platform', plus one chunk that also has the rare word."""
+    (tmp_path / "m").mkdir()
+    for i in range(30):
+        (tmp_path / "m" / f"d{i}.md").write_text(f"# Doc {i}\n\nThe platform handles item{i}.", encoding="utf-8")
+    (tmp_path / "m" / "rare.md").write_text("# Rare\n\nThe platform also has zorblax.", encoding="utf-8")
+    ingest(tmp_path, conn, TopicEmbedder())
+    return conn
+
+
+def test_words_present_in_most_chunks_are_ignored(crowded):
+    hits = keyword_search(crowded, "what does the platform do with zorblax", 10)
+
+    assert sources(hits) == ["m/rare.md"]
+
+
+def test_query_made_only_of_common_words_finds_nothing(crowded):
+    assert keyword_search(crowded, "platform", 10) == []
+
+
+def test_small_corpus_keeps_every_word(conn, retriever):
+    hits = keyword_search(conn, "storage buckets", 5)
+
+    assert sources(hits) == ["m/st.md"]
+
+
+def test_several_phrasings_are_fused_into_one_ranking(retriever):
+    hits = retriever.search_many(["zorblax", "bigquery data warehouse"], k=4)
+
+    assert {"m/rare.md", "m/bq.md"} <= set(sources(hits))
+
+
+def test_a_chunk_found_by_several_phrasings_appears_once(retriever):
+    hits = retriever.search_many(["bigquery", "bigquery data warehouse"], k=10)
+
+    ids = [h["id"] for h in hits]
+    assert len(ids) == len(set(ids))
+
+
+def test_no_phrasings_gives_no_results(retriever):
+    assert retriever.search_many([]) == []

@@ -21,3 +21,11 @@ class HybridRetriever:
             keyword_search(self.conn, query, candidates),
         ]
         return rrf(legs)[:k]
+
+    def search_many(self, queries: list[str], k: int = 5, candidates: int = 30) -> list[dict]:
+        """Search each phrasing (e.g. the same question in Spanish and English) and fuse the rankings.
+
+        The embedding model matches within a language far better than across languages.
+        """
+        rankings = [self.search(query, k=candidates, candidates=candidates) for query in queries]
+        return rrf(rankings)[:k]

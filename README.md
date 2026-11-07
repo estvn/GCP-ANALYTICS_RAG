@@ -76,11 +76,15 @@ Hybrid search, 130 questions. Two embedding models, five chunking techniques.
 | community two-stage (headers, then semantic) | bge-m3 | 1336 | 10 | 113 | .869 | .584 |
 | two-stage + merge of neighbours (the author's variant) | bge-m3 | 906 | 7 | 109 | .838 | .592 |
 
-- **Semantic + header cuts wins with both models**, and bge-m3 beats e5-small on every technique (12 to 17 more
-  questions answered), mostly because of the 22 questions asked in the other language.
+- **bge-m3 beats e5-small on every technique** (12 to 17 more questions answered), mostly because of the 22
+  questions asked in the other language. This is the one difference in the table that is conclusive.
+- **Semantic + header cuts has the highest count with both models** (99 and 114), but its lead over the other chunkers
+  is 1 to 7 questions, inside the noise: no chunking technique is conclusively better with the plain hybrid. It is the
+  default because it is the highest measured and it also leads in the vector and translation rows of the next table.
 - **Community recipe against the author's variant.** The community two-stage recipe (split by headers, subdivide only
   the big sections by meaning) answers 2 to 4 more questions than the same recipe with a merge step, and the merge
-  variant has the slightly higher MRR. The gaps are inside the noise (see the caveats): neither beats the other here.
+  variant has the slightly higher MRR. The gaps (2 and 4 questions) are inside the noise (see the caveats): neither
+  beats the other here.
 - Semantic + header cuts makes more and smaller chunks than semantic only because of its extra cut at headers.
 
 ### Retrieval techniques (E30)
@@ -100,8 +104,9 @@ translation were searched and fused with RRF, with weights original:translation 
 | **hybrid + ES/EN 1:1** | **122** / .591 | 110 / .551 | 114 / .576 |
 | hybrid + ES/EN 2:1 | 121 / .607 | 111 / .591 | 112 / .605 |
 
-- **Winner: hybrid + ES/EN 1:1 on semantic + header cuts** (122 of 130, hit rate .938). Weights 1:1 and 2:1 are tied
-  (one question apart); `main` implements 1:1.
+- **Best measured: hybrid + ES/EN 1:1 on semantic + header cuts** (122 of 130, hit rate .938). Weights 1:1 and 2:1 are
+  tied (one question apart); `main` implements 1:1. Its lead is conclusive over semantic only (12 questions) but not
+  over two-stage (8 questions) nor over vector + ES/EN (6 questions).
 - **Keyword alone is the weakest** (75 to 80 answered): it matches words, not meaning, and cannot cross languages. Its
   job is to be the second leg of the hybrid, for exact terms.
 - **Vector alone has the best MRR** (.631 to .639 on semantic + headers) and a simpler pipeline. If ranking the right
@@ -123,9 +128,10 @@ Measured on 60 real chunks, 4 threads, int8 ONNX on CPU.
 
 ### Caveats
 
-- One run per index and 130 questions: a gap of 2 to 4 questions is below the standard error (about 4 points) and is
-  **not conclusive**. The gaps of 8 questions or more (bge-m3 against e5-small, and semantic + headers against the other
-  two chunkers when the translation is used) are the ones to trust.
+- One run per index and 130 questions. The standard error is about 4 points, so differences under about 8 points
+  (about 10 of the 130 questions) are **not conclusive**. The conclusive gaps are: bge-m3 against e5-small (12 to 17
+  questions), and semantic + headers against the other two chunkers on vector + ES/EN (11 to 12 questions) and against
+  semantic only on hybrid + ES/EN (12 questions).
 - The translation of each question is the hand translation in `eval/golden_translations.json`. A real deployment needs
   a translation step: one extra call and two searches per question. `search_many` takes the phrasings from the caller,
   so a client that can write both versions (such as an LLM) provides them; with a single phrasing it is the plain hybrid.

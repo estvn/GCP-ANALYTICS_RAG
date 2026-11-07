@@ -128,6 +128,7 @@ The tables above return about 10 chunks. Returning 30 chunks answers more questi
 | semantic only | hybrid + ES/EN 2:1 | 125 | 0.574 | about 31,725 |
 
 - Only semantic + header cuts with hybrid + ES/EN 1:1 answers all 130; the others answer 125 to 129, so the chunking techniques are inside the noise of each other at 30 chunks. Semantic + header cuts returns the least text (about 26,000 characters, against 47,000 for structural).
+- At 20 chunks (about 17,600 characters for semantic + header cuts) the best combination answers 127 of 130; the 3 questions it still misses have their correct chunk at positions 22, 24 and 30, so they only appear with more than 20 chunks.
 - The 11 questions missed at 10 chunks had their correct chunk between positions 11 and 30: a ranking problem, not a chunking problem (all 130 evidence snippets sit complete inside a chunk of that index).
 - A larger pool (100 candidates) helps at 30 chunks and hurts the top 10 and the MRR. The same 130 questions chose chunker, `k` and pool size, so 130 of 130 is optimistic for new questions.
 

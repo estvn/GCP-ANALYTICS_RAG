@@ -17,7 +17,7 @@ PDF/MD --> [1] Markdown --> [2] chunks --> [3] modelo de embeddings --> vector p
 | Paso | Qué ocurre | Quién lo hace |
 |---|---|---|
 | 1. A Markdown | Convierte cada PDF a texto con estructura | Librería `pymupdf4llm` (motor legacy), orquestada por `ingestion/parse.py` |
-| 2. Chunks | Corta el texto en trozos | El chunker elegido (sección 2) |
+| 2. Chunks | Corta el texto en trozos | El chunker elegido: `SemanticChunker`, semántico con cortes en headers (sección 2) |
 | 3. Embeddings | Convierte cada chunk en una lista de números | `Embedder` (nuestro código), que ejecuta el modelo con `onnxruntime` |
 | 4. Guardar | Inserta texto, ruta de headers, vector y columna de palabras | `store.py` (psycopg) hacia Postgres con pgvector |
 | 5. Índices | Estructuras para encontrar rápido | **Postgres**, que los construye y mantiene solo; nosotros solo los declaramos una vez |
@@ -31,19 +31,30 @@ Un chunk es un trozo de **texto** (no números). El chunking decide qué trozos 
 lo que el chunking dejó disponible: **el chunking pone el techo de calidad**. Todos los chunkers producen texto; después
 cualquiera de ellos sigue el mismo camino de embedding y almacenamiento.
 
+### Qué hay en `main`
+`main` tiene **un solo chunker**: `SemanticChunker` (`src/rag/ingestion/semantic.py`), que es el valor por defecto de
+`ingest()`. Corta por cambio de significado y además corta en cada header cuando el chunk ya tiene 100 tokens (máximo
+440, mínimo 100, percentil 90). Las demás técnicas viven solo en sus ramas (ver abajo): el chunker estructural y el
+recursivo se borraron de `main` (ya no existe `chunk.py`).
+
 ### Tamaño: caracteres, no tokens
 Los tamaños del chunking estructural (2400) están en **caracteres**. Un token son unos 4 caracteres, pero la relación
 varía: con 2400 caracteres la mediana es 397 tokens y el máximo 951. Importa porque el modelo `e5-small` solo lee 512
 tokens por texto (sección 5).
 
-### Las cuatro técnicas (una rama de GitHub cada una)
+### Las cinco técnicas comparadas (diez ramas de GitHub: cada técnica con `e5-small` y con `bge-m3`)
+
+Las ramas son `chunking/<técnica>-{e5-small,bge-m3}`. El **recursivo solo** (`RecursiveCharacterTextSplitter` sobre todo
+el documento, solape de 200, sin mirar headers) fue la línea base de las primeras pruebas; su rama `chunking/recursive-e5-small`
+se borró y hoy no tiene rama. La tabla de resultados históricos más abajo todavía lo muestra.
 
 | Técnica | Cómo corta | ¿Usa modelo? |
 |---|---|---|
-| **Recursivo solo** (`chunking/recursive-e5-small`) | `RecursiveCharacterTextSplitter` sobre todo el documento: prueba corte en párrafo, línea, fin de oración (`. ? ! ;`), espacio y, al final, carácter; solape de 200. No mira los headers | No |
-| **Estructural + recursivo** (`chunking/structural-e5-small`) | 1) corta por headers `#`, `##`, `###`; 2) fusiona secciones vecinas chicas hasta el tamaño límite; 3) las secciones largas se parten con el recursivo y el header queda pegado al primer trozo | No |
-| **Semántico** (`chunking/semantic-e5-small`) | Parte el texto en oraciones y viñetas; calcula el embedding de ventanas de 3 unidades; corta donde la distancia entre ventanas vecinas supera el percentil 90 del documento; mínimo 100 tokens, máximo 440 tokens reales | Sí, para decidir dónde cortar |
-| **Estructura + semántica** (`chunking/structure-semantic-e5-small`) | Igual que el semántico, y además cada header es un punto de corte (si el chunk ya tiene 100 tokens) | Sí, para decidir dónde cortar |
+| **Estructural + recursivo** (`chunking/structural-*`; no está en `main`) | 1) corta por headers `#`, `##`, `###`; 2) fusiona secciones vecinas chicas hasta el tamaño límite; 3) las secciones largas se parten con el recursivo y el header queda pegado al primer trozo | No |
+| **Semántico** (`chunking/semantic-*`) | Parte el texto en oraciones y viñetas; calcula el embedding de ventanas de 3 unidades; corta donde la distancia entre ventanas vecinas supera el percentil 90 del documento; mínimo 100 tokens, máximo 440 tokens reales | Sí, para decidir dónde cortar |
+| **Semántico + cortes en headers** (`chunking/structure-semantic-*`; es el de `main`) | Igual que el semántico, y además cada header es un punto de corte (si el chunk ya tiene 100 tokens). **No es el híbrido del usuario** | Sí, para decidir dónde cortar |
+| **Dos etapas de la comunidad** (`chunking/structure-then-semantic-*`) | 1) corta por headers; 2) solo las secciones que superan el tope se subdividen con el corte semántico | Sí, solo en las secciones grandes |
+| **Híbrido del usuario: dos etapas + fusión de vecinos** (`chunking/structure-semantic-merge-*`) | Las dos etapas anteriores y, después, se embeben las piezas y se fusionan las vecinas que hablan de lo mismo (tope 440 tokens, mínimo 100); no se descarta nada | Sí, para cortar y para fusionar |
 
 No se probaron: el **tamaño fijo puro** (cortar cada N caracteres sin mirar nada) y el **agrupamiento por clustering**
 (unir piezas parecidas aunque estén lejos en el documento).
@@ -55,13 +66,14 @@ cambia la dirección en que se usa esa medida.
 
 | Variante | Dirección | Cómo funciona | Estado en este proyecto |
 |---|---|---|---|
-| **Corte por quiebre** (top-down) | Parte de oraciones y **corta** | Embebe cada oración con sus vecinas, mide la distancia entre vecinas consecutivas y corta donde supera un umbral (aquí, percentil 90). Es la variante estándar | Probada: `chunking/semantic-e5-small` |
-| **Estructura primero, semántica dentro** (híbrido) | Corte por quiebre + títulos | Una sola pasada: cada header `#` es también un punto de corte, y entre headers manda el cambio de significado. El chunk guarda su ruta de títulos | Probada: `chunking/structure-semantic-e5-small` |
-| **Fusión** (bottom-up, merge) | Parte de trozos chicos y **fusiona** | 1) se crean trozos chicos (oraciones o párrafos); 2) se embebe cada uno; 3) se recorre el documento y se une el trozo siguiente al actual mientras su similitud supere el umbral y no se pase del tope de tokens; si no, se abre un chunk nuevo | Descartada (decisión del proyecto, no se implementó en `main`; la rama `chunking/semantic-merge` queda como prototipo) |
-| **Estructural en dos etapas** | Estructura y luego semántica | 1) se corta por headers en secciones; 2) solo las secciones que superan el tope se subdividen con el corte por quiebre | En prueba: `chunking/structure-then-semantic` (E29) |
+| **Corte por quiebre** (top-down) | Parte de oraciones y **corta** | Embebe cada oración con sus vecinas, mide la distancia entre vecinas consecutivas y corta donde supera un umbral (aquí, percentil 90). Es la variante estándar | Probada: `chunking/semantic-{e5-small,bge-m3}` |
+| **Semántico + cortes en headers** (una pasada) | Corte por quiebre + títulos | Una sola pasada: cada header `#` es también un punto de corte (si el chunk ya tiene 100 tokens), y entre headers manda el cambio de significado. El chunk guarda su ruta de títulos. **No es el híbrido del usuario** | Probada y es el chunker de `main`: `chunking/structure-semantic-{e5-small,bge-m3}` |
+| **Fusión de vecinos** (bottom-up, merge) | Parte de trozos chicos y **fusiona** | 1) se crean trozos chicos; 2) se embebe cada uno; 3) se une el trozo siguiente al actual mientras su similitud supere el umbral y no se pase del tope de tokens; si no, se abre un chunk nuevo. La fusión sobre oraciones (secuencial y aglomerativa) se descartó | Descartada sobre oraciones; usada como paso final del híbrido (fila siguiente) |
+| **Estructural en dos etapas** | Estructura y luego semántica | 1) se corta por headers en secciones; 2) solo las secciones que superan el tope se subdividen con el corte por quiebre | Probada en E29: `chunking/structure-then-semantic-{e5-small,bge-m3}` (97 y 113 preguntas respondidas de 130) |
+| **Híbrido del usuario** (dos etapas + fusión) | Estructura, semántica en lo grande y luego fusión de vecinas | Es la receta de dos etapas más el paso de comparar con el modelo y unir piezas vecinas con el mismo significado (tope 440 tokens, mínimo 100) | Probada en E29: `chunking/structure-semantic-merge-{e5-small,bge-m3}` (95 respondidas con `e5-small` y 109 con `bge-m3`) |
 | **Clustering** | Agrupa piezas **no vecinas** | Une piezas parecidas aunque estén lejos; rompe el orden de lectura | No probada |
 
-**Qué hace el híbrido hoy.** El código es de una sola pasada. El chunker semántico recibe el documento markdown
+**Qué hace el chunker de `main` hoy.** El código es de una sola pasada (semántico con cortes en headers; no es el híbrido del usuario). El chunker semántico recibe el documento markdown
 crudo (no chunks ya hechos) y los headers entran como cortes extra, siempre que el chunk ya tenga el mínimo de tokens.
 Es decir, la estructura marca los cortes gruesos y la semántica los finos, dentro del mismo recorrido. La versión de
 dos etapas es distinta: ahí la estructura produce los chunks principales y la semántica solo vuelve a cortar los que
@@ -71,8 +83,7 @@ quedaron demasiado grandes.
 pieza. La diferencia está en la decisión. El corte compara contra la **distribución de distancias de todo el documento**
 (un percentil), así que se adapta a cada texto. La fusión compara contra un **umbral fijo** y contra el chunk que se está
 armando, por lo que es más sensible al valor elegido y puede crecer por deriva (cada pieza se parece a la anterior pero
-la primera y la última ya no). Las fusiones se descartaron sin medirlas, así que no hay datos propios que digan cuál es más eficiente. La fusión secuencial se parece al método publicado Max-Min (2025), pero la implementación del proyecto es propia y no está validada contra el paper. Lo que sí queda por medir en los
-experimento E29 (estructura en dos etapas), con el mismo índice, las mismas preguntas y el mismo texto devuelto.
+la primera y la última ya no). La fusión secuencial se parece al método publicado Max-Min (2025), pero la implementación del proyecto es propia y no está validada contra el paper. El experimento E29 midió las cinco técnicas con el mismo índice, las mismas 130 preguntas y el mismo texto devuelto (ver los resultados más abajo y `eval/results.md`).
 
 ### Cómo decide el chunking semántico (en lenguaje simple)
 Se divide el texto en piezas chicas; el modelo compara cada pieza (con sus vecinas) con la siguiente; si hablan de lo
@@ -93,7 +104,11 @@ En estructura + semántica el reparto medido (muestra de 24 archivos) fue: 47% d
 (header), 43% la semántica y 10% el tope de tokens; en 33 ocasiones se llegó a un header con el chunk por debajo de
 100 tokens y se unió con la sección siguiente.
 
-### Resultados del chunking (índice completo, 311 archivos, 130 preguntas, mismo texto devuelto)
+### Resultados del chunking, corrida histórica E19 (311 archivos de entonces, 130 preguntas, mismo texto devuelto)
+
+Esta tabla es la corrida E19 con el índice de entonces. Los números actuales están en `eval/results.md` (secciones E29 y
+E30). Los conteos de chunks de E29 (741 estructural, 1144 semántico, 1408 semántico + headers con `e5-small`) difieren de
+los de esta tabla; la causa no se verificó.
 
 | Técnica | Chunks | Sobre 512 tokens | Aciertos / MRR (mejor variante) |
 |---|---|---|---|
@@ -103,7 +118,22 @@ En estructura + semántica el reparto medido (muestra de 24 archivos) fue: 47% d
 | Estructura + semántica | 1443 | 0% | **0.762** / 0.562 |
 
 (Con `e5-small`, búsqueda híbrida con umbral de frecuencia 0.05.) El orden en aciertos es consistente, pero las
-diferencias (2 a 6 puntos) son una tendencia: el error estándar con 130 preguntas es de unos 4 puntos. Costo: la primera
+diferencias (2 a 6 puntos) son una tendencia: el error estándar con 130 preguntas es de unos 4 puntos y las diferencias
+menores a unos 8 puntos (unas 10 de las 130 preguntas) no son concluyentes.
+
+**Qué midió E29 (híbrida, 130 preguntas; respondidas de 130 / aciertos / MRR).**
+
+| Técnica | `e5-small` | `bge-m3` |
+|---|---|---|
+| Estructural | 95 / .731 / .561 | 107 / .823 / .612 |
+| Semántico | 96 / .738 / .517 | 113 / .869 / .576 |
+| Semántico + cortes en headers | 99 / .762 / .557 | 114 / .877 / .580 |
+| Dos etapas de la comunidad | 97 / .746 / .508 | 113 / .869 / .584 |
+| Híbrido del usuario (dos etapas + fusión) | 95 / .731 / .552 | 109 / .838 / .592 |
+
+Chunks con `e5-small`: 741 / 1144 / 1408 / 1335 / 907; con `bge-m3`: 741 / 1128 / 1416 / 1336 / 906. `bge-m3` supera a
+`e5-small` por 12 a 17 preguntas (concluyente). Las diferencias entre chunkers caen dentro del ruido, así que ninguno es un
+ganador claro: "semántico + cortes en headers" es el de mayor cantidad de aciertos medidos y por eso está en `main`. Costo: la primera
 indexación semántica tarda unas 7 veces más porque calcula un embedding por ventana.
 
 ## 3. Embeddings, vectores y coordenadas
@@ -140,7 +170,7 @@ tamaño.
 |---|---|---|
 | Dimensión del vector | **384** | **1024** |
 | Tokens que lee por texto | 512 | hasta 8192 (usamos 1024) |
-| Archivo int8 | unos 118 MB | unos 570 MB |
+| Archivo int8 | 113 MB (medido en E24) | 542 MB (medido en E24) |
 | Prefijos | `query: ` y `passage: ` (obligatorios) | ninguno |
 | Pooling (cómo resume los tokens) | promedio de los tokens | primer token (CLS) |
 | Memoria por vector en la base (`halfvec`, 2 bytes por número) | 768 bytes | 2048 bytes |
@@ -148,12 +178,13 @@ tamaño.
 ### Por qué importan más dimensiones
 - **Capacidad**: más números permiten distinguir más matices de significado (por ejemplo, separar "pago por demanda" de
   "pago por capacidad" dentro del tema "costos").
-- **Costo**: más memoria en la base (aquí 1443 vectores ocupan unos 1.1 MB con 384 dimensiones y unos 3 MB con 1024, algo
-  irrelevante a esta escala) y más cálculo en cada comparación.
+- **Costo**: más memoria en la base (aquí 1416 vectores, los chunks del mejor índice medido con `bge-m3` (1408 con `e5-small`), ocupan
+  unos 1.1 MB con 384 dimensiones y unos 3 MB con 1024, algo irrelevante a esta escala; estimación por bytes por vector) y más cálculo en cada comparación.
 
 **Matiz honesto**: la dimensión por sí sola no determina la calidad. `bge-m3` difiere de `e5-small` en tamaño, en
 entrenamiento, en dimensiones y en cuántos tokens lee, así que no se puede atribuir su mejora solo a las 1024 dimensiones.
-Lo que medimos es el conjunto del modelo:
+Lo que medimos es el conjunto del modelo. Esta tabla es una medición histórica (E24 para recursos; las filas de aciertos son
+de corridas anteriores con chunking estructural); los números actuales están en `eval/results.md` (E29 y E30):
 
 | Medición en este proyecto | `e5-small` | `bge-m3` |
 |---|---|---|

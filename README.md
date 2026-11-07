@@ -69,6 +69,7 @@ Why this and not something simpler: keyword search alone is the weakest (it answ
 
 - **What is lost:** with this chunker and 30 chunks e5-small answers 165 of 180 questions and bge-m3 176, **11 fewer** (about 6 points); with 20 chunks, 164 against 172. To answer 90% of the questions it needs 17 chunks instead of 10, so the language model reads more text for the same coverage (E36).
 - **What is gained:** about 435 MB less memory while loaded (699 MB against 1,135 MB), 4.7 times less CPU time to embed each query (32 against 150 ms), indexing 9 times faster, and a model file of 113 MB instead of 542 MB (E24, E34, E35).
+- **If the questions are always in Spanish, the gap between the models is smaller** (E37). 21 of the 96 Spanish questions have their answer in an English passage, so the translation fusion is needed; with it, at 30 chunks, e5-small answers 91 and bge-m3 93 of the 96: **2 questions of difference**, against 11 of 180 when questions in English are included. Without the translation e5-small answers 78 and bge-m3 91, and only 5 against 19 of the 21 questions whose answer is in English.
 - **How to switch:** load it with `load_embedder("e5-small")`; create a new database with `init_schema(conn, dim=384)` (the vectors have another length, so an index cannot mix both models) and index again with `ingest` using that embedder; keep the translation fusion; use 30 candidates per search and not 100, because with 100 e5-small needs 23 chunks for 90% (E36).
 
 ## Why these choices: the results

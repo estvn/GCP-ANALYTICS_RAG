@@ -1,0 +1,9 @@
+questions written in Spanish: 96 of 180; of them 21 have their answer in an English passage
+
+e5-small on the semantic + header cuts index, 30 candidates; answered within 10 / 20 / 30 chunks
+  hybrid, Spanish question only                        all 96 Spanish questions: 72 / 75 / 78   | the 21 with an English passage: 3 / 4 / 5
+  hybrid + ES/EN 1:1 (question + English translation)  all 96 Spanish questions: 84 / 90 / 91   | the 21 with an English passage: 18 / 21 / 21
+
+bge-m3 on the semantic + header cuts index, 30 candidates; answered within 10 / 20 / 30 chunks
+  hybrid, Spanish question only                        all 96 Spanish questions: 81 / 88 / 91   | the 21 with an English passage: 14 / 18 / 19
+  hybrid + ES/EN 1:1 (question + English translation)  all 96 Spanish questions: 86 / 91 / 93   | the 21 with an English passage: 20 / 21 / 21

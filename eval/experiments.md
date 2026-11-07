@@ -669,6 +669,22 @@ e5-small:
 - **Caveats**: single run; the 130 original questions also chose the settings; only the position of the correct chunk was measured; one machine.
 - **Status**: accepted (single run, repeated once). **Recommendation**: bge-m3 for the chunker of `main`.
 
+### E37. Only the questions written in Spanish
+- **Question**: if the questions are always in Spanish, does anything change, and how do the two models compare?
+- **Setup**: the 96 questions in Spanish among the 180 (the 130 original ones and the 50 new ones of E32); 21 of them have their answer in a passage in English (language of the passage detected by word counts). Index `full_SEMH` with e5-small and `full_SEMH_bge` with bge-m3, 30 candidates per search, hybrid with the Spanish question only and hybrid + ES/EN 1:1 (the question and its English translation). Script `spanish_only.py` (session scratchpad, **not in the repo**); raw output `eval/runs/e37_spanish_only.log`.
+- **Result** (answered):
+
+| search | model | all 96 Spanish questions: first 10 / 20 / 30 chunks | the 21 whose answer is in an English passage |
+|---|---|---|---|
+| hybrid, Spanish question only | e5-small | 72 / 75 / 78 | 3 / 4 / 5 |
+| hybrid + ES/EN 1:1 | e5-small | 84 / 90 / 91 | 18 / 21 / 21 |
+| hybrid, Spanish question only | bge-m3 | 81 / 88 / 91 | 14 / 18 / 19 |
+| hybrid + ES/EN 1:1 | bge-m3 | 86 / 91 / 93 | 20 / 21 / 21 |
+
+- **Findings**: with the translation fused, the two models answer almost the same number of Spanish questions (91 and 93 of 96 with 30 chunks, 84 and 86 with 10); without it the gap is large (78 and 91 with 30 chunks) because of the 21 questions whose answer is in English (e5-small answers 5, bge-m3 19). The translation is what makes Spanish questions find the English passages. Of the 11-question gap of E36 (176 against 165 of 180), 2 questions are among the Spanish ones and 9 among the 84 written in English.
+- **Caveats**: 96 questions, a single run; differences of 2 questions are noise; the language of a passage is a word-count heuristic; about one Spanish question in five has its answer in English, which is a property of this corpus.
+- **Status**: accepted (single run, n = 96).
+
 ## Corrections log (things said or measured wrongly, and what replaced them)
 
 | # | Claim or measurement | Reality | Where fixed |

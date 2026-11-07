@@ -121,6 +121,31 @@ Cells are hit / MRR.
 - The grid was run with an ad-hoc script that is not part of the repository (the keyword-leg variants were
   hard-coded there); `uv run python -m rag.evaluation.report` reproduces the main table.
 
+## Full course (311 files, 5 courses) and the three chunking techniques
+
+The three techniques were indexed over the whole course and evaluated on 130 questions (the 40 + 10 + 40 from course 1
+with their source paths prefixed, plus `golden_courses_2_5.json`: 40 questions on courses 2 to 5), at equal returned
+text (about 9,000 characters per query). Hit / MRR:
+
+| technique | chunks | over 512 tokens | first indexing | vector | hybrid (df 0.15) | hybrid (df 0.05) |
+|---|---|---|---|---|---|---|
+| structural 2400 | 755 | 260 (34%) | 131 s | 0.662 / 0.489 | 0.708 / 0.542 | 0.731 / 0.565 |
+| semantic | 1173 | 1 | 916 s | 0.700 / 0.465 | 0.731 / 0.496 | 0.738 / 0.521 |
+| structure + semantic | 1443 | 0 | 115 s (cached windows; about 15 min alone) | 0.723 / 0.500 | 0.754 / 0.493 | **0.762** / 0.562 |
+
+By set (hybrid, df 0.05): course 1 tuning sets A / T / V and courses 2 to 5 (F): structural 0.600 / 0.900 / 0.700 / 0.850,
+semantic 0.700 / 0.900 / 0.625 / 0.850, structure + semantic 0.725 / 1.000 / 0.650 / 0.850.
+
+- **With five times more content the ordering is consistent but small**: structure + semantic >= semantic >= structural
+  in hit rate under all three search variants, by 2 to 6 points. The standard error with 130 questions is about
+  3.8 points, so this is a trend, not a proof. MRR does not follow it (structural 0.565, structure + semantic 0.562).
+- **Scores on the course 1 questions dropped** (for example set A, structural: 0.70 on course 1 alone, 0.60 on the
+  full index) because the other courses repeat topics and add look-alike passages. Courses 2 to 5 score 0.85 to 0.90.
+- **A lower document-frequency cap (0.05) beat 0.15** for all three techniques (pooled +0.8 to +2.3 points). The code
+  still uses 0.15; it was tuned on 162 chunks and should probably shrink as the index grows.
+- Each technique lives in its own branch (`chunking/structural`, `chunking/semantic`, `chunking/structure-semantic`)
+  with its code, tests and a `CHUNKING.md`.
+
 ## Where the chunks are cut
 
 Checked on course 1 by looking, in the source markdown, at what follows each chunk end.

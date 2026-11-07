@@ -28,6 +28,7 @@ MODELS = {
     "e5-small": (E5_SMALL, Path("models/multilingual-e5-small")),
     "bge-m3": (BGE_M3, Path("models/bge-m3")),
 }
+DEFAULT_MODEL = "bge-m3"  # E33: ranks the correct chunk higher; e5-small is the lighter option
 
 
 def pool(hidden: np.ndarray, mask: np.ndarray, how: str) -> np.ndarray:
@@ -41,7 +42,7 @@ def pool(hidden: np.ndarray, mask: np.ndarray, how: str) -> np.ndarray:
 
 
 class Embedder:
-    def __init__(self, model_dir: Path, spec: ModelSpec = E5_SMALL, threads: int = 4):
+    def __init__(self, model_dir: Path, spec: ModelSpec, threads: int = 4):
         model_dir = Path(model_dir)
         self.spec = spec
         self.dim = spec.dim
@@ -76,6 +77,6 @@ class Embedder:
         return np.vstack(out) if out else np.empty((0, self.dim), dtype=np.float32)
 
 
-def load_embedder(name: str, threads: int = 4) -> Embedder:
+def load_embedder(name: str = DEFAULT_MODEL, threads: int = 4) -> Embedder:
     spec, model_dir = MODELS[name]
     return Embedder(model_dir, spec, threads)

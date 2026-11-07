@@ -39,7 +39,7 @@ def connect(url: str) -> psycopg.Connection:
     return conn
 
 
-def init_schema(conn: psycopg.Connection, dim: int = 384) -> None:
+def init_schema(conn: psycopg.Connection, dim: int = 1024) -> None:  # 1024 = bge-m3 (384 for e5-small)
     conn.execute(SCHEMA.format(dim=int(dim)))
     conn.commit()
     register_vector(conn)

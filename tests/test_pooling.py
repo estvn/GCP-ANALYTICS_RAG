@@ -1,6 +1,9 @@
+import inspect
+
 import numpy as np
 
-from rag.embed import BGE_M3, E5_SMALL, MODELS, pool
+from rag.embed import BGE_M3, DEFAULT_MODEL, E5_SMALL, MODELS, Embedder, load_embedder, pool
+from rag.store import init_schema
 
 
 def test_mean_pooling_averages_only_real_tokens_and_normalises():
@@ -32,3 +35,16 @@ def test_model_specs_describe_their_models():
 
 def test_models_are_selectable_by_name():
     assert set(MODELS) == {"e5-small", "bge-m3"}
+
+
+def test_bge_m3_is_the_default_model():
+    assert DEFAULT_MODEL == "bge-m3"
+    assert inspect.signature(load_embedder).parameters["name"].default == DEFAULT_MODEL
+
+
+def test_the_embedder_has_no_hidden_default_model():
+    assert inspect.signature(Embedder).parameters["spec"].default is inspect.Parameter.empty
+
+
+def test_the_default_vector_dimension_is_the_one_of_the_default_model():
+    assert inspect.signature(init_schema).parameters["dim"].default == MODELS[DEFAULT_MODEL][0].dim

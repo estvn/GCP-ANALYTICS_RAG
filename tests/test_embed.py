@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from rag.embed import Embedder
+from rag.embed import E5_SMALL, Embedder
 
 MODEL_DIR = Path(__file__).parent.parent / "models" / "multilingual-e5-small"
 pytestmark = pytest.mark.skipif(not MODEL_DIR.exists(), reason="model not downloaded")
@@ -11,7 +11,7 @@ pytestmark = pytest.mark.skipif(not MODEL_DIR.exists(), reason="model not downlo
 
 @pytest.fixture(scope="module")
 def emb():
-    return Embedder(MODEL_DIR, threads=2)
+    return Embedder(MODEL_DIR, E5_SMALL, threads=2)
 
 
 def test_shape_and_unit_norm(emb):

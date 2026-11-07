@@ -1,10 +1,64 @@
-# GCP Analytics RAG
+# Vector search with ES/EN RRF fusion (question and translation)
 
-Hybrid retrieval (Postgres full-text + vectors) over the Google Cloud Data Analytics course, built to run on a laptop
-within a small CPU/RAM budget (no GPU). Postgres + pgvector for storage, `multilingual-e5-small`
-(int8, ONNX Runtime) for embeddings.
+Branch `retrieval/vector-es-en-rrf`. Hybrid retrieval (Postgres full-text + vectors) over the Google Cloud Data Analytics
+course, built to run on a laptop within a small CPU/RAM budget (no GPU). Results use the `bge-m3` embedding model
+(int8, ONNX Runtime) and the three most precise chunking techniques (E30).
 
-Status: ingestion, hybrid retrieval and evaluation work. The MCP server is next.
+Raw evaluation output: [eval/runs/e30_retrieval_modes.log](eval/runs/e30_retrieval_modes.log).
+
+## Technique applied
+
+RRF (Reciprocal Rank Fusion) is not a search technique on its own: it only fuses ranked lists. Here it fuses the lists
+obtained with the question and with its translation, because embedding models match much better inside one language.
+
+1. Embed the question as written and run the vector search (`bge-m3`, cosine over `halfvec`, HNSW).
+2. Embed the translation of the question and run the vector search again.
+3. Fuse the two result lists with RRF, weights `original:translation`: **1:1** or **2:1**. Score of a chunk =
+   `weight / (60 + position)` in each list, added.
+4. Return the top `k`. There is no keyword leg, so it is the simplest of the ES/EN variants. The repository has
+   the unweighted fusion in `search_many` for the hybrid; the vector-only version was evaluated with a scratch script.
+
+## Experiments
+
+Written up in [eval/experiments.md](https://github.com/estvn/GCP-ANALYTICS_RAG/blob/main/eval/experiments.md) (the file on `main` is the complete log):
+
+- **E13**: Querying in both languages
+- **E25**: e5-small on the full index: same-language vs cross-lingual, and ES+EN fusion
+- **E28**: Weighted RRF over two phrasings
+- **E30**: Retrieval techniques on the three best chunking indexes
+
+## Results (E30, bge-m3, 130 questions: 108 same-language and 22 cross-lingual)
+
+`SEMH` = semantic + header cuts, `SEM` = semantic, `STSEM` = community two-stage. MRR is the mean of 1 / position of the
+first correct chunk (1 = always first, 0 if absent).
+
+| chunking | search | answered (130) | MRR | same-language (108) | cross-lingual (22) |
+|---|---|---|---|---|---|
+| semantic + header cuts | no translation | 112 | 0.631 | 94 | 18 |
+| semantic + header cuts | ES/EN 1:1 | 116 | 0.639 | 95 | 21 |
+| semantic + header cuts | ES/EN 2:1 | 116 | 0.638 | 96 | 20 |
+| semantic | no translation | 107 | 0.581 | 88 | 19 |
+| semantic | ES/EN 1:1 | 104 | 0.548 | 85 | 19 |
+| semantic | ES/EN 2:1 | 105 | 0.564 | 86 | 19 |
+| community two-stage | no translation | 107 | 0.595 | 91 | 16 |
+| community two-stage | ES/EN 1:1 | 105 | 0.594 | 86 | 19 |
+| community two-stage | ES/EN 2:1 | 106 | 0.588 | 89 | 17 |
+
+## What happened
+
+- Best MRR of all combinations: `SEMH` with 1:1 reaches MRR .639 and answers 116 of 130 (.892); 2:1 gives the same 116 (MRR .638).
+- It lifts the cross-lingual questions of `SEMH` from .818 (plain vector) to .955 (1:1) and .909 (2:1).
+- It helps only `SEMH` (112 to 116); on `SEM` it goes from 107 to 104 / 105 and on `STSEM` from 107 to 105 / 106.
+- Compared with hybrid + ES/EN it answers 6 fewer questions on `SEMH` (116 against 122, at the edge of the noise) but ranks the right chunk higher.
+- Differences of 2 to 4 questions out of 130 are below the standard error (about 4 points): not conclusive.
+
+## Limits
+
+- Single run, 130 questions. The second phrasing is a hand translation (`eval/golden_translations.json`); the cost of
+  producing it in a real system is not measured.
+- The evaluation used a keyword document-frequency cap of 0.05 and the weights above from scratch scripts (not in the
+  repo). The repo defaults are `MAX_DOC_FREQUENCY = 0.15` and an unweighted `rrf`.
+- The user's hybrid chunking and the e5-small indexes were not run through these modes.
 
 ## Layout
 

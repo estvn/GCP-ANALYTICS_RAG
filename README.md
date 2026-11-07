@@ -6,6 +6,7 @@ this branch's results: `e5-small` (int8, ONNX Runtime).
 
 Full description, settings and how to reproduce: [CHUNKING.md](CHUNKING.md). Raw evaluation lines:
 [eval/runs/structure-then-semantic-e5-small.log](eval/runs/structure-then-semantic-e5-small.log).
+Hardware cost of the embedding model (`e5-small`): [HARDWARE_e5-small.md](HARDWARE_e5-small.md).
 
 ## Technique applied
 

@@ -112,7 +112,7 @@ def test_changing_the_chunker_configuration_reindexes_everything(conn, docs):
     assert stats["updated"] == 2 and stats["skipped"] == 0
 
 
-def test_the_default_chunker_is_the_semantic_one_with_header_cuts(conn, docs):
+def test_the_default_chunker_is_the_semantic_one(conn, docs):
     ingest(docs, conn, FakeEmbedder())
 
     stats = ingest(docs, conn, FakeEmbedder(), chunker=SemanticChunker(FakeEmbedder()))

@@ -49,3 +49,8 @@ def test_batching_does_not_change_the_vector(emb):
 def test_unknown_kind_is_rejected(emb):
     with pytest.raises(ValueError):
         emb.embed(["x"], kind="document")
+
+
+def test_count_tokens_is_not_truncated_at_the_model_limit(emb):
+    assert 3 <= emb.count_tokens("hola mundo") <= 6
+    assert emb.count_tokens("palabra " * 1000) > 512

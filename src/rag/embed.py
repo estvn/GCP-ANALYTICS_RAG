@@ -22,6 +22,10 @@ class Embedder:
         self.tok = Tokenizer.from_file(str(model_dir / "tokenizer.json"))
         self.tok.enable_truncation(max_tokens)
         self.tok.enable_padding()
+        self._counter = Tokenizer.from_file(str(model_dir / "tokenizer.json"))  # no truncation: counts the real size
+
+    def count_tokens(self, text: str) -> int:
+        return len(self._counter.encode(text).ids)
 
     def embed(self, texts: list[str], kind: str, batch_size: int = 16) -> np.ndarray:
         """Unit-norm vectors, shape (len(texts), 384). kind: 'query' or 'passage'."""

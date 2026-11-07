@@ -45,3 +45,18 @@ def chunk_markdown(text: str, source: str, chunk_size: int = 2400, overlap: int 
         }
         for i, (h, body) in enumerate(pieces)
     ]
+
+
+class StructuralChunker:
+    """Headers first, then size: the chunking used by default."""
+
+    def __init__(self, chunk_size: int = 2400, overlap: int = 200):
+        self.chunk_size = chunk_size
+        self.overlap = overlap
+
+    @property
+    def fingerprint(self) -> str:
+        return f"structural:{self.chunk_size}:{self.overlap}"
+
+    def chunk(self, text: str, source: str) -> list[dict]:
+        return chunk_markdown(text, source, self.chunk_size, self.overlap)

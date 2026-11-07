@@ -3,12 +3,16 @@
 import hashlib
 from pathlib import Path
 
-from rag.ingestion.chunk import chunk_markdown
+from rag.ingestion.chunk import StructuralChunker
 from rag.store import delete_documents, get_hashes, replace_document
 
 
-def ingest(md_root, conn, embedder, chunk_size: int = 2400, overlap: int = 200) -> dict[str, int]:
-    """Sync md_root into the database. Only new or changed files are chunked and embedded."""
+def ingest(md_root, conn, embedder, chunker=None) -> dict[str, int]:
+    """Sync md_root into the database. Only new or changed files are chunked and embedded.
+
+    A chunker has `chunk(text, source)` and a `fingerprint` that changes with its configuration.
+    """
+    chunker = chunker or StructuralChunker()
     root = Path(md_root)
     stats = {"added": 0, "updated": 0, "removed": 0, "skipped": 0}
     known = get_hashes(conn)
@@ -18,12 +22,12 @@ def ingest(md_root, conn, embedder, chunk_size: int = 2400, overlap: int = 200) 
         source = f.relative_to(root).as_posix()
         seen.add(source)
         text = f.read_text(encoding="utf-8")
-        # chunking params are part of the hash: changing them must re-index
-        digest = hashlib.sha256(f"{chunk_size}:{overlap}:{text}".encode()).hexdigest()
+        # the chunker configuration is part of the hash: changing it must re-index
+        digest = hashlib.sha256(f"{chunker.fingerprint}:{text}".encode()).hexdigest()
         if known.get(source) == digest:
             stats["skipped"] += 1
             continue
-        chunks = chunk_markdown(text, source, chunk_size, overlap)
+        chunks = chunker.chunk(text, source)
         vectors = embedder.embed([c["text"] for c in chunks], kind="passage") if chunks else []
         replace_document(conn, source, digest, chunks, vectors)
         stats["updated" if source in known else "added"] += 1

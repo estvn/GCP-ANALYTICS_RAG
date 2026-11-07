@@ -3,6 +3,7 @@ import hashlib
 import numpy as np
 import pytest
 
+from rag.ingestion.chunk import StructuralChunker
 from rag.ingestion.pipeline import ingest
 
 
@@ -98,3 +99,23 @@ def test_failed_embedding_keeps_previous_data(conn, docs):
         ingest(docs, conn, Boom())
 
     assert any("cloud data warehouse" in x for x in texts(conn))
+
+
+def test_changing_the_chunker_configuration_reindexes_everything(conn, docs):
+    ingest(docs, conn, FakeEmbedder(), chunker=StructuralChunker(chunk_size=2400))
+
+    stats = ingest(docs, conn, FakeEmbedder(), chunker=StructuralChunker(chunk_size=1200))
+
+    assert stats["updated"] == 2 and stats["skipped"] == 0
+
+
+def test_any_object_with_chunk_and_fingerprint_can_chunk(conn, docs):
+    class OneChunkPerFile:
+        fingerprint = "one-per-file"
+
+        def chunk(self, text, source):
+            return [{"text": text, "source": source, "headers": [], "index": 0}]
+
+    ingest(docs, conn, FakeEmbedder(), chunker=OneChunkPerFile())
+
+    assert conn.execute("SELECT count(*) FROM chunks").fetchone()[0] == 2

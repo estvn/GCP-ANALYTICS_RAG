@@ -21,7 +21,8 @@ src/rag/
 │   ├── fusion.py     # Reciprocal Rank Fusion
 │   └── search.py     # HybridRetriever: vector leg + keyword leg, multi-phrasing search
 └── evaluation/       # golden sets, hit@k / MRR, comparison report
-eval/                 # golden sets and results.md
+eval/                 # golden sets, results.md and experiments.md (full ledger)
+docs/                 # study guides (Spanish)
 tests/                # mirrors src/
 infra/                # container definitions
 data/  models/        # local only, git-ignored (course files, ONNX model)
@@ -59,3 +60,10 @@ evaluation are in [eval/results.md](eval/results.md). Reproduce with:
 ```bash
 uv run python -m rag.evaluation.report
 ```
+
+## Study guides (Spanish)
+
+- [docs/01_chunking_embeddings_y_vectores.md](docs/01_chunking_embeddings_y_vectores.md): indexing, chunking techniques, embeddings, vectors and dimensions.
+- [docs/02_tecnicas_de_retrieval.md](docs/02_tecnicas_de_retrieval.md): vector search, keyword search, RRF, multi-language fusion, model mismatch.
+- [docs/03_arquitecturas_rag.md](docs/03_arquitecturas_rag.md): RAG architectures, what "RAG 1.0 / 2.0" mean.
+- [docs/04_este_proyecto.md](docs/04_este_proyecto.md): this project: techniques, tools, advantages and limits.

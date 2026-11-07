@@ -78,7 +78,7 @@ def delete_documents(conn: psycopg.Connection, sources: set[str]) -> None:
 
 EF_SEARCH = 100  # HNSW recall/latency knob; starting point from the pgvector skill
 MIN_WORD_LENGTH = 3  # shorter words ("es", "de", "to") only add noise to the keyword leg
-MAX_DOC_FREQUENCY = 0.15  # a word in more than this share of chunks does not discriminate
+MAX_DOC_FREQUENCY = 0.05  # a word in more than this share of chunks does not discriminate (E19, E30)
 MIN_COMMON_COUNT = 5  # ...but a tiny corpus cannot tell what is common
 
 

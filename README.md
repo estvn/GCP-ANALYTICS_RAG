@@ -115,6 +115,22 @@ translation were searched and fused with RRF, with weights original:translation 
   added up). The ES/EN variants apply it on top of vector, keyword and hybrid.
 - Translating the question helps only the semantic + headers index; on the other two it is neutral or worse.
 
+### Returning more chunks (E31)
+
+The tables above return about 10 chunks. Returning 30 chunks answers more questions, at three times the text for the language model. Best retrieval technique per bge-m3 index with 30 chunks and a pool of 100 candidates per search (answered / 130 and MRR); details in [eval/experiments.md](eval/experiments.md) E31:
+
+| chunking technique | best retrieval technique | answered / 130 | MRR | characters in 30 chunks |
+|---|---|---|---|---|
+| semantic + header cuts | hybrid + ES/EN 1:1 | 130 | 0.553 | about 26,356 |
+| user's hybrid (two-stage + merge) | hybrid + ES/EN 2:1 | 129 | 0.589 | about 38,052 |
+| structural | hybrid + ES/EN 2:1 | 129 | 0.579 | about 47,005 |
+| community two-stage | hybrid + ES/EN 2:1 | 125 | 0.591 | about 27,321 |
+| semantic only | hybrid + ES/EN 2:1 | 125 | 0.574 | about 31,725 |
+
+- Only semantic + header cuts with hybrid + ES/EN 1:1 answers all 130; the others answer 125 to 129, so the chunking techniques are inside the noise of each other at 30 chunks. Semantic + header cuts returns the least text (about 26,000 characters, against 47,000 for structural).
+- The 11 questions missed at 10 chunks had their correct chunk between positions 11 and 30: a ranking problem, not a chunking problem (all 130 evidence snippets sit complete inside a chunk of that index).
+- A larger pool (100 candidates) helps at 30 chunks and hurts the top 10 and the MRR. The same 130 questions chose chunker, `k` and pool size, so 130 of 130 is optimistic for new questions.
+
 ### What the models cost (E24)
 
 Measured on 60 real chunks, 4 threads, int8 ONNX on CPU.

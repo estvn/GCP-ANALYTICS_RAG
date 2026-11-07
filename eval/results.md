@@ -132,6 +132,7 @@ text (about 9,000 characters per query). Hit / MRR:
 | structural 2400 | 755 | 260 (34%) | 131 s | 0.662 / 0.489 | 0.708 / 0.542 | 0.731 / 0.565 |
 | semantic | 1173 | 1 | 916 s | 0.700 / 0.465 | 0.731 / 0.496 | 0.738 / 0.521 |
 | structure + semantic | 1443 | 0 | 115 s (cached windows; about 15 min alone) | 0.723 / 0.500 | 0.754 / 0.493 | **0.762** / 0.562 |
+| plain recursive (no headers) | 648 | 286 (44%) | 108 s | 0.677 / 0.492 | 0.685 / 0.535 | 0.700 / 0.543 |
 
 By set (hybrid, df 0.05): course 1 tuning sets A / T / V and courses 2 to 5 (F): structural 0.600 / 0.900 / 0.700 / 0.850,
 semantic 0.700 / 0.900 / 0.625 / 0.850, structure + semantic 0.725 / 1.000 / 0.650 / 0.850.
@@ -143,8 +144,10 @@ semantic 0.700 / 0.900 / 0.625 / 0.850, structure + semantic 0.725 / 1.000 / 0.6
   full index) because the other courses repeat topics and add look-alike passages. Courses 2 to 5 score 0.85 to 0.90.
 - **A lower document-frequency cap (0.05) beat 0.15** for all three techniques (pooled +0.8 to +2.3 points). The code
   still uses 0.15; it was tuned on 162 chunks and should probably shrink as the index grows.
-- Each technique lives in its own branch (`chunking/structural`, `chunking/semantic`, `chunking/structure-semantic`)
-  with its code, tests and a `CHUNKING.md`.
+- **The plain recursive splitter (no headers, one of the four techniques) is last in hit rate** (0.700 at df 0.05) and
+  has the most chunks over the embedder limit (44%); `k` is 5 for it (larger average chunk), 6 to 10 for the others.
+- Each technique lives in its own branch (`chunking/recursive`, `chunking/structural`, `chunking/semantic`,
+  `chunking/structure-semantic`) with its code, tests and a `CHUNKING.md`.
 
 ## Where the chunks are cut
 

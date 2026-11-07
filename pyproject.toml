@@ -1,0 +1,26 @@
+[project]
+name = "rag"
+version = "0.1.0"
+description = "Hybrid RAG over the Google Cloud Data Analytics course"
+requires-python = ">=3.12"
+dependencies = [
+    "huggingface-hub>=2.4.0",
+    "langchain-text-splitters>=1.1.3",
+    "onnxruntime>=1.31.1",
+    "pgvector>=0.5.1",
+    "psycopg[binary]>=3.3.8",
+    "pymupdf4llm>=2.1",
+    "tokenizers>=0.23.3",
+]
+
+[project.scripts]
+rag = "rag:main"
+
+[build-system]
+requires = ["uv_build>=0.13.7,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]

@@ -1,0 +1,7 @@
+reranker loaded in 1.9 s; memory 64 -> 879 MB
+with bge-m3 loaded too: memory 1942 MB
+h01: search 0.15 s | rerank 10 pairs 17.0 s | rerank 30 pairs 65.3 s (2176 ms per pair), real length 353 tokens per pair
+h02: search 0.51 s | rerank 10 pairs 13.6 s | rerank 30 pairs 55.8 s (1861 ms per pair), real length 274 tokens per pair
+h03: search 0.33 s | rerank 10 pairs 13.2 s | rerank 30 pairs 16.1 s (536 ms per pair), real length 296 tokens per pair
+h04: search 0.16 s | rerank 10 pairs 11.4 s | rerank 30 pairs 58.5 s (1951 ms per pair), real length 284 tokens per pair
+memory at the end 3607 MB

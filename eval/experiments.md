@@ -685,6 +685,24 @@ e5-small:
 - **Caveats**: 96 questions, a single run; differences of 2 questions are noise; the language of a passage is a word-count heuristic; about one Spanish question in five has its answer in English, which is a property of this corpus.
 - **Status**: accepted (single run, n = 96).
 
+### E38. The cost of a multilingual reranker
+- **Question**: what would it cost to reorder the candidates with a local cross-encoder reranker?
+- **Setup**: `bge-reranker-v2-m3` from `onnx-community/bge-reranker-v2-m3-ONNX` (the base model `BAAI/bge-reranker-v2-m3` is Apache-2.0; that copy declares no license), file `onnx/model_int8.onnx` (544 MB), in `models/bge-reranker-v2-m3/` (git-ignored); XLM-RoBERTa, 24 layers, hidden size 1,024, vocabulary of 250,002 tokens. `rerank_probe.py` (session scratchpad, **not in the repo**) on the index `full_SEMH_bge`, 4 questions of E32 with their translations, 30 candidates from `search_many`, 4 CPU threads, batches of 10 pairs; memory with `psutil`. Run twice. Raw output of the second run: `eval/runs/e38_reranker_cost.log`. A multilingual check: the correct passage scored higher than a wrong one in 4 of 4 questions with an English passage and 6 of 6 with a Spanish passage.
+- **Result**:
+
+| per query, 4 CPU threads | without reranker | with `bge-reranker-v2-m3` (int8 ONNX) |
+|---|---|---|
+| search (`search_many`, 2 phrasings) | 0.15 to 0.5 s | the same search, plus: |
+| reorder 10 candidates | | + 11 to 17 s |
+| reorder 30 candidates | | + 16 to 65 s (34 to 54 s in a first run) |
+| memory of the process after loading | 1,135 MB (bge-m3 alone, E35) | 1,942 MB (bge-m3 and the reranker) |
+| memory while scoring 30 pairs | | 3,607 MB |
+| model files on disk | 542 MB | 542 MB + 544 MB |
+
+- **Findings**: reordering 30 candidates takes tens of seconds on this CPU, hundreds of times the search itself; the process needs about 3 times the memory of bge-m3 alone while scoring. The variation between runs (16 to 65 s for 30 pairs) comes from a machine that was not idle and from the length of the pairs (274 to 353 tokens on average).
+- **Caveats**: 4 questions; one machine, 4 threads (more threads or a GPU would be faster); quality was not measured: a test on 40 questions was started and stopped on purpose when the cost was clear; a smaller multilingual reranker (for example `cross-encoder/mmarco-mMiniLMv2-L12-H384-v1`, 113 MB) was not tried.
+- **Status**: accepted as a cost measurement. **Decision (the user)**: no reranker; rank fusion and 30 chunks stay.
+
 ## Corrections log (things said or measured wrongly, and what replaced them)
 
 | # | Claim or measurement | Reality | Where fixed |

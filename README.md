@@ -72,7 +72,18 @@ A *reranker* is a second model that reads the question and one chunk together an
 
 The price of the second technique is text: 30 chunks are about 26,000 characters for the language model to read, against about 8,800 for 10. That is the saving a reranker would give.
 
-Why there is none: the first specification said "only if the evaluation demands it"; the one measurement (E10, course 1 only) found little room, because the misses of that time were chunks that never entered the candidate list, and a reranker only reorders what the search already found. It was never repeated on the whole corpus. Today the room is different: the correct chunk is in the first 30 for 98% of the questions but in the first 10 for 91% and in the first 5 for 76%, so a perfect reranker could recover up to 7 points with 10 chunks and up to 22 with 5. How much a real one recovers, and what it costs in memory and time, is not measured yet.
+Why there is none: **it is too heavy**. A reranker was tested for its cost with `bge-reranker-v2-m3`, the multilingual reranker of the same family as bge-m3 (int8 ONNX, 544 MB; E38). Each pair of question and chunk is about 270 to 350 tokens and the model has 24 layers, so on this CPU it takes 1 to 2 seconds per pair:
+
+| per query, 4 CPU threads | without reranker | with `bge-reranker-v2-m3` (int8 ONNX) |
+|---|---|---|
+| search (`search_many`, 2 phrasings) | 0.15 to 0.5 s | the same search, plus: |
+| reorder 10 candidates | | + 11 to 17 s |
+| reorder 30 candidates | | + 16 to 65 s (34 to 54 s in a first run) |
+| memory of the process after loading | 1,135 MB (bge-m3 alone, E35) | 1,942 MB (bge-m3 and the reranker) |
+| memory while scoring 30 pairs | | 3,607 MB |
+| model files on disk | 542 MB | 542 MB + 544 MB |
+
+The search without a reranker answers in a fraction of a second; reordering 30 candidates would add between several seconds and about a minute, and the process would need about 3 times the memory. The decision was made on cost alone: how much a reranker improves the order was not measured, because the quality test was stopped once the cost was clear. An earlier measurement (E10, course 1 only) had found little room, and today a perfect reranker would recover at most 7 points with 10 chunks and 22 with 5, but a real one would recover only part of that. The techniques above (rank fusion and 30 chunks) are what `main` uses instead.
 
 ### If bge-m3 makes the machine slow: switch to e5-small
 

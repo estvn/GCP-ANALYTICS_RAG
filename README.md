@@ -187,6 +187,17 @@ Measured with the 50 new questions and their translations against the two indexe
 
 - **The vectors are 2.7 times longer, not 5 times** (1,024 against 384 numbers). The 5 times is the model file (542 MB against 113 MB). Because a chunk also stores its text and a full-text index, one chunk takes only 1.4 times more space with bge-m3, not 2.7.
 - **What costs time is the model, not the database.** Embedding the query takes 4.7 times longer with bge-m3 and is most of the 424 ms of a search; the two searches in PostgreSQL take about the same with both. The model's time and memory do not grow with the number of chunks.
+- **The 1.1 GB stays while the process lives, and it does not grow with queries** (100 queries added 9 MB; it does not depend on the number of chunks). Where it goes (E35):
+
+| step (bge-m3, one process, measured twice with the same result) | memory | added |
+|---|---|---|
+| Python with the libraries imported | 51 MB | |
+| ONNX session loaded (the 568 MB int8 model) | 614 MB | +563 MB |
+| first tokenizer (the one that prepares the queries) | 862 MB | +248 MB |
+| second tokenizer (the one that only counts tokens for the chunker) | 1,117 MB | +254 MB |
+| after 100 different queries | 1,126 MB | +9 MB |
+
+  About 500 MB are the two copies of the tokenizer (the vocabulary has 250,000 tokens), and the second one is only used to count tokens when chunking, which a query never does. Loading it only when needed would leave a query process at about 860 MB with bge-m3; this is not done yet. The same applies to e5-small, which uses the same vocabulary: of its 699 MB, about 500 MB are the two tokenizers and 113 MB the model, so the real difference in memory between the two models is the weights, about 450 MB. Indexing needs more than querying (a peak of 1,591 MB in E24, with batches of 16 chunks).
 - **What grows with the number of chunks is storage and indexing time.** Estimate by multiplying the measured bytes per chunk and the indexing speed of E24 (0.6 and 5.6 chunks per second on 60 real chunks); it is an extrapolation, not a measurement:
 
 | chunks | whole table + indexes, bge-m3 / e5-small | vectors + HNSW index only, bge-m3 / e5-small | indexing time, bge-m3 / e5-small |

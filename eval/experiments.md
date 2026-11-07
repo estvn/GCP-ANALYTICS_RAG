@@ -626,6 +626,23 @@ e5-small:
 - **Caveats**: about 900 chunks, so the PostgreSQL search times at hundreds of thousands of chunks were not measured; the sizes per chunk are those of a small index and may not scale exactly linearly; indexing speed comes from 60 chunks; whether the quality gap between the models grows with the corpus was not tested.
 - **Status**: accepted (single run).
 
+### E35. Where the memory of a bge-m3 process goes
+- **Question**: does loading bge-m3 always use 1.1 GB, and what is in it?
+- **Setup**: `bench_memory.py` and `bench_memory2.py` (session scratchpad, **not in the repo**): a clean Python process, `onnxruntime` session with the same options as `Embedder` (4 intra-op threads, 1 inter-op), process memory (`psutil`) after each step, 100 different questions (the 50 of E32 and their translations) one at a time. Each variant run twice. A first run (60 repetitions of one single query) seemed to show that `enable_mem_pattern=False` made the query 4.5 times faster; with 100 different queries it makes no difference (142 against 149 ms) and the vectors are identical (maximum difference 0.0), so that effect was an artifact of repeating one query.
+- **Result**:
+
+| step (bge-m3, one process, measured twice with the same result) | memory | added |
+|---|---|---|
+| Python with the libraries imported | 51 MB | |
+| ONNX session loaded (the 568 MB int8 model) | 614 MB | +563 MB |
+| first tokenizer (the one that prepares the queries) | 862 MB | +248 MB |
+| second tokenizer (the one that only counts tokens for the chunker) | 1,117 MB | +254 MB |
+| after 100 different queries | 1,126 MB | +9 MB |
+
+- **Findings**: the memory does not grow with queries (+9 MB over 100 queries) and does not depend on the number of chunks; about 563 MB are the model and about 500 MB the two copies of the 250,000-token tokenizer; the second copy is only used by `count_tokens`, which the chunker calls and a query does not. The 699 MB of e5-small in E34 are mostly the same two tokenizers (113 MB of model), so the memory difference between the models is the weights, about 450 MB. Loading the counting tokenizer on demand would save about 254 MB in a query process (not implemented).
+- **Caveats**: one machine; memory is the working set of the process (`rss`); the figure for indexing (E24: peak 1,591 MB) was measured with another script; the saving of the lazy tokenizer is a measurement of the tokenizer, not of the changed code.
+- **Status**: accepted (single run, repeated twice).
+
 ## Corrections log (things said or measured wrongly, and what replaced them)
 
 | # | Claim or measurement | Reality | Where fixed |

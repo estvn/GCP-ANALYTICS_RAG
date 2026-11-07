@@ -25,6 +25,7 @@ Written up in [eval/experiments.md](https://github.com/estvn/GCP-ANALYTICS_RAG/b
 - **E17**: Grid with a validation set: 6 chunkers x 7 search variants
 - **E19**: Full-index evaluation of the three chunkers
 - **E29**: All chunking techniques on one common method
+- **E31**: Returning 30 chunks and a larger candidate pool
 
 ## Results (E29: hybrid search, 130 questions, hits / MRR)
 
@@ -38,6 +39,27 @@ Written up in [eval/experiments.md](https://github.com/estvn/GCP-ANALYTICS_RAG/b
 
 Hits are questions answered out of 130, with about 9,000 characters returned per query. Differences under about 8 points
 (about 10 of the 130 questions) are not conclusive.
+
+## Results returning 30 chunks (E31)
+
+Index `full_SEM` (`e5-small`), the same 130 questions; each query returns up to 30 chunks (about 31,363 characters). Questions answered out of 130 within the first 10, 20 and 30 chunks, with 30 and with 100 candidates per search (the pool of chunks each search contributes before fusion):
+
+| retrieval technique | @10 (30 cand.) | @30 (30 cand.) | @10 (100 cand.) | @20 (100 cand.) | @30 (100 cand.) | MRR (100 cand.) |
+|---|---|---|---|---|---|---|
+| vector | 93 | 104 | 93 | 100 | 104 | 0.472 |
+| vector + ES/EN 1:1 | 99 | 112 | 76 | 104 | 113 | 0.325 |
+| vector + ES/EN 2:1 | 90 | 104 | 92 | 103 | 107 | 0.341 |
+| keyword | 79 | 96 | 79 | 93 | 96 | 0.379 |
+| keyword + ES/EN 1:1 | 78 | 104 | 75 | 90 | 103 | 0.302 |
+| keyword + ES/EN 2:1 | 78 | 98 | 77 | 96 | 99 | 0.323 |
+| hybrid | 97 | 109 | 97 | 104 | 108 | 0.523 |
+| hybrid + ES/EN 1:1 | 106 | 121 | 89 | 112 | 120 | 0.367 |
+| hybrid + ES/EN 2:1 | 97 | 109 | 98 | 110 | 112 | 0.420 |
+
+- Best technique on this index: hybrid + ES/EN 1:1, 120 of 130 answered with 100 candidates (MRR 0.367); still missing: ['q35', 'v02', 'v05', 'v24', 'v29', 'v31', 'v35', 'f12', 'f38', 'f40'].
+- At 20 chunks (about 20,909 characters) the best technique answers 112 of 130 with 100 candidates.
+- Returning 30 chunks instead of about 10 answers more questions in every technique. A pool of 100 candidates helps at 30 chunks but hurts the top 10: plain hybrid goes from 97 to 97 answered at 10 chunks.
+- Differences under about 8 points (about 10 of the 130 questions) are not conclusive. The 130 questions also chose the settings, so the figures are optimistic for new questions. Raw output: [eval/runs/e31_k30_candidates100.log](eval/runs/e31_k30_candidates100.log) and [eval/runs/e31_k30_candidates30.log](eval/runs/e31_k30_candidates30.log).
 
 ## Layout
 

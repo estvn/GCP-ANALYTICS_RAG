@@ -1,0 +1,33 @@
+## full_SEMH_bge + bge-m3: 1416 chunks, k=10
+  vector                         all(130) 0.862/0.631 | same-language(108) 0.870/0.655 | cross-lingual(22) 0.818/0.512
+  keyword                        all(130) 0.577/0.355 | same-language(108) 0.676/0.425 | cross-lingual(22) 0.091/0.012
+  hybrid (vector+keyword RRF)    all(130) 0.877/0.580 | same-language(108) 0.907/0.664 | cross-lingual(22) 0.727/0.167
+  hybrid + ES/EN RRF 1:1         all(130) 0.938/0.591 | same-language(108) 0.935/0.586 | cross-lingual(22) 0.955/0.617
+  hybrid + ES/EN RRF 2:1         all(130) 0.931/0.607 | same-language(108) 0.944/0.633 | cross-lingual(22) 0.864/0.480
+## full_SEM_bge + bge-m3: 1128 chunks, k=9
+  vector                         all(130) 0.823/0.581 | same-language(108) 0.815/0.586 | cross-lingual(22) 0.864/0.557
+  keyword                        all(130) 0.592/0.374 | same-language(108) 0.685/0.446 | cross-lingual(22) 0.136/0.018
+  hybrid (vector+keyword RRF)    all(130) 0.869/0.576 | same-language(108) 0.917/0.661 | cross-lingual(22) 0.636/0.160
+  hybrid + ES/EN RRF 1:1         all(130) 0.846/0.551 | same-language(108) 0.843/0.547 | cross-lingual(22) 0.864/0.572
+  hybrid + ES/EN RRF 2:1         all(130) 0.854/0.591 | same-language(108) 0.852/0.615 | cross-lingual(22) 0.864/0.472
+## full_STSEM_bge + bge-m3: 1336 chunks, k=10
+  vector                         all(130) 0.823/0.595 | same-language(108) 0.843/0.624 | cross-lingual(22) 0.727/0.456
+  keyword                        all(130) 0.615/0.351 | same-language(108) 0.713/0.418 | cross-lingual(22) 0.136/0.023
+  hybrid (vector+keyword RRF)    all(130) 0.869/0.584 | same-language(108) 0.926/0.668 | cross-lingual(22) 0.591/0.173
+  hybrid + ES/EN RRF 1:1         all(130) 0.877/0.576 | same-language(108) 0.880/0.581 | cross-lingual(22) 0.864/0.553
+  hybrid + ES/EN RRF 2:1         all(130) 0.862/0.605 | same-language(108) 0.880/0.638 | cross-lingual(22) 0.773/0.439
+## full_SEMH_bge + bge-m3: 1416 chunks, k=10
+  vector + ES/EN RRF 1:1         all(130) 0.892/0.639 | same-language(108) 0.880/0.646 | cross-lingual(22) 0.955/0.605
+  vector + ES/EN RRF 2:1         all(130) 0.892/0.638 | same-language(108) 0.889/0.649 | cross-lingual(22) 0.909/0.585
+  keyword + ES/EN RRF 1:1        all(130) 0.577/0.300 | same-language(108) 0.528/0.312 | cross-lingual(22) 0.818/0.238
+  keyword + ES/EN RRF 2:1        all(130) 0.562/0.296 | same-language(108) 0.630/0.348 | cross-lingual(22) 0.227/0.041
+## full_SEM_bge + bge-m3: 1128 chunks, k=9
+  vector + ES/EN RRF 1:1         all(130) 0.800/0.548 | same-language(108) 0.787/0.539 | cross-lingual(22) 0.864/0.594
+  vector + ES/EN RRF 2:1         all(130) 0.808/0.564 | same-language(108) 0.796/0.560 | cross-lingual(22) 0.864/0.581
+  keyword + ES/EN RRF 1:1        all(130) 0.608/0.313 | same-language(108) 0.583/0.330 | cross-lingual(22) 0.727/0.229
+  keyword + ES/EN RRF 2:1        all(130) 0.577/0.312 | same-language(108) 0.657/0.367 | cross-lingual(22) 0.182/0.041
+## full_STSEM_bge + bge-m3: 1336 chunks, k=10
+  vector + ES/EN RRF 1:1         all(130) 0.808/0.594 | same-language(108) 0.796/0.600 | cross-lingual(22) 0.864/0.565
+  vector + ES/EN RRF 2:1         all(130) 0.815/0.588 | same-language(108) 0.824/0.612 | cross-lingual(22) 0.773/0.470
+  keyword + ES/EN RRF 1:1        all(130) 0.562/0.319 | same-language(108) 0.528/0.329 | cross-lingual(22) 0.727/0.269
+  keyword + ES/EN RRF 2:1        all(130) 0.585/0.320 | same-language(108) 0.657/0.374 | cross-lingual(22) 0.227/0.057

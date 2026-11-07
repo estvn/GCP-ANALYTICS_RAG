@@ -6,14 +6,13 @@
 import argparse
 from pathlib import Path
 
-from rag.embed import Embedder
+from rag.embed import MODELS, load_embedder
 from rag.evaluation.golden import Question, load_golden
 from rag.evaluation.metrics import evaluate
 from rag.retrieval import HybridRetriever
 from rag.store import connect, keyword_search, vector_search
 
 DEFAULT_DB = "postgresql://rag:rag@127.0.0.1:5433/rag"
-DEFAULT_MODEL_DIR = Path("models/multilingual-e5-small")
 DEFAULT_SETS = [
     Path("eval/golden_set.json"),
     Path("eval/golden_terms.json"),
@@ -44,13 +43,13 @@ def to_markdown(rows: list[dict], k: int) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--db", default=DEFAULT_DB)
-    parser.add_argument("--model-dir", type=Path, default=DEFAULT_MODEL_DIR)
+    parser.add_argument("--model", choices=sorted(MODELS), default="bge-m3")
     parser.add_argument("--golden", type=Path, nargs="+", default=DEFAULT_SETS)
     parser.add_argument("-k", type=int, default=5)
     args = parser.parse_args()
     sets = {path.stem: load_golden(path) for path in args.golden}
     with connect(args.db) as conn:
-        print(to_markdown(run(conn, Embedder(args.model_dir), sets, args.k), args.k))
+        print(to_markdown(run(conn, load_embedder(args.model), sets, args.k), args.k))
 
 
 if __name__ == "__main__":

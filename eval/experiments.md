@@ -575,6 +575,26 @@ e5-small:
 - **Caveats**: 50 questions and a single run; the questions and their translations were written by a language model, not by a person, so they may be easier or phrased differently from real questions; only 12 questions cross languages; the evidence snippets are short; the files differ from those of the 130 questions, so topics differ too. The defaults of `search` and `search_many` (30 chunks, 100 candidates) were set after E31; this experiment finds no gain from the pool of 100.
 - **Status**: accepted (single run, n = 50). **Branches**: every technique branch has the section "Results on 50 new questions (E32)".
 
+### E33. Which embedding model, read from E31 and E32 (analysis of existing runs)
+- **Question**: how do e5-small and bge-m3 compare when more chunks are returned, and which one fits production?
+- **Setup**: no new run. The raw output of E31 (130 questions) and E32 (50 new questions), 30 candidates per search, 10, 20 and 30 chunks counted from the same ranking, five chunking techniques per model, averaged over the five techniques and over the 180 questions (MRR weighted by the number of questions). Computed by a script of the session scratchpad (not in the repository) from `eval/runs/e31_k30_candidates30.log` and `eval/runs/e32_heldout_candidates30.log`.
+- **Result** (share of the 180 questions answered):
+
+| retrieval | model | first 10 chunks | first 20 | first 30 | MRR |
+|---|---|---|---|---|---|
+| hybrid + ES/EN 1:1 (with translation) | e5-small | 83.4% | 91.7% | 93.6% | 0.49 |
+| hybrid + ES/EN 1:1 (with translation) | bge-m3 | 87.9% | 94.8% | 96.3% | 0.58 |
+| hybrid (one phrasing, no translation) | e5-small | 76.9% | 81.9% | 85.4% | 0.55 |
+| hybrid (one phrasing, no translation) | bge-m3 | 86.7% | 93.8% | 95.1% | 0.58 |
+
+- **Findings**:
+  - Going from 10 to 30 chunks gains 8 to 10 points for both models.
+  - With the translation fused, e5-small answers 91.7% with 20 chunks, more than bge-m3 with 10 (87.9%): it needs about twice the chunks (and the text). Without the translation it does not reach bge-m3's 10 chunks even with 30.
+  - The chunks are practically the same with both models (E29 counts: 741 and 741, 1,408 and 1,416, 1,335 and 1,336, 907 and 906), and the gap remains on the structural index, which uses no model to cut: the difference comes from the embeddings, not from the chunking (E24 also measured a related/unrelated similarity gap of 0.17 for e5-small and 0.53 for bge-m3).
+  - bge-m3 needs no translation step; e5-small does.
+- **Caveats**: the gaps with the translation (2.7 to 4.5 points) are inside the noise of 180 questions (about 6 points, about 10 questions); no end-to-end test of the answer of a language model; text measured in characters; the questions of E32 were written by a language model.
+- **Status**: accepted (analysis of single runs). **Recommendation**: bge-m3 for production; e5-small when RAM or indexing time are the limit.
+
 ## Corrections log (things said or measured wrongly, and what replaced them)
 
 | # | Claim or measurement | Reality | Where fixed |

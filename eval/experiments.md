@@ -377,7 +377,30 @@ Cells `hit / MRR`. Variants: vector; hybrid with df cap 0.10 / 0.15 / 0.30 and R
   **Status**: accepted (structural chunking only). **Commit**: `29f0f82` (configurable embedder).
 
 ### E27. bge-m3 with structure + semantic chunking
-- **Status: pending.** Indexing `full_SEMH_bge` is running in the background (about 2 h estimated, every window is embedded); the evaluation and the ES+EN fusion test follow automatically.
+- **Status: pending.** Indexing `full_SEMH_bge` is running in the background (about 2 h estimated, every window is embedded); at the last check it had 292 chunks from 69 of 311 documents.
+  The vector and hybrid evaluation runs automatically when indexing ends. The ES+EN fusion (E25/E26 style) and the weighted fusion (E28) on this index have to be run by hand afterwards.
+
+### E28. Weighted RRF over two phrasings: more weight on the original question (130 questions)
+Weights are original : translation; the translation always comes from `golden_translations.json`. Cells `hit / MRR`.
+
+| index, search | 1 phrasing | RRF 1:1 | RRF 2:1 | RRF 3:1 |
+|---|---|---|---|---|
+| e5 structural (k=6), vector: total | .662/.489 | .646/.376 | .623/.383 | .631/.386 |
+| same-language / cross-lingual (hit) | .769 / .136 | .648 / .636 | .704 / .227 | .713 / .227 |
+| e5 structural, hybrid: total | .731/.565 | .754/.456 | .723/.454 | .738/.463 |
+| same-language / cross-lingual (hit) | .861 / .091 | .750 / .773 | .815 / .273 | .833 / .273 |
+| e5 structure+semantic (k=10), vector: total | .723/.500 | .769/.403 | .715/.384 | .723/.394 |
+| same-language / cross-lingual (hit) | .824 / .227 | .769 / .773 | .806 / .273 | .815 / .273 |
+| e5 structure+semantic, hybrid: total | .762/.562 | .800/.453 | .738/.455 | .738/.469 |
+| same-language / cross-lingual (hit) | .870 / .227 | .787 / .864 | .833 / .273 | .833 / .273 |
+| bge-m3 structural (k=6), vector: total | .785/.599 | .792/.572 | .808/.601 | .800/.604 |
+| same-language / cross-lingual (hit) | .787 / .773 | .787 / .818 | .806 / .818 | .796 / .818 |
+| bge-m3 structural, hybrid: total | .808/.609 | .846/.585 | .838/.611 | .838/.618 |
+| same-language / cross-lingual (hit) | .880 / .455 | .843 / .864 | .843 / .818 | .843 / .818 |
+- **Finding**: with e5-small, weighting the original recovers same-language accuracy but **destroys the cross-lingual gain** (0.864 -> 0.273 for hybrid, 0.773 -> 0.273 for vector): only 1:1 keeps it, because the
+  translated query is the only one that finds those answers and a lower weight buries it. With bge-m3 the model already crosses languages, so the translation adds about 3 points in total (0.808 -> 0.838-0.846) and the weights hardly matter;
+  3:1 gives the best MRR (0.618) at a total hit of 0.838. A second phrasing was essential with e5-small and is optional with bge-m3.
+- **Status**: accepted (22 cross-lingual questions; translations by a model, as a stand-in for the caller). Run by an ad hoc script (not in the repo).
 
 ---
 

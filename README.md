@@ -46,6 +46,7 @@ Written up in [eval/experiments.md](https://github.com/estvn/GCP-ANALYTICS_RAG/b
 - **E28**: Weighted RRF over two phrasings
 - **E30**: Retrieval techniques on the three best chunking indexes
 - **E31**: Returning 30 chunks and a larger candidate pool
+- **E32**: Questions nobody used to choose a setting (50 new questions)
 
 ## Results (E30: questions answered out of 130 / MRR, bge-m3)
 
@@ -94,6 +95,21 @@ Same 130 questions; each query returns up to 30 chunks and the candidate pool is
 - Best row: vector on the semantic + header cuts index, 125 of 130 answered (MRR 0.637); still missing: ['k10', 'v15', 'v24', 'v31', 'f40'].
 - Returning 30 chunks answers more questions than about 10; a pool of 100 candidates helps at 30 chunks but can hurt the top 10 and the MRR.
 - Differences under about 8 points (about 10 of the 130 questions) are not conclusive; the 130 questions also chose the settings, so the figures are optimistic for new questions. Raw output: [eval/runs/e31_k30_candidates100.log](eval/runs/e31_k30_candidates100.log).
+
+## Results on 50 new questions (E32)
+
+50 questions about files that no earlier question used (written by a language model, evidence checked by script), so none of them chose a setting; 30 chunks returned, pool of 30 or 100 candidates. Answered out of 50; rows are the technique of this branch on the five bge-m3 indexes (the e5-small indexes are in the raw output):
+
+| chunking technique (bge-m3 index) | retrieval | @10 (30 cand.) | @30 (30 cand.) | @30 (100 cand.) | MRR (100 cand.) |
+|---|---|---|---|---|---|
+| semantic + header cuts | vector | 39 | 44 | 44 | 0.534 |
+| structural | vector | 43 | 48 | 48 | 0.631 |
+| user's hybrid (two-stage + merge) | vector | 43 | 45 | 45 | 0.610 |
+| semantic only | vector | 37 | 43 | 43 | 0.534 |
+| community two-stage | vector | 40 | 47 | 47 | 0.579 |
+
+- Best row with 100 candidates: vector on the structural index, 48 of 50 answered (MRR 0.631); still missing: ['h25', 'h35'].
+- With 50 questions one question is 2 points; differences under about 6 questions are not conclusive. Raw output: [eval/runs/e32_heldout_candidates100.log](eval/runs/e32_heldout_candidates100.log).
 
 ## Layout
 

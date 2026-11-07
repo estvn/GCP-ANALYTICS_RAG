@@ -1,0 +1,3 @@
+## full_STSEM_bge: 1336 chunks, avg 911 chars, k=10
+  vector         A 0.850/0.594 T 0.800/0.583 V 0.700/0.473 F 0.925/0.721 | pooled 0.823/0.595 | same-language(108) 0.843 | cross-lingual(22) 0.727
+  hybrid df0.05  A 0.825/0.540 T 0.900/0.670 V 0.850/0.538 F 0.925/0.653 | pooled 0.869/0.584 | same-language(108) 0.926 | cross-lingual(22) 0.591

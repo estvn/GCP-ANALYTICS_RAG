@@ -1,0 +1,614 @@
+{
+ "questions": [
+  {
+   "id": "h01",
+   "lang": "es",
+   "question": "¿Por qué, al analizar el uso de tarjetas de crédito para una nueva tarjeta de viajes, se sustituyen los nombres y números de tarjeta por símbolos únicos?",
+   "relevant": [
+    {
+     "source": "03_DATA_TRANSFORMATION_CLOUD/02_HANDLE_RAW_DATA_DATA_PIPELINES/011_DATA_TRANSFORMATION_TECHNIQUES_THAT_ACHIEVE_DIFFERENTE_BUSINESS_NEEDS.md",
+     "evidence": "La asignación de token se refiere al reemplazo de datos sensibles por símbolos únicos. Esta técnica es necesaria para ayudar a proteger la información sensible, como la PII y la PHI."
+    }
+   ]
+  },
+  {
+   "id": "h02",
+   "lang": "es",
+   "question": "Al crear en BigQuery una tabla particionada por rango de números enteros, ¿qué representan los tres valores que hay que escribir: inicio, fin e intervalo?",
+   "relevant": [
+    {
+     "source": "02_CLOUD_DATA_MANAGEMENT_AND_STORAGE/004_TECHNIQUES_ACCESS_DATA/016_CREATE_PARTITIONED_TABLE.md",
+     "evidence": "Start (Inicio) es el inicio del rango de la partición, End (Fin) es el final del último rango de la partición y, por último, Interval (Intervalo) es el ancho de cada rango de la partición."
+    }
+   ]
+  },
+  {
+   "id": "h03",
+   "lang": "es",
+   "question": "¿Para qué se usa Dataplex en el lab del módulo 3 del curso 2 con el comercio electrónico TheLook?",
+   "relevant": [
+    {
+     "source": "02_CLOUD_DATA_MANAGEMENT_AND_STORAGE/001_INTRODUCTION_DATA_CLOUD_MANAGEMENT_STORAGE/005_EXPLORE_YOUR_COURSE_2_SCENARIO.md",
+     "evidence": "Navegar por Dataplex:** En este lab del módulo 3, usarás Dataplex para buscar eficientemente tablas en BigQuery que contengan información sobre ventas de camisetas."
+    }
+   ]
+  },
+  {
+   "id": "h04",
+   "lang": "es",
+   "question": "Después de elegir un conjunto de datos público en el mercado dentro de BigQuery, ¿qué botón hay que pulsar para enlazarlo con el panel de exploración?",
+   "relevant": [
+    {
+     "source": "02_CLOUD_DATA_MANAGEMENT_AND_STORAGE/003_STEPS_FIND_DATA/002_HOW_TO_FIND_DATA_USING_BIG_QUERY.md",
+     "evidence": "1. Haz clic en el botón + AGREGAR en el Explorador de BigQuery para agregar un conjunto de datos. 2. Navega a los conjuntos de datos públicos para lanzar la interfaz de Marketplace en BigQuery. 3. Selecciona tu conjunto de datos. 4. Haz clic en VER CONJUNTO DE DATOS para conectar el conjunto al Explorador de BigQuery."
+    }
+   ]
+  },
+  {
+   "id": "h05",
+   "lang": "es",
+   "question": "¿Por qué los modelos planos suelen servir como fuente de datos históricos para análisis en un almacén de datos?",
+   "relevant": [
+    {
+     "source": "02_CLOUD_DATA_MANAGEMENT_AND_STORAGE/002_KEY_COMPONENTS_DATA_ORGANIZATION/003_NORMALIZED_DENORMALIZED_DATA.md",
+     "evidence": "En su lugar, la única tabla ya modela todas las relaciones posibles, lo que puede generar datos duplicados. Debido a eso, los modelos planos suelen usarse como una posible fuente dentro de un sistema de datos para capturar datos menos complejos que no necesitan actualizarse, como los datos históricos que se usan para realizar análisis en un almacén de datos."
+    }
+   ]
+  },
+  {
+   "id": "h06",
+   "lang": "es",
+   "question": "En el escenario de TheLook del curso 4, ¿qué se construye en el laboratorio del último módulo y con qué lenguaje?",
+   "relevant": [
+    {
+     "source": "04_VISUALIZE_DATA_IN_CLOUD/01_HOW_VISUALIZE_DATA_IN_CLOUD/005_EXPLORE_COURSE_4_SCENARIO.md",
+     "evidence": "En este lab del módulo 5, crearás un proyecto de LookML para modelar las dimensiones y mediciones en toda la base de datos de TheLook."
+    }
+   ]
+  },
+  {
+   "id": "h07",
+   "lang": "es",
+   "question": "¿Qué dificultades de calidad de datos aparecen en un data lake y por qué?",
+   "relevant": [
+    {
+     "source": "02_CLOUD_DATA_MANAGEMENT_AND_STORAGE/001_INTRODUCTION_DATA_CLOUD_MANAGEMENT_STORAGE/012_OVERVIEW_DATA_LAKEHOUSE_ARCHITECTURE.md",
+     "evidence": "También es más difícil garantizar la calidad de los datos, ya que no se limpian de inmediato, lo que dificulta garantizar que se cumplan los estándares organizativos y que sean útiles los datos que se transfieren."
+    }
+   ]
+  },
+  {
+   "id": "h08",
+   "lang": "es",
+   "question": "En Analytics Hub, cuando alguien suscrito busca un intercambio y accede a sus datos, ¿de dónde se leen realmente y qué recurso se crea en su proyecto?",
+   "relevant": [
+    {
+     "source": "02_CLOUD_DATA_MANAGEMENT_AND_STORAGE/003_STEPS_FIND_DATA/007_ANALYTICS_HUB_ENABLES_DATA_SHARING.md",
+     "evidence": "Cuando el usuario busca en los intercambios de Analytics Hub para encontrar los datos que necesita, este consulta los datos directo desde el conjunto de datos del publicador. Esto crea un conjunto de datos vinculado al que el suscriptor puede acceder en sus proyectos sin tener que copiar los datos del publicador."
+    }
+   ]
+  },
+  {
+   "id": "h09",
+   "lang": "en",
+   "question": "What template does the resume reading suggest for phrasing job achievements with measurable results?",
+   "relevant": [
+    {
+     "source": "05_PREPARE_FOR_BEING_DATA_CLOUD_ANALYST/01_PREPARE_DATA_CLOUD_ANALYS_JOB/008_UPDATE_RESUME.md",
+     "evidence": "También es importante incluir datos que muestren estos resultados, si es posible. Por ejemplo, puedes usar la fórmula “Logré [X] según la medida de [Y], cuando hice [Z]”."
+    }
+   ]
+  },
+  {
+   "id": "h10",
+   "lang": "en",
+   "question": "Why is LookML classed as a declarative language, and how does that differ from the way an imperative language such as Python works?",
+   "relevant": [
+    {
+     "source": "04_VISUALIZE_DATA_IN_CLOUD/05_EXPLORE_DEVELOPMENT_ENVIRONMENT/006_DEFINE_DIMENSIONS_MEASURE_LOOKML.md",
+     "evidence": "SQL es un lenguaje declarativo. Los programadores tienen que decirle al sistema lo que quieren que pase. Con SQL, la computadora realizará los pasos necesarios para ejecutar el comando. LookML es un lenguaje de modelado basado en SQL, así que también es un lenguaje declarativo."
+    }
+   ]
+  },
+  {
+   "id": "h12",
+   "lang": "es",
+   "question": "En la propuesta de esquema de página para el informe de tráfico web de TheLook, ¿qué colores se plantean para el cuadro de evaluación y para el gráfico de barras?",
+   "relevant": [
+    {
+     "source": "04_VISUALIZE_DATA_IN_CLOUD/02_PLANNING_METHODS_VISUALIZATIONS_DESIGN/017_ANALYZE_WIREFRAME.md",
+     "evidence": "La tabla debe ser en blanco y negro. - El cuadro de evaluación debe ser verde con números rojos. - El gráfico de barras debe ser amarillo y púrpura con contraste alto."
+    }
+   ]
+  },
+  {
+   "id": "h13",
+   "lang": "es",
+   "question": "¿Qué riesgos trae obtener información desde internet para una visualización y qué se necesita antes de construirla?",
+   "relevant": [
+    {
+     "source": "04_VISUALIZE_DATA_IN_CLOUD/01_HOW_VISUALIZE_DATA_IN_CLOUD/008_PLANNING_PHASES_DATA_VISUALIZATION_WORKFLOW.md",
+     "evidence": "The very nature of pulling information from the internet means opening up the possibility of data breaches, viruses and malware. - Before building a visualization, it's critical to have a strategy for keeping your data safe."
+    }
+   ]
+  },
+  {
+   "id": "h14",
+   "lang": "es",
+   "question": "¿Qué tipo de unión en SQL conserva todas las filas de la tabla que aparece antes de la cláusula JOIN y solo las coincidentes de la tabla que aparece después?",
+   "relevant": [
+    {
+     "source": "02_CLOUD_DATA_MANAGEMENT_AND_STORAGE/004_TECHNIQUES_ACCESS_DATA/005_SQL_QUERY_TERMS.md",
+     "evidence": "Combina todas las filas de la tabla a la izquierda de (antes) la cláusula JOIN, pero solo las filas que coinciden de la tabla a la derecha de (después) la cláusula JOIN."
+    }
+   ]
+  },
+  {
+   "id": "h15",
+   "lang": "es",
+   "question": "En SQL, ¿cómo se puede obtener el primer o el último texto en orden alfabético de una columna?",
+   "relevant": [
+    {
+     "source": "03_DATA_TRANSFORMATION_CLOUD/01_INTRODUCTION_DATA_TRANSFORMATION_CLOUD/013_TECHNIQUES_USED_TRANSFORM_DATA.md",
+     "evidence": "Nota: **<mark>MAX</mark>** y **<mark>MIN</mark>** se pueden usar para encontrar los primeros o últimos valores de cadena utilizando el orden alfabético."
+    }
+   ]
+  },
+  {
+   "id": "h16",
+   "lang": "es",
+   "question": "En el ejemplo completado de la actividad del currículum, ¿qué datos debe contener el apartado dedicado a los empleos anteriores?",
+   "relevant": [
+    {
+     "source": "05_PREPARE_FOR_BEING_DATA_CLOUD_ANALYST/01_PREPARE_DATA_CLOUD_ANALYS_JOB/009_ACTIVITY_EXEMPLAR_UPDATE_RESUME.md",
+     "evidence": "que incluya el nombre y la ubicación de la empresa, tu cargo, las fechas en las que trabajaste allí y una descripción de tus responsabilidades y logros"
+    }
+   ]
+  },
+  {
+   "id": "h17",
+   "lang": "en",
+   "question": "What score must a learner reach on each graded quiz to earn the certificate, and how often can those quizzes be taken?",
+   "relevant": [
+    {
+     "source": "05_PREPARE_FOR_BEING_DATA_CLOUD_ANALYST/02_COURSE_5_OVERVIEW.md",
+     "evidence": "Para obtener el certificado, debes conseguir una puntuación igual o superior al 80% en cada cuestionario con calificación. Puedes hacer este tipo de cuestionario muchas veces para llegar a la puntuación de aprobado."
+    }
+   ]
+  },
+  {
+   "id": "h18",
+   "lang": "es",
+   "question": "Según la lectura sobre trabajo en equipo, ¿cómo se describe un panel y qué debe hacer el analista con las partes interesadas para diseñar uno eficaz?",
+   "relevant": [
+    {
+     "source": "04_VISUALIZE_DATA_IN_CLOUD/02_PLANNING_METHODS_VISUALIZATIONS_DESIGN/011_TIPS_EFFECTIVE_TEAMWORK.md",
+     "evidence": "Los paneles son herramientas de visualización de datos que muestran datos en un solo lugar para que sean más accesibles y fáciles de entender. Para poder diseñar un panel eficaz, debes colaborar con las partes interesadas en el diseño de un esquema o un esquema de página en tu panel."
+    }
+   ]
+  },
+  {
+   "id": "h19",
+   "lang": "en",
+   "question": "Which four Google Cloud tools get a high-level introduction in the module about the cloud data analyst role?",
+   "relevant": [
+    {
+     "source": "01_INTRODUCTION_GC_DATA_ANALYTICS/004_ROLE_CLOUD_DATA_ANALYST/001_INTRODUCTION_MODULE_4.md",
+     "evidence": "Next, you’ll explore Google Cloud’s data and analytics portfolio. You'll get a high-level introduction to the tools: BigQuery, Looker, Managed Service for Apache Spark, and Dataflow."
+    }
+   ]
+  },
+  {
+   "id": "h20",
+   "lang": "en",
+   "question": "In the program's study tips, what are exemplars and what is their purpose for a learner doing activities?",
+   "relevant": [
+    {
+     "source": "03_DATA_TRANSFORMATION_CLOUD/01_INTRODUCTION_DATA_TRANSFORMATION_CLOUD/003_HELPFUL_RESOURCES_TIPS.md",
+     "evidence": "Exemplars are completed assignments that fully meet an activity's criteria. Many activities in this program have exemplars for you to validate your work or"
+    }
+   ],
+   "also_relevant": [
+    {
+     "source": "01_INTRODUCTION_GC_DATA_ANALYTICS/001_INTRODUCTION_TO_CLOUD_COMPUTING/003_CDA-C1-r-002-en-file-4.en.md",
+     "evidence": "Exemplars are completed assignments that fully meet an activity's criteria. Many activities in this program have exemplars for you to validate your work or"
+    }
+   ]
+  },
+  {
+   "id": "h21",
+   "lang": "es",
+   "question": "¿Cuáles son las cinco fases por las que pasan los datos en la actividad del plan de ciclo de vida de TheLook?",
+   "relevant": [
+    {
+     "source": "01_INTRODUCTION_GC_DATA_ANALYTICS/003_DATA_LIFECYCLE/009_ACTIVITY_DESIGN_DATA_LIFECYCLE_PLAN.md",
+     "evidence": "El ciclo de vida de los datos es un concepto fundamental para los analistas de datos en la nube y consta de cinco etapas clave: recopilación, administración, análisis, archivado y destrucción."
+    }
+   ]
+  },
+  {
+   "id": "h22",
+   "lang": "en",
+   "question": "In the educational mobile app launch example, what does the product development team put on its dashboard?",
+   "relevant": [
+    {
+     "source": "04_VISUALIZE_DATA_IN_CLOUD/04_INTRODUCTION_VISUALIZATION_TOOLS_ENTERPRISE_GRADE/006_INSIGHTS_FROM_A_SINGLE_DATASET.md",
+     "evidence": "El equipo crea un panel que incluye el promedio de tiempo invertido dentro de la app, los tres principales problemas informados y un gráfico de las funciones más solicitadas."
+    }
+   ]
+  },
+  {
+   "id": "h23",
+   "lang": "en",
+   "question": "How does the management of a data warehouse differ between a cloud provider and an on-premises setup?",
+   "relevant": [
+    {
+     "source": "01_INTRODUCTION_GC_DATA_ANALYTICS/001_INTRODUCTION_TO_CLOUD_COMPUTING/013_ADVANTAGES_CLOUD_DATA_WAREHOUSES.md",
+     "evidence": "Managed by the cloud provider,<br>which requires fewer internal<br>resources|Require on-site experts and<br>resources to manage storage<br>systems"
+    }
+   ]
+  },
+  {
+   "id": "h24",
+   "lang": "en",
+   "question": "Which cloud payment model gives an organization a discount in return for committing to a fixed amount of resources for a set period of time?",
+   "relevant": [
+    {
+     "source": "01_INTRODUCTION_GC_DATA_ANALYTICS/GLOSSARY_COURSE_1.md",
+     "evidence": "Reserved instances:** A cloud payment model in which an organization purchases a specific amount of resources for a certain time period, and receives a discount in return for this commitment"
+    }
+   ]
+  },
+  {
+   "id": "h25",
+   "lang": "es",
+   "question": "Si muchos usuarios de una app de comida abandonan el carrito al pagar, ¿qué descubre el análisis y qué acción se toma?",
+   "relevant": [
+    {
+     "source": "04_VISUALIZE_DATA_IN_CLOUD/03_ACCESS_DATA_EXPLORE_CREATE_REPORTS_BASED_ON_IT_IN_CLOUD/006_ACTIONABLE_INSIGHTS_THROUGH_DATA_EXPLORATION.md",
+     "evidence": "Imagina que eres un analista de datos que trabaja para una aplicación de entrega de comida, y muchos usuarios abandonan los carritos durante el proceso de pago. Luego de analizar los datos de los usuarios, descubres que el proceso de pago es demasiado complejo. Con esta estadística en mente, lo simplificas, lo cual da como resultado menos carritos abandonados y una experiencia del cliente mejorada."
+    }
+   ]
+  },
+  {
+   "id": "h26",
+   "lang": "en",
+   "question": "Which loading method moves to the destination storage only the records that have changed since the previous load?",
+   "relevant": [
+    {
+     "source": "03_DATA_TRANSFORMATION_CLOUD/03_GLOSSARY_COURSE_3.md",
+     "evidence": "Carga incremental:** Un método por el cual solo los datos que se modificaron desde la última carga se trasladan al almacenamiento de destino"
+    }
+   ],
+   "also_relevant": [
+    {
+     "source": "03_DATA_TRANSFORMATION_CLOUD/02_HANDLE_RAW_DATA_DATA_PIPELINES/019_GLOSSARY_MODULE_02.md",
+     "evidence": "Carga incremental:** Un método por el cual solo los datos que se modificaron desde la última carga se trasladan al almacenamiento de destino"
+    }
+   ]
+  },
+  {
+   "id": "h27",
+   "lang": "es",
+   "question": "¿Cuánto dura una sesión de Práctica de entrevistas y cuántas preguntas de cada tipo se plantean?",
+   "relevant": [
+    {
+     "source": "02_CLOUD_DATA_MANAGEMENT_AND_STORAGE/004_TECHNIQUES_ACCESS_DATA/024_INTERVIEW_TIP_PROVIDE_EXAMPLES.md",
+     "evidence": "La entrevista dura unos 10 minutos y las preguntas varían en cada intento. En cada ocasión, se te harán dos preguntas de antecedentes, una de comportamiento y dos técnicas."
+    }
+   ]
+  },
+  {
+   "id": "h28",
+   "lang": "en",
+   "question": "How long does a learner have to finish all the tasks in a Google Skills lab, can the clock be stopped, and how many times can a lab be taken in total?",
+   "relevant": [
+    {
+     "source": "01_INTRODUCTION_GC_DATA_ANALYTICS/001_INTRODUCTION_TO_CLOUD_COMPUTING/004_CDA-C2-r-243-en-file-5.en.md",
+     "evidence": "You must complete all tasks within the allotted 90 minutes, as you can’t pause the timer. Since labs may rely on preconfigured virtual machines and / or provisioned resources, you’ll only be able to complete the lab a total of 5 times."
+    }
+   ],
+   "also_relevant": [
+    {
+     "source": "03_DATA_TRANSFORMATION_CLOUD/01_INTRODUCTION_DATA_TRANSFORMATION_CLOUD/004_LAB_TECHNICAL_TIPS.md",
+     "evidence": "You must complete all tasks within the allotted 90 minutes, as you can’t pause the timer. Since labs may rely on preconfigured virtual machines and / or provisioned resources, you’ll only be able to complete the lab a total of 5 times."
+    }
+   ]
+  },
+  {
+   "id": "h29",
+   "lang": "es",
+   "question": "¿Cuánto tiempo se dispone para un lab de Qwiklabs y cuántas veces se puede completar?",
+   "relevant": [
+    {
+     "source": "04_VISUALIZE_DATA_IN_CLOUD/01_HOW_VISUALIZE_DATA_IN_CLOUD/004_LAB_TECHNICAL_TIPS.md",
+     "evidence": "Deberás completar todas las tareas en los 90 minutos asignados, y no podrás pausar el cronómetro. Dado que los labs pueden basarse en máquinas virtuales preconfiguradas o recursos aprovisionados, solo podrás completar el lab un total de 5 veces."
+    }
+   ],
+   "also_relevant": [
+    {
+     "source": "02_CLOUD_DATA_MANAGEMENT_AND_STORAGE/001_INTRODUCTION_DATA_CLOUD_MANAGEMENT_STORAGE/004_LAB_TECHNICAL_TIPS.md",
+     "evidence": "Deberás completar todas las tareas en los 90 minutos asignados, y no podrás pausar el cronómetro. Dado que los labs pueden basarse en máquinas virtuales preconfiguradas o recursos aprovisionados, solo podrás completar el lab un total de 5 veces."
+    }
+   ]
+  },
+  {
+   "id": "h30",
+   "lang": "es",
+   "question": "En Looker Studio, ¿hasta dónde llega el efecto de un filtro según se aplique a un gráfico, a nivel de página o a todo el informe?",
+   "relevant": [
+    {
+     "source": "04_VISUALIZE_DATA_IN_CLOUD/03_ACCESS_DATA_EXPLORE_CREATE_REPORTS_BASED_ON_IT_IN_CLOUD/010_AGGREGATE_FILTER_SUMMARIZE_DATA.md",
+     "evidence": "Los filtros aplicados a gráficos filtrarán datos en una visualización específica. A nivel del informe, un filtro se aplicará en todos los datos de la página. Los filtros que se aplican a todo el informe filtrarán datos en cada una de las páginas."
+    }
+   ]
+  },
+  {
+   "id": "h33",
+   "lang": "es",
+   "question": "¿En qué se diferencian la transformación manual y la automática de datos?",
+   "relevant": [
+    {
+     "source": "03_DATA_TRANSFORMATION_CLOUD/01_INTRODUCTION_DATA_TRANSFORMATION_CLOUD/019_GLOSSARY_MODULE_01.md",
+     "evidence": "Transformación automática:** El uso de herramientas de tratamiento de datos y escritura de secuencias de comandos con menos programación, o ninguna, en comparación con la transformación manual **Transformación de datos:** El proceso de tomar datos sin procesar y convertirlos en un formato utilizable **Transformación manual:** El uso de lenguajes de programación para la transformación de datos sin la ayuda de programas de software"
+    }
+   ]
+  },
+  {
+   "id": "h34",
+   "lang": "es",
+   "question": "¿Cómo se llama el modelo de servicio en la nube que cobra solo por el uso real, según transacciones, volumen almacenado y datos transferidos?",
+   "relevant": [
+    {
+     "source": "01_INTRODUCTION_GC_DATA_ANALYTICS/001_INTRODUCTION_TO_CLOUD_COMPUTING/015_GLOSARY_TERMS_MODULE_1.md",
+     "evidence": "Measured service:** A service that charges users only for what they use, based on the number of transactions, the storage volume, and the amount of data transferred"
+    }
+   ],
+   "also_relevant": [
+    {
+     "source": "01_INTRODUCTION_GC_DATA_ANALYTICS/GLOSSARY_COURSE_1.md",
+     "evidence": "Measured service:** A service that charges users only for what they use, based on the number of transactions, the storage volume, and the amount of data transferred"
+    }
+   ]
+  },
+  {
+   "id": "h35",
+   "lang": "es",
+   "question": "¿Qué ofrece Práctica de entrevistas a los licenciados del certificado para mejorar su técnica?",
+   "relevant": [
+    {
+     "source": "01_INTRODUCTION_GC_DATA_ANALYTICS/001_INTRODUCTION_TO_CLOUD_COMPUTING/001_CDA-C1-r-001-es-file-2.es.md",
+     "evidence": "Mejorar tu técnica en las entrevistas con Práctica de entrevistas, una herramienta de Google que se creó teniendo en cuenta a los licenciados de sus certificados. Obtener preguntas de práctica específicas sobre análisis de datos, transcripciones de tus respuestas y estadísticas automáticas"
+    }
+   ]
+  },
+  {
+   "id": "h36",
+   "lang": "en",
+   "question": "Why are the different shapes in Google Slides handy when sketching a dashboard wireframe, and what could a circle stand for?",
+   "relevant": [
+    {
+     "source": "04_VISUALIZE_DATA_IN_CLOUD/02_PLANNING_METHODS_VISUALIZATIONS_DESIGN/016_HOW_TO_BUILD_WIREFRAME_GOOGLE_SLIDES.md",
+     "evidence": "La variedad de formas disponibles en Presentaciones de Google son marcadores de posición eficaces para futuras visualizaciones. Por ejemplo, un círculo puede representar un gráfico circular, y un"
+    }
+   ]
+  },
+  {
+   "id": "h37",
+   "lang": "es",
+   "question": "¿Qué es una llave de seguridad y para qué sirve?",
+   "relevant": [
+    {
+     "source": "01_INTRODUCTION_GC_DATA_ANALYTICS/003_DATA_LIFECYCLE/19_GLOSSARY.md",
+     "evidence": "Llave de seguridad:** Un método de autenticación que utiliza una firma digital física o una clave para verificar la identidad de un usuario antes de acceder a recursos específicos"
+    }
+   ]
+  },
+  {
+   "id": "h38",
+   "lang": "en",
+   "question": "What browser setup is advised when doing the labs so that a learner's own account does not clash with the provided student account?",
+   "relevant": [
+    {
+     "source": "03_DATA_TRANSFORMATION_CLOUD/01_INTRODUCTION_DATA_TRANSFORMATION_CLOUD/004_LAB_TECHNICAL_TIPS.md",
+     "evidence": "Use an Incognito or private browser window to complete the lab in order to prevent any conflicts between your personal account and the student account."
+    }
+   ],
+   "also_relevant": [
+    {
+     "source": "01_INTRODUCTION_GC_DATA_ANALYTICS/001_INTRODUCTION_TO_CLOUD_COMPUTING/004_CDA-C2-r-243-en-file-5.en.md",
+     "evidence": "Use an Incognito or private browser window to complete the lab in order to prevent any conflicts between your personal account and the student account."
+    }
+   ]
+  },
+  {
+   "id": "h39",
+   "lang": "es",
+   "question": "¿Qué puntuación mínima se necesita en las tareas calificadas para poder recibir el Certificado de Google Cloud Data Analytics?",
+   "relevant": [
+    {
+     "source": "02_CLOUD_DATA_MANAGEMENT_AND_STORAGE/001_INTRODUCTION_DATA_CLOUD_MANAGEMENT_STORAGE/003_HELPFUL_RESOURCES_TIPS.md",
+     "evidence": "Aprobar todas las tareas calificadas en el certificado con, al menos, una puntuación del 80%. Cada cuestionario calificado en un curso es parte de una calificación acumulativa para ese curso."
+    }
+   ],
+   "also_relevant": [
+    {
+     "source": "04_VISUALIZE_DATA_IN_CLOUD/01_HOW_VISUALIZE_DATA_IN_CLOUD/003_HELPFUL_RESOURCES_TIPS.md",
+     "evidence": "Aprobar todas las tareas calificadas en el certificado con, al menos, una puntuación del 80%. Cada cuestionario calificado en un curso es parte de una calificación acumulativa para ese curso."
+    }
+   ]
+  },
+  {
+   "id": "h40",
+   "lang": "es",
+   "question": "En el ejemplo completado del plan de ciclo de vida de datos, ¿cuántas recomendaciones deben figurar en la diapositiva de recopilación y en la que agrupa las etapas finales del ciclo?",
+   "relevant": [
+    {
+     "source": "01_INTRODUCTION_GC_DATA_ANALYTICS/003_DATA_LIFECYCLE/010_EXEMPLAR_DESIGN_DATA_LIFECYCLE.md",
+     "evidence": "En la **diapositiva Recopila datos**, se deben incluir tres recomendaciones basadas en los comentarios de las partes interesadas. - La diapositiva **Administra, analiza, archiva y destruye datos** debe contar con tres recomendaciones basadas en los comentarios de las partes interesadas."
+    }
+   ],
+   "also_relevant": [
+    {
+     "source": "01_INTRODUCTION_GC_DATA_ANALYTICS/003_DATA_LIFECYCLE/009_ACTIVITY_DESIGN_DATA_LIFECYCLE_PLAN.md",
+     "evidence": "En la **diapositiva Recopila datos**, se deben incluir tres recomendaciones basadas en los comentarios de las partes interesadas. - La diapositiva **Administra, analiza, archiva y destruye datos** debe contar con tres recomendaciones basadas en los comentarios de las partes interesadas."
+    }
+   ]
+  },
+  {
+   "id": "h41",
+   "lang": "es",
+   "question": "¿Qué tres pasos se siguen para recuperar conjuntos de datos en la nube cuando se trabaja con aprendizaje automático?",
+   "relevant": [
+    {
+     "source": "02_CLOUD_DATA_MANAGEMENT_AND_STORAGE/004_TECHNIQUES_ACCESS_DATA/007_STEPS_MODELS_ACCESING_DATA_ML.md",
+     "evidence": "Retrieving datasets: - Choose the appropriate cloud service provider - Set up the necessary credentials and permissions - Establish connections to the data resources"
+    }
+   ]
+  },
+  {
+   "id": "h42",
+   "lang": "en",
+   "question": "What does the third course of the certificate have learners do in order to check data quality, relate different data sources and protect personal information?",
+   "relevant": [
+    {
+     "source": "03_DATA_TRANSFORMATION_CLOUD/01_INTRODUCTION_DATA_TRANSFORMATION_CLOUD/002_COURSE_03_OVERVIEW.md",
+     "evidence": "In this course, you’ll use data discovery and profiling methods to examine data quality and validity. You’ll also use data mapping to establish relationships between different data sources, and explore transformation using various methods."
+    }
+   ],
+   "also_relevant": [
+    {
+     "source": "01_INTRODUCTION_GC_DATA_ANALYTICS/001_INTRODUCTION_TO_CLOUD_COMPUTING/002_CDA-C1-r-173-en-file-3.en.md",
+     "evidence": "In this course, you’ll use data discovery and profiling methods to examine data quality and validity. You’ll also use data mapping to establish relationships between different data sources, and explore transformation using various methods."
+    }
+   ]
+  },
+  {
+   "id": "h43",
+   "lang": "es",
+   "question": "¿Cómo se carga un archivo CSV en una partición específica de una tabla de BigQuery?",
+   "relevant": [
+    {
+     "source": "02_CLOUD_DATA_MANAGEMENT_AND_STORAGE/004_TECHNIQUES_ACCESS_DATA/018_TIPS_INTERACTING_PARTITIONED_TABLES.md",
+     "evidence": "Puedes cargar datos a una partición específica si usas el comando <mark>bq load</mark> con un decorador de partición. Cuando escribas el comando, especifica la partición y el archivo que quieras subir."
+    }
+   ]
+  },
+  {
+   "id": "h44",
+   "lang": "en",
+   "question": "In the module 5 glossary, what is a caching policy?",
+   "relevant": [
+    {
+     "source": "04_VISUALIZE_DATA_IN_CLOUD/05_EXPLORE_DEVELOPMENT_ENVIRONMENT/016_GLOSSARY_MODULE_5.md",
+     "evidence": "Política de almacenamiento en caché:** Es un conjunto de reglas que determina por cuánto tiempo se almacenan en caché los resultados, y cuándo se actualizan."
+    }
+   ],
+   "also_relevant": [
+    {
+     "source": "04_VISUALIZE_DATA_IN_CLOUD/GLOSSARY_COURSE_4.md",
+     "evidence": "Política de almacenamiento en caché:** Es un conjunto de reglas que determina por cuánto tiempo se almacenan en caché los resultados, y cuándo se actualizan."
+    }
+   ]
+  },
+  {
+   "id": "h46",
+   "lang": "es",
+   "question": "Al crear visualizaciones después de la canalización de datos, ¿qué medidas de accesibilidad se recomiendan para seguir las pautas internacionales de contenido web?",
+   "relevant": [
+    {
+     "source": "03_DATA_TRANSFORMATION_CLOUD/02_HANDLE_RAW_DATA_DATA_PIPELINES/017_ANALYSIS_VISUALIZATION_AFTER_DATA_PIPELINE.md",
+     "evidence": "Cuando crees visualizaciones, apégate a los Lineamientos de accesibilidad para el contenido web (WCAG). Puedes implementar funciones de accesibilidad, como alternativas de texto para contenido distinto al texto y colores de fondo con proporciones de contraste suficientes."
+    }
+   ]
+  },
+  {
+   "id": "h47",
+   "lang": "es",
+   "question": "¿Por qué la transferencia por transmisión es la adecuada para sistemas antifraude de aplicaciones bancarias?",
+   "relevant": [
+    {
+     "source": "03_DATA_TRANSFORMATION_CLOUD/02_HANDLE_RAW_DATA_DATA_PIPELINES/006_STRATEGIES_TOOLS_EFFICIENT_DATA_INGESTION.md",
+     "evidence": "A diferencia del método por lotes, la transferencia de transmisión se optimiza para los datos que deben procesarse en tiempo real. Por ejemplo, las aplicaciones bancarias y los sistemas de detección de fraude dependen de la transmisión para ayudar a brindar alertas en tiempo real a sus usuarios."
+    }
+   ]
+  },
+  {
+   "id": "h48",
+   "lang": "en",
+   "question": "How can Dataproc users keep cluster costs down, and which kinds of workloads does this managed Spark and Hadoop service cover?",
+   "relevant": [
+    {
+     "source": "02_CLOUD_DATA_MANAGEMENT_AND_STORAGE/004_TECHNIQUES_ACCESS_DATA/020_KEY_PROCESSES_BENEFITS_DATAPROC.md",
+     "evidence": "Managed Spark and Hadoop service that integrates open source data tools for batch processing, querying, streaming, and machine learning. - With Dataproc, users can create clusters quickly, manage then easily, and save money by turning off cluster when they're not needed"
+    }
+   ]
+  },
+  {
+   "id": "h49",
+   "lang": "en",
+   "question": "In the fitness app example, what pattern among users who stayed longer led the company to prioritize community features?",
+   "relevant": [
+    {
+     "source": "03_DATA_TRANSFORMATION_CLOUD/01_INTRODUCTION_DATA_TRANSFORMATION_CLOUD/009_RECORRIDO_DATOS_TOMA_DECISIONES.md",
+     "evidence": "Descubren una caída significativa en la cantidad de usuarios después de dos semanas de uso. Los usuarios que utilizan las funciones comunitarias, como foros grupales, desafíos y agregar amigos, tienen más probabilidades de usar la app por más tiempo."
+    }
+   ]
+  },
+  {
+   "id": "h50",
+   "lang": "es",
+   "question": "¿Cuáles son las tres metas centrales que persigue la administración de datos dentro de una organización?",
+   "relevant": [
+    {
+     "source": "02_CLOUD_DATA_MANAGEMENT_AND_STORAGE/002_KEY_COMPONENTS_DATA_ORGANIZATION/005_COMPONENTS_OBJECTIVES_DATA_GOVERNANCE.md",
+     "evidence": "La administración de datos tiene tres objetivos principales: lograr la integridad y la exactitud de los datos, establecer políticas y prácticas que se alineen con las reglamentaciones y protejan los derechos de privacidad y hacer que los datos sean más accesibles y usables para los usuarios autorizados."
+    }
+   ]
+  },
+  {
+   "id": "h51",
+   "lang": "es",
+   "question": "¿Cómo define el glosario los datos faltantes tras combinar tablas y qué es un valor NULL?",
+   "relevant": [
+    {
+     "source": "03_DATA_TRANSFORMATION_CLOUD/03_CLOUD_DATA_OPTIMIZATION_STRATEGIES/014_GLOSSARY_MODULE_03.md",
+     "evidence": "Datos faltantes:** Cuando las filas que esperas que se devuelvan no aparecen en la tabla combinada **Valor NULL:** Un valor no disponible para un campo"
+    }
+   ]
+  },
+  {
+   "id": "h52",
+   "lang": "es",
+   "question": "En una entrevista de análisis de datos, ¿qué ejemplo concreto de logro con cifras se ofrece para mostrar cómo hablar de resultados medibles?",
+   "relevant": [
+    {
+     "source": "05_PREPARE_FOR_BEING_DATA_CLOUD_ANALYST/01_PREPARE_DATA_CLOUD_ANALYS_JOB/011_EXPLORE_TIPS_DATA_ANALYTICS_JOB_INVERVIEW.md",
+     "evidence": "A continuación, te mostramos un ejemplo: “Aceleré la elaboración de informes un 22% en tres meses con el diseño de una nueva canalización de flujo de datos”."
+    }
+   ]
+  },
+  {
+   "id": "h53",
+   "lang": "en",
+   "question": "Which chart types are suggested for categorical data and which for numerical data?",
+   "relevant": [
+    {
+     "source": "04_VISUALIZE_DATA_IN_CLOUD/02_PLANNING_METHODS_VISUALIZATIONS_DESIGN/002_DATA_TYPES_CONSIDER_VISUALIZATIONS.md",
+     "evidence": "Categorical data: - Bar chart - Column bar - Pie chart Numerical data: - Line chart - Histogram - Scatterplot - Boxplot - Bubble chart"
+    }
+   ]
+  },
+  {
+   "id": "h54",
+   "lang": "es",
+   "question": "En un modelo de datos, ¿en qué se diferencian las dimensiones de las medidas?",
+   "relevant": [
+    {
+     "source": "04_VISUALIZE_DATA_IN_CLOUD/03_ACCESS_DATA_EXPLORE_CREATE_REPORTS_BASED_ON_IT_IN_CLOUD/007_DIMENSIONS_MEASURES_DATA_MODELS.md",
+     "evidence": "Unique attributes that help you describe data - Dimensions can be combined to ask more complex questions ## Measures - Aggregations of one or more dimensions like a count or average"
+    }
+   ]
+  }
+ ]
+}

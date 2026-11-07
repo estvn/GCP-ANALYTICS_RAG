@@ -22,6 +22,7 @@ Written up in [eval/experiments.md](https://github.com/estvn/GCP-ANALYTICS_RAG/b
 
 - **E29**: All chunking techniques on one common method
 - **E31**: Returning 30 chunks and a larger candidate pool
+- **E32**: Questions nobody used to choose a setting (50 new questions)
 
 ## Results (E29: hybrid search, 130 questions, hits / MRR)
 
@@ -56,6 +57,25 @@ Index `full_STMERGE_bge` (`bge-m3`), the same 130 questions; each query returns 
 - At 20 chunks (about 25,368 characters) the best technique answers 126 of 130 with 100 candidates.
 - Returning 30 chunks instead of about 10 answers more questions in every technique. A pool of 100 candidates helps at 30 chunks but hurts the top 10: plain hybrid goes from 115 to 106 answered at 10 chunks.
 - Differences under about 8 points (about 10 of the 130 questions) are not conclusive. The 130 questions also chose the settings, so the figures are optimistic for new questions. Raw output: [eval/runs/e31_k30_candidates100.log](eval/runs/e31_k30_candidates100.log) and [eval/runs/e31_k30_candidates30.log](eval/runs/e31_k30_candidates30.log).
+
+## Results on 50 new questions (E32)
+
+Index `full_STMERGE_bge` (`bge-m3`). 50 questions about files that no earlier question used (written by a language model, evidence checked by script), so none of them chose a setting. Questions answered out of 50 within the first 10, 20 and 30 chunks, with 30 and with 100 candidates per search:
+
+| retrieval technique | @10 (30 cand.) | @20 (30 cand.) | @30 (30 cand.) | @10 (100 cand.) | @20 (100 cand.) | @30 (100 cand.) | MRR (100 cand.) |
+|---|---|---|---|---|---|---|---|
+| vector | 43 | 44 | 45 | 43 | 44 | 45 | 0.610 |
+| vector + ES/EN 1:1 | 41 | 44 | 46 | 40 | 42 | 46 | 0.565 |
+| vector + ES/EN 2:1 | 42 | 44 | 45 | 42 | 44 | 46 | 0.614 |
+| keyword | 32 | 37 | 39 | 32 | 37 | 39 | 0.405 |
+| keyword + ES/EN 1:1 | 38 | 41 | 43 | 34 | 41 | 44 | 0.383 |
+| keyword + ES/EN 2:1 | 33 | 37 | 40 | 33 | 38 | 40 | 0.386 |
+| hybrid | 42 | 46 | 46 | 40 | 45 | 47 | 0.546 |
+| hybrid + ES/EN 1:1 | 43 | 47 | 48 | 41 | 46 | 47 | 0.534 |
+| hybrid + ES/EN 2:1 | 43 | 46 | 46 | 43 | 45 | 48 | 0.560 |
+
+- Best technique on this index: hybrid + ES/EN 2:1, 48 of 50 answered with 100 candidates (MRR 0.560); still missing: ['h24', 'h35'].
+- With 50 questions one question is 2 points; differences under about 6 questions are not conclusive. A pool of 100 candidates is not better than 30 here. Raw output: [eval/runs/e32_heldout_candidates100.log](eval/runs/e32_heldout_candidates100.log) and [eval/runs/e32_heldout_candidates30.log](eval/runs/e32_heldout_candidates30.log).
 
 ## Layout
 

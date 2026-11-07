@@ -43,7 +43,7 @@ def to_markdown(rows: list[dict], k: int) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--db", default=DEFAULT_DB)
-    parser.add_argument("--model", choices=sorted(MODELS), default="bge-m3")
+    parser.add_argument("--model", choices=sorted(MODELS), default="e5-small")
     parser.add_argument("--golden", type=Path, nargs="+", default=DEFAULT_SETS)
     parser.add_argument("-k", type=int, default=5)
     args = parser.parse_args()

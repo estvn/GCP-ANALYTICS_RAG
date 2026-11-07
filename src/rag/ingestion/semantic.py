@@ -55,7 +55,7 @@ def split_units(markdown: str) -> list[Unit]:
 
 
 class SemanticChunker:
-    """Cut where the meaning shifts, and also at every header once the chunk has `min_tokens`.
+    """Cut where the meaning shifts, under a hard token cap; headers are context only, never cut points.
 
     Needs an embedder with `embed(texts, kind)` and `count_tokens(text)`.
     """
@@ -69,8 +69,8 @@ class SemanticChunker:
 
     @property
     def fingerprint(self) -> str:
-        # the trailing "True" is the old header-cut option, kept so indexes built before it was removed are not re-embedded
-        return f"semantic:{self.max_tokens}:{self.min_tokens}:{self.percentile}:True"
+        # the trailing "False" is the old header-cut option, kept so indexes built when it was an option are not re-embedded
+        return f"semantic:{self.max_tokens}:{self.min_tokens}:{self.percentile}:False"
 
     def chunk(self, text: str, source: str) -> list[dict]:
         units = split_units(text)
@@ -92,8 +92,7 @@ class SemanticChunker:
                 flush()
                 pieces += [(unit.headers, part) for part in self._split_long(unit.text)]
                 continue
-            starts_section = unit.text.startswith("#")
-            if current and (tokens + size > self.max_tokens or (starts_section and tokens >= self.min_tokens)):
+            if current and tokens + size > self.max_tokens:
                 flush()
             current.append(unit)
             tokens += size

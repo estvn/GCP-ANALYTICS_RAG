@@ -51,3 +51,26 @@ Best pooled hit rate on the full course (0.762 with the lower document-frequency
 equal to the structural chunker (MRR 0.562 vs 0.565), at the price of a slower first indexing. The gap to the structural
 chunker is about 3 points, within the noise of 130 questions. Full comparison in [eval/results.md](eval/results.md).
 Other branches: `chunking/structural`, `chunking/semantic`.
+
+## Common-method comparison (E29)
+
+Index `full_SEMH` (1408 chunks, avg 883 chars, k=10), embedding model `e5-small`, 130 questions, about 9,000 characters returned per query.
+
+| search | hits / 130 | hit rate | MRR |
+|---|---|---|---|
+| vector only | 94 | 0.723 | 0.500 |
+| **hybrid (df cap 0.05)** | **99** | **0.762** | **0.557** |
+
+Hybrid by question set (hit/MRR): A 0.725/0.486 | T 1.000/0.528 | V 0.650/0.480 | F 0.850/0.710. Same-language questions (108): 0.870. Cross-lingual questions (22): 0.227.
+
+Raw lines: [eval/runs/structure-semantic-e5-small.log](eval/runs/structure-semantic-e5-small.log). Table of all techniques (hybrid, hits / MRR):
+
+| technique | e5-small hits / MRR | bge-m3 hits / MRR |
+|---|---|---|
+| structural 2400 | 95 / .561 | 107 / .612 |
+| semantic | 96 / .517 | 113 / .576 |
+| semantic + header cuts | 99 / .557 | **114** / .580 |
+| community two-stage | 97 / .508 | 113 / .584 |
+| user's hybrid (two-stage + merge) | 95 / .552 | 109 / .592 |
+
+The chunk count here (from the E29 database) differs from the one in the sections above and the cause was not verified.

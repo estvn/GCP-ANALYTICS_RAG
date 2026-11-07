@@ -3,8 +3,8 @@ import hashlib
 import numpy as np
 import pytest
 
-from rag.ingestion.semantic import SemanticChunker
 from rag.ingestion.pipeline import ingest
+from rag.ingestion.semantic import SemanticChunker
 
 
 class FakeEmbedder:
@@ -110,6 +110,14 @@ def test_changing_the_chunker_configuration_reindexes_everything(conn, docs):
     stats = ingest(docs, conn, FakeEmbedder(), chunker=SemanticChunker(FakeEmbedder(), max_tokens=300))
 
     assert stats["updated"] == 2 and stats["skipped"] == 0
+
+
+def test_the_default_chunker_is_the_semantic_one_with_header_cuts(conn, docs):
+    ingest(docs, conn, FakeEmbedder())
+
+    stats = ingest(docs, conn, FakeEmbedder(), chunker=SemanticChunker(FakeEmbedder()))
+
+    assert stats["skipped"] == 2
 
 
 def test_any_object_with_chunk_and_fingerprint_can_chunk(conn, docs):

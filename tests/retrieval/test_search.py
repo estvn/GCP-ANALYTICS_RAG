@@ -104,6 +104,22 @@ def crowded(conn, tmp_path):
     return conn
 
 
+@pytest.fixture
+def widely_used_word(conn, tmp_path):
+    """200 chunks; 'widget' is in 12 of them (6%), above the 5% cap but under the old 15% one."""
+    (tmp_path / "m").mkdir()
+    for i in range(200):
+        word = "widget " if i < 12 else ""
+        text = f"# Doc {i}\n\n{word}item{i} is here."
+        (tmp_path / "m" / f"d{i}.md").write_text(text, encoding="utf-8")
+    ingest(tmp_path, conn, TopicEmbedder())
+    return conn
+
+
+def test_a_word_in_more_than_five_percent_of_the_chunks_is_ignored(widely_used_word):
+    assert keyword_search(widely_used_word, "widget", 10) == []
+
+
 def test_words_present_in_most_chunks_are_ignored(crowded):
     hits = keyword_search(crowded, "what does the platform do with zorblax", 10)
 

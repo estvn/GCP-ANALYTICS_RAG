@@ -11,6 +11,7 @@ def ingest(md_root, conn, embedder, chunker=None) -> dict[str, int]:
     """Sync md_root into the database. Only new or changed files are chunked and embedded.
 
     A chunker has `chunk(text, source)` and a `fingerprint` that changes with its configuration.
+    The default is the semantic chunker with a cut at every header (the winner of E29), driven by `embedder`.
     """
     chunker = chunker or SemanticChunker(embedder)
     root = Path(md_root)

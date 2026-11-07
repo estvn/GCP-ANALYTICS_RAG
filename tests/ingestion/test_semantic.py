@@ -110,21 +110,19 @@ TWO_SECTIONS_SAME_TOPIC = (
 )
 
 
-def test_headers_are_cut_points_when_structure_comes_first():
-    by_meaning = chunker(min_tokens=5, split_on_headers=False).chunk(TWO_SECTIONS_SAME_TOPIC, "m/doc.md")
-    by_structure = chunker(min_tokens=5, split_on_headers=True).chunk(TWO_SECTIONS_SAME_TOPIC, "m/doc.md")
+def test_a_header_is_a_cut_point_even_when_the_topic_does_not_change():
+    chunks = chunker(min_tokens=5).chunk(TWO_SECTIONS_SAME_TOPIC, "m/doc.md")
 
-    assert len(by_meaning) == 1
-    assert [c["headers"] for c in by_structure] == [["A"], ["B"]]
+    assert [c["headers"] for c in chunks] == [["A"], ["B"]]
 
 
-def test_a_tiny_section_is_merged_into_the_next_one_even_with_header_cuts():
+def test_a_tiny_section_is_merged_into_the_next_one():
     text = "# A\n\nTiny.\n\n# B\n\nThe cloud has regions. The cloud has zones. The cloud is global.\n"
 
-    chunks = chunker(min_tokens=6, split_on_headers=True).chunk(text, "m/doc.md")
+    chunks = chunker(min_tokens=6).chunk(text, "m/doc.md")
 
     assert len(chunks) == 1
 
 
-def test_the_fingerprint_changes_with_the_structure_flag():
-    assert chunker(split_on_headers=False).fingerprint != chunker(split_on_headers=True).fingerprint
+def test_the_fingerprint_changes_with_the_configuration():
+    assert chunker().fingerprint != chunker(max_tokens=100).fingerprint

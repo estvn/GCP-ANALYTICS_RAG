@@ -41,7 +41,7 @@ The best tuning result did not carry over to validation (vector: 0.800 to 0.725)
 
 Hit rate / MRR at equal returned text (about 9,000 characters per query). Pooled over 130 questions: 40 + 10 + 40 from
 course 1 and 40 from courses 2 to 5. One question is 0.77 points; the standard error of a hit rate near 0.75 is about
-3.8 points, so differences under about 4 points are not conclusive.
+3.8 points, so differences under about 8 points (two standard errors, about 10 of the 130 questions) are not conclusive.
 
 | technique | chunks | over 512 tokens | vector | hybrid (df cap 0.15) | hybrid (df cap 0.05) |
 |---|---|---|---|---|---|
@@ -63,7 +63,7 @@ course 1 and 40 from courses 2 to 5. One question is 0.77 points; the standard e
 
 Smaller chunks (median 268 tokens) that rank the right passage lower than the structural 2400 chunks (MRR 0.521 vs
 0.565) with a slightly higher hit rate (0.738 vs 0.731). Full comparison in [eval/results.md](eval/results.md).
-Other branches: `chunking/structural`, `chunking/structure-semantic`.
+Other branches: `chunking/structural-e5-small`, `chunking/semantic-e5-small`, `chunking/structure-semantic-e5-small` (and the `-bge-m3` versions).
 
 ## Common-method comparison (E29)
 

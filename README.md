@@ -1,10 +1,80 @@
-# GCP Analytics RAG
+# Hybrid search (vector + keyword fused with RRF)
 
-Hybrid retrieval (Postgres full-text + vectors) over the Google Cloud Data Analytics course, built to run on a laptop
-within a small CPU/RAM budget (no GPU). Postgres + pgvector for storage, `multilingual-e5-small`
-(int8, ONNX Runtime) for embeddings.
+Branch `retrieval/hybrid`. Hybrid retrieval (Postgres full-text + vectors) over the Google Cloud Data Analytics course,
+built to run on a laptop within a small CPU/RAM budget (no GPU). Postgres + pgvector for storage. Results below use the
+`bge-m3` embedding model (int8, ONNX Runtime) and the three most precise chunking techniques.
 
-Status: ingestion, hybrid retrieval and evaluation work. The MCP server is next.
+Raw evaluation output: [eval/runs/e30_retrieval_modes.log](eval/runs/e30_retrieval_modes.log).
+
+## Technique applied
+
+1. Run the vector search and the keyword search, 30 candidates each.
+2. Fuse the two ranked lists with Reciprocal Rank Fusion (`retrieval/fusion.py`, `HybridRetriever.search`):
+   each chunk scores `1 / (60 + position)` in every list it appears in, and the scores add up.
+3. Return the top `k`. No raw scores are compared, only positions.
+
+- **Strong at:** Finds more questions than either leg alone (exact terms from keyword, meaning from vector).
+- **Weak at:** The keyword leg adds noise and cannot cross languages, so the chunk it rescues is often ranked low (lower MRR than vector alone).
+
+## ES/EN RRF: the same technique, asked twice
+
+RRF is not a search technique on its own: it only fuses ranked lists. The ES/EN variant runs this technique twice, with
+the question as written (original) and with its translation, and fuses the two lists with weights `original:translation`:
+
+- **1:1**: both lists count the same. Score of a chunk = `1 / (60 + position)` in each list, added.
+- **2:1**: the original list counts double: `2 / (60 + position_original) + 1 / (60 + position_translation)`.
+
+It helps cross-language questions, because models match much better inside one language; the cost is a translation step
+and two searches per query (the evaluation used hand translations from `eval/golden_translations.json`, so that cost is
+not measured).
+
+## Experiments
+
+Written up in [eval/experiments.md](https://github.com/estvn/GCP-ANALYTICS_RAG/blob/main/eval/experiments.md) (the file on `main` is the complete log):
+
+- **E05**: Retrieval smoke test (hybrid v1) on the real index
+- **E06**: First baseline matrix: 3 chunk sizes x 3 modes
+- **E07**: Fixing the keyword leg: stoplist, document-frequency cap, RRF weights
+- **E09**: Modes on sets A and T with the final implementation
+- **E17**: Grid with a validation set: 6 chunkers x 7 search variants
+- **E25**: e5-small on the full index: same-language vs cross-lingual, and ES+EN fusion
+- **E27**: bge-m3 with structure + semantic chunking
+- **E28**: Weighted RRF over two phrasings
+- **E29**: All chunking techniques on one common method
+- **E30**: Retrieval techniques on the three best chunking indexes
+
+## Results (E30: questions answered out of 130 / MRR, bge-m3)
+
+Rows of this technique in bold. `SEMH` = semantic + header cuts, `SEM` = semantic, `STSEM` = community two-stage.
+
+| retrieval | semantic + headers (`SEMH`) | semantic (`SEM`) | community two-stage (`STSEM`) |
+|---|---|---|---|
+| vector | 112 / 0.631 | 107 / 0.581 | 107 / 0.595 |
+| vector + ES/EN 1:1 | 116 / 0.639 | 104 / 0.548 | 105 / 0.594 |
+| vector + ES/EN 2:1 | 116 / 0.638 | 105 / 0.564 | 106 / 0.588 |
+| keyword | 75 / 0.355 | 77 / 0.374 | 80 / 0.351 |
+| keyword + ES/EN 1:1 | 75 / 0.300 | 79 / 0.313 | 73 / 0.319 |
+| keyword + ES/EN 2:1 | 73 / 0.296 | 75 / 0.312 | 76 / 0.320 |
+| hybrid | **114 / 0.580** | **113 / 0.576** | **113 / 0.584** |
+| hybrid + ES/EN 1:1 | **122 / 0.591** | **110 / 0.551** | **114 / 0.576** |
+| hybrid + ES/EN 2:1 | **121 / 0.607** | **111 / 0.591** | **112 / 0.605** |
+
+`k` is the number of chunks returned per query (10, 9 and 10 here: a 9,000-character budget divided by the average
+chunk length). MRR is the mean of 1 / position of the first correct chunk (1 = always first, 0 if absent).
+
+## What happened
+
+- Most questions answered of all combinations: hybrid + ES/EN 1:1 on `SEMH` (122 out of 130, MRR 0.591).
+- Without translation the three indexes are tied (113 to 114 answered): the chunking technique barely matters for the plain hybrid.
+- With ES/EN 1:1 it jumps on `SEMH` (114 to 122) and stays flat on the others (`SEM` 113 to 110, `STSEM` 113 to 114).
+- Differences of 2 to 4 questions out of 130 are below the standard error (about 4 points): not conclusive.
+
+## Limits
+
+- Single run, 130 questions. The second phrasing is a hand translation; a real system needs a translation step.
+- The evaluation used a keyword document-frequency cap of 0.05 and ES/EN weights of 2:1 from scratch scripts (not in the
+  repo). The repo defaults are `MAX_DOC_FREQUENCY = 0.15` in `store.py` and an unweighted `rrf`.
+- The user's hybrid chunking and the e5-small indexes were not run through these retrieval modes.
 
 ## Layout
 

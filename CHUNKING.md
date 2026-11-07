@@ -18,7 +18,7 @@ techniques side by side in [eval/results.md](eval/results.md).
 - Cost: indexing time of this run was not recorded.
 
 ```python
-from rag.ingestion.chunk import StructuralChunker
+from rag.ingestion.structural import StructuralChunker
 from rag.embed import load_embedder
 from rag.ingestion.pipeline import ingest
 
@@ -53,7 +53,7 @@ repository** (see the reproducibility map in `eval/experiments.md`).
 | community two-stage | 97 / .508 | 113 / .584 |
 | user's hybrid (two-stage + merge) | 95 / .552 | 109 / .592 |
 
-A difference of 2 to 4 questions out of 130 is below the standard error (about 4 points): it is not conclusive.
+Differences under about 8 points (about 10 of the 130 questions) are not conclusive.
 
 ## Limits
 

@@ -19,7 +19,8 @@ class Question:
     relevant: tuple[Evidence, ...]  # any one of them answers the question
 
 
-def load_golden(path) -> list[Question]:
+def load_golden(path, source_prefix: str = "") -> list[Question]:
+    """Load a golden set. `source_prefix` is prepended to every source (for an index built from a parent folder)."""
     raw = json.loads(Path(path).read_text(encoding="utf-8"))["questions"]
     questions = [
         Question(
@@ -27,7 +28,8 @@ def load_golden(path) -> list[Question]:
             lang=item["lang"],
             text=item["question"],
             relevant=tuple(
-                Evidence(e["source"], e["evidence"]) for e in item["relevant"] + item.get("also_relevant", [])
+                Evidence(source_prefix + e["source"], e["evidence"])
+                for e in item["relevant"] + item.get("also_relevant", [])
             ),
         )
         for item in raw

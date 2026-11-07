@@ -99,3 +99,19 @@ def test_load_golden_rejects_duplicate_ids(tmp_path):
 
     with pytest.raises(ValueError, match="duplicate"):
         load_golden(path)
+
+
+def test_load_golden_can_prefix_every_source(tmp_path):
+    item = {
+        "id": "q1",
+        "lang": "en",
+        "question": "?",
+        "relevant": [{"source": "m/a.md", "evidence": "x"}],
+        "also_relevant": [{"source": "m/b.md", "evidence": "y"}],
+    }
+    path = tmp_path / "g.json"
+    path.write_text(json.dumps({"questions": [item]}), encoding="utf-8")
+
+    [question] = load_golden(path, source_prefix="course1/")
+
+    assert [e.source for e in question.relevant] == ["course1/m/a.md", "course1/m/b.md"]

@@ -2,6 +2,6 @@
 
 from rag.ingestion.parse import convert_corpus
 from rag.ingestion.pipeline import ingest
-from rag.ingestion.semantic import SemanticChunker
+from rag.ingestion.structure_semantic_merge import StructureSemanticMergeChunker
 
-__all__ = ["SemanticChunker", "convert_corpus", "ingest"]
+__all__ = ["StructureSemanticMergeChunker", "convert_corpus", "ingest"]

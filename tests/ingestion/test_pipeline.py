@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from rag.ingestion.pipeline import ingest
-from rag.ingestion.semantic import SemanticChunker
+from rag.ingestion.structure_semantic_merge import StructureSemanticMergeChunker
 
 
 class FakeEmbedder:
@@ -76,7 +76,8 @@ def test_changed_file_replaces_only_its_chunks(conn, docs):
     stats = ingest(docs, conn, emb)
 
     assert stats["updated"] == 1 and stats["skipped"] == 1
-    assert emb.calls == 1
+    # the unchanged file costs nothing; the changed one is embedded twice: its pieces by the merge stage, its chunks to store
+    assert emb.calls == 2
     t = texts(conn)
     assert any("new features" in x for x in t)
     assert not any("cloud data warehouse" in x for x in t)
@@ -105,17 +106,17 @@ def test_failed_embedding_keeps_previous_data(conn, docs):
 
 
 def test_changing_the_chunker_configuration_reindexes_everything(conn, docs):
-    ingest(docs, conn, FakeEmbedder(), chunker=SemanticChunker(FakeEmbedder(), max_tokens=440))
+    ingest(docs, conn, FakeEmbedder(), chunker=StructureSemanticMergeChunker(FakeEmbedder(), max_tokens=440))
 
-    stats = ingest(docs, conn, FakeEmbedder(), chunker=SemanticChunker(FakeEmbedder(), max_tokens=300))
+    stats = ingest(docs, conn, FakeEmbedder(), chunker=StructureSemanticMergeChunker(FakeEmbedder(), max_tokens=300))
 
     assert stats["updated"] == 2 and stats["skipped"] == 0
 
 
-def test_the_default_chunker_is_the_semantic_one_with_header_cuts(conn, docs):
+def test_the_default_chunker_is_the_merge_one(conn, docs):
     ingest(docs, conn, FakeEmbedder())
 
-    stats = ingest(docs, conn, FakeEmbedder(), chunker=SemanticChunker(FakeEmbedder()))
+    stats = ingest(docs, conn, FakeEmbedder(), chunker=StructureSemanticMergeChunker(FakeEmbedder()))
 
     assert stats["skipped"] == 2
 

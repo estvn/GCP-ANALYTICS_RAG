@@ -476,7 +476,7 @@ Weights are original : translation; the translation always comes from `golden_tr
   - RRF is not a search technique by itself: it only fuses lists; here it was applied on top of vector, keyword and hybrid.
   - The 6-question gap between hybrid + ES/EN and vector + ES/EN on `SEMH` is at the edge of the ~4 point standard error: not conclusive. Vector leads in MRR.
 - **Caveats**: single run; the second phrasing is a hand translation, so a real system would need a translation step (extra call, two searches per query), which this does not measure; the keyword leg uses a document-frequency cap of 0.05 and the 2:1 weights come from scratch scripts, while the repo defaults are 0.15 (`MAX_DOC_FREQUENCY`) and unweighted `rrf`; the user's hybrid chunking and the e5-small indexes were not run through these modes.
-- **Status**: accepted (single run, n = 130). **Branches**: `retrieval/vector`, `retrieval/keyword`, `retrieval/hybrid`.
+- **Status**: accepted (single run, n = 130). **Branches**: `retrieval/vector`, `retrieval/keyword`, `retrieval/hybrid`, and the two ES/EN RRF variants that did best, `retrieval/hybrid-es-en-rrf` and `retrieval/vector-es-en-rrf`.
 
 ## Corrections log (things said or measured wrongly, and what replaced them)
 
@@ -516,7 +516,7 @@ Weights are original : translation; the translation always comes from `golden_tr
 ## Branches and commits
 
 Branches: `main` (all techniques) and one branch per technique and model, each with a `CHUNKING.md`, the raw eval lines in `eval/runs/` and a README that leads with the technique (E29):
-`chunking/structural-{e5-small,bge-m3}`, `chunking/semantic-{e5-small,bge-m3}`, `chunking/structure-semantic-{e5-small,bge-m3}` (semantic + header cuts, not the hybrid), `chunking/structure-then-semantic-{e5-small,bge-m3}` (community two-stage), `chunking/structure-semantic-merge-{e5-small,bge-m3}` (the user's hybrid), and `chunking/recursive-e5-small` (E20, no E29 index). Retrieval techniques (E30): `retrieval/vector`, `retrieval/keyword`, `retrieval/hybrid`. The older `chunking/structure-then-semantic` (no model in the name) is the base of the two two-stage branches and can be deleted.
+`chunking/structural-{e5-small,bge-m3}`, `chunking/semantic-{e5-small,bge-m3}`, `chunking/structure-semantic-{e5-small,bge-m3}` (semantic + header cuts, not the hybrid), `chunking/structure-then-semantic-{e5-small,bge-m3}` (community two-stage), `chunking/structure-semantic-merge-{e5-small,bge-m3}` (the user's hybrid), and `chunking/recursive-e5-small` (E20, no E29 index). Retrieval techniques (E30): `retrieval/vector`, `retrieval/keyword`, `retrieval/hybrid`, and the two ES/EN RRF variants that did best, `retrieval/hybrid-es-en-rrf` and `retrieval/vector-es-en-rrf`. The older `chunking/structure-then-semantic` (no model in the name) is the base of the two two-stage branches and can be deleted.
 Main commits in order: `c499977` scaffold, `b9edd96` parse, `cb7adda` chunk, `6373e84` embed, `8c40b66` ingest, `4f5fb05` refactor, `6de9c0a` README, `0a087c0` retrieval,
 `24d02f4` docs, `8655b7e` golden set, `3c4bb27` keyword df cap + search_many, `bc8b097` report + terms set, `5cbf826` results, `8fcbbdf` chunker injection, `3bd7110` semantic chunker,
 `0846a24` docs, `f5afaa8` structure-first option, `033f9af` validation + grid docs, `f912c1c` sentence-aware splitter, `bfc178c` courses 2-5 set,

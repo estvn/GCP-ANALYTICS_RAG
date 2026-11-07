@@ -1,5 +1,7 @@
 # Retrieval evaluation
 
+The full ledger of every experiment (including retracted and pending ones) is in [experiments.md](experiments.md).
+
 Corpus: course 1 of the Google Cloud Data Analytics certificate (70 markdown files, 162 chunks at the default
 chunk size of 2400 characters). Embeddings: `multilingual-e5-small`, int8, ONNX. Reproduce the main table with
 `uv run python -m rag.evaluation.report`.

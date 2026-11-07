@@ -53,7 +53,7 @@ On exact-term queries hybrid retrieval reaches hit@5 1.00; on paraphrased questi
 equivalent (about 0.70 hit@5 on two independent sets of 40). Within a language it answers 26 of 26 questions of the
 first set; the weak spot is cross-language search, handled by querying in both languages
 (`HybridRetriever.search_many`, hit@5 0.925). Structural, semantic and structure-first chunking tie within the noise
-of these sets, so the simplest one is the default. Full tables, what each experiment changed and the limits of the
+of these sets, so the simplest one is the default. The complete experiment ledger is [eval/experiments.md](eval/experiments.md). Full tables, what each experiment changed and the limits of the
 evaluation are in [eval/results.md](eval/results.md). Reproduce with:
 
 ```bash

@@ -168,6 +168,38 @@ Both models were run on the same five chunking techniques with the 130 original 
 - **Choice for production: bge-m3**, because, with the translation fused, it answers a similar share of questions (the gap is inside the noise) and ranks the correct chunk higher, so the language model gets the same coverage with about half the chunks and the text. e5-small is the option when the RAM is very tight or the whole corpus is re-indexed often; then use 20 to 30 chunks and fuse the translation.
 - **Limits**: with 180 questions, differences under about 6 points (about 10 questions) are not conclusive: the gaps between the two models with the translation (2.7 to 4.5 points) are inside the noise: they answer a similar share of questions and differ in the order of the results and in the text they need. Only the position of the correct chunk was measured, not whether a language model answers better with less text; the amount of text is given in characters, not tokens.
 
+### What each model costs, and what changes with more chunks (E34)
+
+Measured with the 50 new questions and their translations against the two indexes of the author's hybrid chunking (about 900 chunks each), 4 CPU threads, `search_many` with its defaults (30 chunks, 100 candidates):
+
+| measured now, real questions against the real index (906 and 907 chunks) | e5-small | bge-m3 | ratio |
+|---|---|---|---|
+| vector length | 384 numbers | 1,024 numbers | 2.7 times |
+| size of one vector in the table | 776 bytes | 2,052 bytes | 2.6 times |
+| HNSW index per chunk | 1,183 bytes | 2,740 bytes | 2.3 times |
+| whole table + indexes per chunk (text, vector, HNSW, full-text) | 7,135 bytes | 9,973 bytes | 1.4 times |
+| process memory after loading the model (peak) | 699 MB (715 MB) | 1,135 MB (1,152 MB) | 1.6 times |
+| time to load the model | 4.4 s | 5.6 s | 1.3 times |
+| embed one query, median (p95) | 32 ms (45 ms) | 150 ms (230 ms) | 4.7 times |
+| vector search, 100 candidates, median | 15 ms | 20 ms | 1.3 times |
+| keyword search, 100 candidates, median | 28 ms | 32 ms | 1.2 times |
+| `search_many` with 2 phrasings, median (p95) | 136 ms (182 ms) | 424 ms (557 ms) | 3.1 times |
+
+- **The vectors are 2.7 times longer, not 5 times** (1,024 against 384 numbers). The 5 times is the model file (542 MB against 113 MB). Because a chunk also stores its text and a full-text index, one chunk takes only 1.4 times more space with bge-m3, not 2.7.
+- **What costs time is the model, not the database.** Embedding the query takes 4.7 times longer with bge-m3 and is most of the 424 ms of a search; the two searches in PostgreSQL take about the same with both. The model's time and memory do not grow with the number of chunks.
+- **What grows with the number of chunks is storage and indexing time.** Estimate by multiplying the measured bytes per chunk and the indexing speed of E24 (0.6 and 5.6 chunks per second on 60 real chunks); it is an extrapolation, not a measurement:
+
+| chunks | whole table + indexes, bge-m3 / e5-small | vectors + HNSW index only, bge-m3 / e5-small | indexing time, bge-m3 / e5-small |
+|---|---|---|---|
+| 10,000 | 0.1 GB / 0.1 GB | 0.05 GB / 0.02 GB | 4.6 h / 0.5 h |
+| 100,000 | 1.0 GB / 0.7 GB | 0.48 GB / 0.20 GB | 46.3 h / 5.0 h |
+| 1,000,000 | 10.0 GB / 7.1 GB | 4.79 GB / 1.96 GB | 463.0 h / 49.6 h |
+
+  The vectors and their HNSW index are 2.4 times larger with bge-m3; HNSW works best when it fits in memory, so at 1,000,000 chunks that is about 4.8 GB against 2.0 GB. Indexing 100,000 chunks would take about two days with bge-m3 on this CPU and five hours with e5-small, unless more threads or a GPU are used.
+- **With 310 files there are 900 to 1,400 chunks, not 310**, so at today's size every number above is small: about 9 MB per index and a model in memory.
+- **Not measured: whether the quality gap grows with hundreds of thousands of chunks.** With more chunks there are more passages that look alike, and a model that separates the correct passage better (E24) should lose less ranking quality, but this corpus is too small to show it. Testing it needs a larger corpus.
+- **A saving on one side can cost on the other.** With e5-small the language model needs about twice the chunks for the same coverage (E33), which is about 8,800 more characters per question (about 2,200 tokens at 4 characters per token, an estimate). With many questions, that text may cost more than the memory saved.
+
 ### What the models cost (E24)
 
 Measured on 60 real chunks, 4 threads, int8 ONNX on CPU.
@@ -242,7 +274,7 @@ from rag.embed import load_embedder
 from rag.ingestion import convert_corpus, ingest
 from rag.store import init_schema
 
-embedder = load_embedder("bge-m3")
+embedder = load_embedder()                             # bge-m3 by default; load_embedder("e5-small") is the light option
 convert_corpus(Path("data/raw"), Path("data/md"))      # PDF -> Markdown
 
 conn = psycopg.connect("postgresql://rag:rag@127.0.0.1:5433/rag")

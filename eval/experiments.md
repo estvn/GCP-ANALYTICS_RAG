@@ -596,6 +596,36 @@ e5-small:
 - **Decision (the user)**: the ES/EN translation fusion is always used, with both models; the rows without translation stay in this entry only as the record of the analysis.
 - **Status**: accepted (analysis of single runs). **Recommendation**: bge-m3 for production; e5-small when RAM or indexing time are the limit.
 
+### E34. Resource cost of one retrieval with each model, and the scale it implies
+- **Question**: how many resources does a retrieval with bge-m3 use compared with e5-small, and what changes with many more chunks?
+- **Setup**: `bench_retrieval.py` (session scratchpad, **not in the repo**) on the indexes `full_STMERGE_bge` (906 chunks) and `full_STMERGE_e5` (907 chunks); the 50 questions of E32 and their translations (100 queries); 4 CPU threads; a warm-up of 6 embeddings; the time of each step of a query and of `search_many` with its defaults (30 chunks, 100 candidates); process memory with `psutil`; table and index sizes with `pg_total_relation_size` and `pg_relation_size`. The machine was not idle, so the times are higher than those of E24 (12 and 59 ms for embedding one query), but the ratio between the models is the same (4.7 against 4.9).
+- **Result**:
+
+| measured now, real questions against the real index (906 and 907 chunks) | e5-small | bge-m3 | ratio |
+|---|---|---|---|
+| vector length | 384 numbers | 1,024 numbers | 2.7 times |
+| size of one vector in the table | 776 bytes | 2,052 bytes | 2.6 times |
+| HNSW index per chunk | 1,183 bytes | 2,740 bytes | 2.3 times |
+| whole table + indexes per chunk (text, vector, HNSW, full-text) | 7,135 bytes | 9,973 bytes | 1.4 times |
+| process memory after loading the model (peak) | 699 MB (715 MB) | 1,135 MB (1,152 MB) | 1.6 times |
+| time to load the model | 4.4 s | 5.6 s | 1.3 times |
+| embed one query, median (p95) | 32 ms (45 ms) | 150 ms (230 ms) | 4.7 times |
+| vector search, 100 candidates, median | 15 ms | 20 ms | 1.3 times |
+| keyword search, 100 candidates, median | 28 ms | 32 ms | 1.2 times |
+| `search_many` with 2 phrasings, median (p95) | 136 ms (182 ms) | 424 ms (557 ms) | 3.1 times |
+
+  Estimate for more chunks (the bytes per chunk and the indexing speed of E24 multiplied; an extrapolation, not a measurement):
+
+| chunks | whole table + indexes, bge-m3 / e5-small | vectors + HNSW index only, bge-m3 / e5-small | indexing time, bge-m3 / e5-small |
+|---|---|---|---|
+| 10,000 | 0.1 GB / 0.1 GB | 0.05 GB / 0.02 GB | 4.6 h / 0.5 h |
+| 100,000 | 1.0 GB / 0.7 GB | 0.48 GB / 0.20 GB | 46.3 h / 5.0 h |
+| 1,000,000 | 10.0 GB / 7.1 GB | 4.79 GB / 1.96 GB | 463.0 h / 49.6 h |
+
+- **Findings**: the vectors are 2.7 times longer (not 5 times); one chunk takes 1.4 times more space because the text and the full-text index dominate; the time of a query is dominated by embedding it with the model (4.7 times slower), not by PostgreSQL; model time and memory do not depend on the number of chunks; storage and indexing time grow linearly with it; with bge-m3 the vectors and their index take 2.4 times more space and indexing takes 9 times longer.
+- **Caveats**: about 900 chunks, so the PostgreSQL search times at hundreds of thousands of chunks were not measured; the sizes per chunk are those of a small index and may not scale exactly linearly; indexing speed comes from 60 chunks; whether the quality gap between the models grows with the corpus was not tested.
+- **Status**: accepted (single run).
+
 ## Corrections log (things said or measured wrongly, and what replaced them)
 
 | # | Claim or measurement | Reality | Where fixed |

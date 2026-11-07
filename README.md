@@ -1,10 +1,64 @@
-# GCP Analytics RAG
+# Hybrid search with ES/EN RRF fusion (vector + keyword, question and translation)
 
-Hybrid retrieval (Postgres full-text + vectors) over the Google Cloud Data Analytics course, built to run on a laptop
-within a small CPU/RAM budget (no GPU). Postgres + pgvector for storage, `multilingual-e5-small`
-(int8, ONNX Runtime) for embeddings.
+Branch `retrieval/hybrid-es-en-rrf`. Hybrid retrieval (Postgres full-text + vectors) over the Google Cloud Data Analytics
+course, built to run on a laptop within a small CPU/RAM budget (no GPU). Results use the `bge-m3` embedding model
+(int8, ONNX Runtime) and the three most precise chunking techniques (E30).
 
-Status: ingestion, hybrid retrieval and evaluation work. The MCP server is next.
+Raw evaluation output: [eval/runs/e30_retrieval_modes.log](eval/runs/e30_retrieval_modes.log).
+
+## Technique applied
+
+RRF (Reciprocal Rank Fusion) is not a search technique on its own: it only fuses ranked lists. Here it fuses the lists
+obtained with the question and with its translation, because embedding models match much better inside one language.
+
+1. Run the hybrid search (vector + keyword, 30 candidates each, fused with RRF) with the question as written.
+2. Run the same hybrid search with the translation of the question (Spanish to English or the reverse).
+3. Fuse the two result lists with RRF, weights `original:translation`: **1:1** (equal) or **2:1** (the original
+   counts double). Score of a chunk = `weight / (60 + position)` in each list, added.
+4. Return the top `k`. The repository implements the 1:1 case as `HybridRetriever.search_many`; the 2:1 weights
+   were evaluated with a scratch script.
+
+## Experiments
+
+Written up in [eval/experiments.md](https://github.com/estvn/GCP-ANALYTICS_RAG/blob/main/eval/experiments.md) (the file on `main` is the complete log):
+
+- **E13**: Querying in both languages
+- **E25**: e5-small on the full index: same-language vs cross-lingual, and ES+EN fusion
+- **E28**: Weighted RRF over two phrasings
+- **E30**: Retrieval techniques on the three best chunking indexes
+
+## Results (E30, bge-m3, 130 questions: 108 same-language and 22 cross-lingual)
+
+`SEMH` = semantic + header cuts, `SEM` = semantic, `STSEM` = community two-stage. MRR is the mean of 1 / position of the
+first correct chunk (1 = always first, 0 if absent).
+
+| chunking | search | answered (130) | MRR | same-language (108) | cross-lingual (22) |
+|---|---|---|---|---|---|
+| semantic + header cuts | no translation | 114 | 0.580 | 98 | 16 |
+| semantic + header cuts | ES/EN 1:1 | 122 | 0.591 | 101 | 21 |
+| semantic + header cuts | ES/EN 2:1 | 121 | 0.607 | 102 | 19 |
+| semantic | no translation | 113 | 0.576 | 99 | 14 |
+| semantic | ES/EN 1:1 | 110 | 0.551 | 91 | 19 |
+| semantic | ES/EN 2:1 | 111 | 0.591 | 92 | 19 |
+| community two-stage | no translation | 113 | 0.584 | 100 | 13 |
+| community two-stage | ES/EN 1:1 | 114 | 0.576 | 95 | 19 |
+| community two-stage | ES/EN 2:1 | 112 | 0.605 | 95 | 17 |
+
+## What happened
+
+- Best combination in questions answered: 1:1 on `SEMH` answers 122 of 130 (.938, MRR .591); 2:1 answers 121 (.931, MRR .607). They are tied (1 question).
+- It lifts the cross-lingual questions of `SEMH` from .727 (plain hybrid) to .955 (1:1) and .864 (2:1).
+- It helps only `SEMH`: on `SEM` it goes from 113 to 110 / 111 and on `STSEM` from 113 to 114 / 112.
+- Needs the question translated: a real system pays one extra call and two searches per query.
+- Differences of 2 to 4 questions out of 130 are below the standard error (about 4 points): not conclusive.
+
+## Limits
+
+- Single run, 130 questions. The second phrasing is a hand translation (`eval/golden_translations.json`); the cost of
+  producing it in a real system is not measured.
+- The evaluation used a keyword document-frequency cap of 0.05 and the weights above from scratch scripts (not in the
+  repo). The repo defaults are `MAX_DOC_FREQUENCY = 0.15` and an unweighted `rrf`.
+- The user's hybrid chunking and the e5-small indexes were not run through these modes.
 
 ## Layout
 

@@ -377,8 +377,26 @@ Cells `hit / MRR`. Variants: vector; hybrid with df cap 0.10 / 0.15 / 0.30 and R
   **Status**: accepted (structural chunking only). **Commit**: `29f0f82` (configurable embedder).
 
 ### E27. bge-m3 with structure + semantic chunking
-- **Status: pending.** Indexing `full_SEMH_bge` is running in the background (about 2 h estimated, every window is embedded); at the last check it had 292 chunks from 69 of 311 documents.
-  The vector and hybrid evaluation runs automatically when indexing ends. The ES+EN fusion (E25/E26 style) and the weighted fusion (E28) on this index have to be run by hand afterwards.
+- **Question**: does bge-m3 beat e5-small when both use structure + semantic chunking, and by how much?
+- **Setup**: full corpus (311 files, 309 docs indexed), 130 questions (A 40, T 10, V 40, F 40), k = 10 (about 9,000 characters returned), hybrid with df cap 0.05, single phrasing.
+  bge-m3 (int8 ONNX, 1024 dims) both cuts (`SemanticChunker(bge, 440, 100, 90, split_on_headers=True)`) and embeds. Database `full_SEMH_bge`: 1416 chunks, average 879 chars, tokens median 213 / max 499, none over 512.
+  Scripts: `bge_run.py` and `resume_semh.py` (session scratchpad, **not in the repo**). The indexing was interrupted when the window closed (177 of 309 docs done) and resumed without dropping the database; the resumed run added 132 docs in 1194 s.
+- **Result** (hit rate / MRR; e5 values from E28 and the branch `CHUNKING.md`):
+
+| search | e5-small (1443 chunks) | bge-m3 (1416 chunks) | difference (hit) |
+|---|---|---|---|
+| vector, total | .723 / .500 | **.862** / .631 | +13.9 points |
+| hybrid (df .05), total | .762 / .562 | **.877** / .580 | +11.5 points |
+| vector, same-language (108) | .824 | .870 | +4.6 |
+| vector, cross-lingual (22) | .227 | .818 | +59.1 |
+| hybrid, same-language (108) | .870 | .907 | +3.7 |
+| hybrid, cross-lingual (22) | .227 | .727 | +50.0 |
+
+  bge-m3 per set, vector / hybrid: A .950/.692 / .925/.564, T .900/.404 / 1.000/.510, V .700/.482 / .775/.527, F .925/.774 / .900/.666.
+- **Conclusion**: bge-m3 is clearly better on this corpus: +12 to +14 points in total hit rate, far above the 3.8-point standard error. Most of the gain is cross-lingual (Spanish question, English passage and the reverse); same-language improves 4-5 points.
+  The keyword leg still helps exact terms (T: vector .900 vs hybrid 1.000) but hurts cross-lingual (.818 to .727), as in E26. On the structural index bge-m3 gave .808 hybrid (E26); structure + semantic gives .877, about 7 points more.
+- **Caveats**: (1) the chunks are not identical: bge-m3 also decides the cuts, so the gain mixes better cutting with better retrieval; separating them needs cutting with one model and embedding with the other (`same_model.py`-style run, pending). (2) Only 22 cross-lingual questions: that subset is noisy (one question is 4.5 points). (3) The ES+EN fusion and the weighted fusion (E28) were not run on this index. (4) Resumed indexing: documents are deterministic, so the result should equal an uninterrupted run, but this was not checked.
+- **Status**: accepted (single phrasing, vector and hybrid). **Commit**: this entry; the scripts are not in the repo.
 
 ### E28. Weighted RRF over two phrasings: more weight on the original question (130 questions)
 Weights are original : translation; the translation always comes from `golden_translations.json`. Cells `hit / MRR`.
@@ -447,7 +465,7 @@ Main commits in order: `c499977` scaffold, `b9edd96` parse, `cb7adda` chunk, `63
 
 ## Open experiments and decisions
 
-1. bge-m3 + structure + semantic chunking, and the ES+EN fusion on it (E27, running).
+1. ES+EN fusion and weighted fusion (E28) on the bge-m3 structure + semantic index (E27 is done), and a run that cuts with one model and embeds with the other.
 2. Decide the final configuration (current leader on the data so far: bge-m3 + structural or structure + semantic + hybrid with ES+EN RRF) and keep only that path on `main`; techniques stay in their branches.
 3. Branches `embedding/e5-small` and `embedding/bge-m3` and a results document per technique.
 4. Lower `MAX_DOC_FREQUENCY` (0.15 -> 0.05); store the embedding model name in the database.

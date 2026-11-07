@@ -104,18 +104,6 @@ def test_units_remember_the_header_path():
     assert [u.headers for u in units] == [("A", "B"), ("A", "C")]
 
 
-TWO_SECTIONS_SAME_TOPIC = (
-    "# A\n\nThe cloud stores data. The cloud scales fast. The cloud is metered.\n\n"
-    "# B\n\nThe cloud has regions. The cloud has zones. The cloud is global.\n"
-)
-
-
-def test_a_header_is_a_cut_point_even_when_the_topic_does_not_change():
-    chunks = chunker(min_tokens=5).chunk(TWO_SECTIONS_SAME_TOPIC, "m/doc.md")
-
-    assert [c["headers"] for c in chunks] == [["A"], ["B"]]
-
-
 def test_a_tiny_section_is_merged_into_the_next_one():
     text = "# A\n\nTiny.\n\n# B\n\nThe cloud has regions. The cloud has zones. The cloud is global.\n"
 

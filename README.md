@@ -1,6 +1,6 @@
 # Keyword search (by words, Postgres full-text)
 
-Branch `retrieval/keyword`. Hybrid retrieval (Postgres full-text + vectors) over the Google Cloud Data Analytics course,
+Branch `retrieval/keyword`. Retrieval over the Google Cloud Data Analytics course,
 built to run on a laptop within a small CPU/RAM budget (no GPU). Postgres + pgvector for storage. Results below use the
 `bge-m3` embedding model (int8, ONNX Runtime) and the three most precise chunking techniques.
 
@@ -27,6 +27,9 @@ the question as written (original) and with its translation, and fuses the two l
 It helps cross-language questions, because models match much better inside one language; the cost is a translation step
 and two searches per query (the evaluation used hand translations from `eval/golden_translations.json`, so that cost is
 not measured).
+
+This branch holds the single-phrasing technique. There is no branch for keyword + ES/EN: it did not improve the total
+answered, so its code was not kept.
 
 ## Experiments
 
@@ -64,13 +67,12 @@ chunk length). MRR is the mean of 1 / position of the first correct chunk (1 = a
 - The weakest technique alone: 75 to 80 questions answered out of 130 in the three indexes (hit rate .58 to .62).
 - Cross-lingual questions: .09 to .14 without translation. With ES/EN 1:1 it reaches .73 to .82 on those 22 questions, but same-language drops (`SEMH` .676 to .528), so the total does not improve.
 - Its value is as the second leg of the hybrid, for exact terms.
-- Differences of 2 to 4 questions out of 130 are below the standard error (about 4 points): not conclusive.
+- Differences under about 8 points (about 10 of the 130 questions) are not conclusive.
 
 ## Limits
 
 - Single run, 130 questions. The second phrasing is a hand translation; a real system needs a translation step.
-- The evaluation used a keyword document-frequency cap of 0.05 and ES/EN weights of 2:1 from scratch scripts (not in the
-  repo). The repo defaults are `MAX_DOC_FREQUENCY = 0.15` in `store.py` and an unweighted `rrf`.
+- The keyword leg ignores words found in more than 5% of the chunks (`MAX_DOC_FREQUENCY = 0.05` in `store.py`), the value used in the evaluation.
 - The user's hybrid chunking and the e5-small indexes were not run through these retrieval modes.
 
 ## Layout

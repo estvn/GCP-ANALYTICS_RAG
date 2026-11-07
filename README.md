@@ -185,6 +185,7 @@ Measured with the 50 new questions and their translations against the two indexe
 | keyword search, 100 candidates, median | 28 ms | 32 ms | 1.2 times |
 | `search_many` with 2 phrasings, median (p95) | 136 ms (182 ms) | 424 ms (557 ms) | 3.1 times |
 
+- **Keeping a model active to answer queries.** With no queries both only hold memory and use no CPU. bge-m3 holds about 435 MB more (1,135 MB against 699 MB, which would be about 860 MB and 445 MB if the second tokenizer were loaded only when needed; the second figure is an estimate) and uses 4.7 times more CPU time to embed each query (150 against 32 ms, a whole `search_many` 424 against 136 ms). The model files are 542 MB and 113 MB on disk. Measured with 4 threads on one machine that was not idle.
 - **The vectors are 2.7 times longer, not 5 times** (1,024 against 384 numbers). The 5 times is the model file (542 MB against 113 MB). Because a chunk also stores its text and a full-text index, one chunk takes only 1.4 times more space with bge-m3, not 2.7.
 - **What costs time is the model, not the database.** Embedding the query takes 4.7 times longer with bge-m3 and is most of the 424 ms of a search; the two searches in PostgreSQL take about the same with both. The model's time and memory do not grow with the number of chunks.
 - **The 1.1 GB stays while the process lives, and it does not grow with queries** (100 queries added 9 MB; it does not depend on the number of chunks). Where it goes (E35):

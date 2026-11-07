@@ -5,7 +5,7 @@ techniques side by side in [eval/results.md](eval/results.md).
 
 ## How it works
 
-Same as the semantic chunker, with one extra cut point (`split_on_headers=True`):
+Same as the semantic chunker, with one extra cut point:
 1. Units and window embeddings as in the semantic chunker.
 2. A chunk is cut at a topic shift (90th percentile) or at the 440-token cap, **and also at every `#` header once
    the current chunk already has 100 tokens** (`starts_section and tokens >= min_tokens`).
@@ -14,7 +14,7 @@ Same as the semantic chunker, with one extra cut point (`split_on_headers=True`)
 
 ## Settings of this run
 
-- Chunker: `SemanticChunker(embedder, 440, 100, 90, split_on_headers=True)` (maximum 440 tokens, minimum 100 tokens where they apply).
+- Chunker: `SemanticChunker(embedder, 440, 100, 90)` (maximum 440 tokens, minimum 100 tokens where they apply).
 - Embedding model: `bge-m3` (int8 ONNX, local) for both cutting (where the chunker uses embeddings) and retrieval.
 - Corpus: `data/md`, 310 files (309 with chunks), 5 courses. Database `full_SEMH_bge`.
 - Cost: indexing resumed after an interruption (E27): 132 documents in 1194 s (bge-m3).
@@ -25,7 +25,7 @@ from rag.embed import load_embedder
 from rag.ingestion.pipeline import ingest
 
 embedder = load_embedder("bge-m3")
-ingest("data/md", conn, embedder, chunker=SemanticChunker(embedder, 440, 100, 90, split_on_headers=True))
+ingest("data/md", conn, embedder, chunker=SemanticChunker(embedder, 440, 100, 90))
 ```
 
 Indexing is incremental by content hash and the chunker settings are part of the hash, so the same call resumes an
@@ -55,7 +55,7 @@ repository** (see the reproducibility map in `eval/experiments.md`).
 | community two-stage | 97 / .508 | 113 / .584 |
 | user's hybrid (two-stage + merge) | 95 / .552 | 109 / .592 |
 
-A difference of 2 to 4 questions out of 130 is below the standard error (about 4 points): it is not conclusive.
+Differences under about 8 points (about 10 of the 130 questions) are not conclusive.
 
 ## Limits
 

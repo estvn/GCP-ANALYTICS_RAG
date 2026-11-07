@@ -1,10 +1,44 @@
-# GCP Analytics RAG
+# Structural chunking (headers, 2400 characters)
 
-Hybrid retrieval (Postgres full-text + vectors) over the Google Cloud Data Analytics course, built to run on a laptop
-within a small CPU/RAM budget (no GPU). Postgres + pgvector for storage, `multilingual-e5-small`
-(int8, ONNX Runtime) for embeddings.
+Branch `chunking/structural-bge-m3`. Hybrid retrieval (Postgres full-text + vectors) over the Google Cloud Data Analytics course,
+built to run on a laptop within a small CPU/RAM budget (no GPU). Postgres + pgvector for storage. Embedding model of
+this branch's results: `bge-m3` (int8, ONNX Runtime).
 
-Status: ingestion, hybrid retrieval and evaluation work. The MCP server is next.
+Full description, settings and how to reproduce: [CHUNKING.md](CHUNKING.md). Raw evaluation lines:
+[eval/runs/structural-bge-m3.log](eval/runs/structural-bge-m3.log).
+
+## Technique applied
+
+1. Split by markdown headers (`MarkdownHeaderTextSplitter`).
+2. Pack neighbouring pieces and split what is too long with `RecursiveCharacterTextSplitter`, at most 2400
+   **characters** with an overlap of 200 (it is characters, not tokens; see E19 and E22).
+3. No embedding is used to cut, so it is the cheapest technique to index.
+
+## Experiments
+
+Written up in [eval/experiments.md](https://github.com/estvn/GCP-ANALYTICS_RAG/blob/main/eval/experiments.md) (the file on `main` is the complete log):
+
+- **E03**: Chunk counts by size (structural chunker, course 1)
+- **E06**: First baseline matrix: 3 chunk sizes x 3 modes
+- **E08**: Equal returned text, chunk size
+- **E14**: Boundary quality audits (what gets cut)
+- **E19**: Full-index evaluation of the three chunkers
+- **E22**: Is the 512-token truncation hiding answers?
+- **E26**: bge-m3 on the full index, structural chunking
+- **E29**: All chunking techniques on one common method
+
+## Results (E29: hybrid search, 130 questions, hits / MRR)
+
+| technique | e5-small | bge-m3 |
+|---|---|---|
+| structural 2400 | 95 / .561 | 107 / .612 **◀ this branch** |
+| semantic | 96 / .517 | 113 / .576 |
+| semantic + header cuts | 99 / .557 | 114 / .580 |
+| community two-stage | 97 / .508 | 113 / .584 |
+| user's hybrid (two-stage + merge) | 95 / .552 | 109 / .592 |
+
+Hits are questions answered out of 130, with about 9,000 characters returned per query. A gap of 2 to 4 questions is
+below the standard error (about 4 points): it is not conclusive.
 
 ## Layout
 

@@ -47,8 +47,8 @@ inglés) y un índice **GIN** que funciona como el índice de un libro: cada pal
 
 **No es BM25.** El ranking de texto de Postgres no pondera por rareza del término (IDF): "para" o "sirve" pesaban igual que
 "BigQuery". Se aproximó esa ponderación con un filtro: se descartan las palabras que aparecen en más del 15% de los chunks
-(y en al menos 5). El 15% se ajustó con 162 chunks; con 750 a 1450 chunks rinde mejor **5%** (de +0.7 a +2.3 puntos), pero el
-código todavía usa 15%. Una lista fija de palabras vacías resultó inconsistente. Una extensión con BM25 real
+(y en al menos 5). El 15% se ajustó con 162 chunks; con 750 a 1450 chunks rinde mejor **5%** (de +0.8 a +2.3 puntos), y el
+código ya usa 0.05 (`MAX_DOC_FREQUENCY`; antes era 0.15). Una lista fija de palabras vacías resultó inconsistente. Una extensión con BM25 real
 (pg_textsearch, ParadeDB) no se probó.
 
 **Fortaleza**: siglas y nombres exactos (10 de 10 en las consultas de términos del curso 1). **Debilidad**: no entiende
@@ -72,14 +72,15 @@ Chunk B: 2o en vectorial, ausente en palabras -> 1/62      = 0.0161
   de 900), así las técnicas de chunking se comparan con la misma cantidad de texto.
 - El híbrido existe porque cada búsqueda cubre el punto ciego de la otra.
 
-Resultados (índice completo, 130 preguntas, chunking estructural; aciertos / MRR):
+Resultados de una corrida histórica (índice completo de entonces, 130 preguntas, chunking estructural; aciertos / MRR). Los
+números del índice actual están en `eval/results.md` (secciones E29 y E30):
 
 | Búsqueda | `e5-small` | `bge-m3` |
 |---|---|---|
 | Solo vectorial | 0.662 / 0.489 | 0.785 / 0.599 |
 | Híbrido (vectorial + palabras, RRF) | 0.731 / 0.565 | 0.808 / 0.609 |
 
-En las preguntas de los cursos 2 a 5 la diferencia es mayor (`e5-small`: 0.775 solo vectores contra 0.850 a 0.900 con el híbrido, según el umbral de frecuencia). Una corrección importante del
+En las preguntas de los cursos 2 a 5 (también corridas históricas) la diferencia es mayor (`e5-small`: 0.775 solo vectores contra 0.850 a 0.900 con el híbrido, según el umbral de frecuencia). Una corrección importante del
 proceso: en el curso 1 el híbrido **no** superó a los vectores solos en preguntas parafraseadas al validar con un conjunto
 nuevo; su valor está en siglas y nombres exactos y en el índice grande.
 
@@ -91,6 +92,8 @@ idiomas** y fusionar las listas con RRF (`HybridRetriever.search_many`). La trad
 MCP); en las pruebas la hizo un modelo como sustituto.
 
 **RRF por sí misma no es multiidioma**: lo es este uso concreto (dos consultas, una por idioma, fusionadas).
+
+(Tabla de corridas históricas, con el índice de entonces; para el índice actual ver más abajo y `eval/results.md`, E30.)
 
 | Índice y búsqueda | Una formulación | RRF 1:1 | RRF 2:1 | RRF 3:1 |
 |---|---|---|---|---|
@@ -105,8 +108,13 @@ MCP); en las pruebas la hizo un modelo como sustituto.
   respuestas.
 - Fusionar los dos idiomas tiene un costo: la consulta en el idioma equivocado mete ruido y en preguntas del mismo idioma se
   pierden de 5 a 21 puntos con `e5-small`.
-- **Con `bge-m3`** el modelo ya cruza idiomas por sí solo (0.773 con una sola consulta, contra 0.136 de `e5-small`); la traducción
-  suma unos 3 puntos y los pesos casi no importan. Con `bge-m3`, una segunda formulación es opcional.
+- **Con `bge-m3`** el modelo ya cruza idiomas por sí solo (0.773 con una sola consulta, contra 0.136 de `e5-small`); sobre el índice
+  estructural la traducción sumó unos 3 puntos (E28) y los pesos casi no importaron.
+- **E30, con el mejor índice medido** (`bge-m3`, semántico + cortes en headers; respondidas de 130): el híbrido pasa de 114 a
+  **122** con la traducción ES/EN 1:1 (+8 preguntas, .938 de aciertos, lo mejor medido). En los otros dos chunkers (semántico
+  puro y dos etapas) la traducción es neutra o peor (110 y 114 con 1:1). Con RRF 2:1 el resultado es 121 / 111 / 112. Hay que
+  recordar que la traducción de la evaluación se hizo a mano: un sistema real necesita un paso de traducción. Detalle en
+  `eval/results.md`, sección E30.
 - Con una sola formulación, el híbrido **perjudica** el cruce de idiomas con `bge-m3` (0.455 contra 0.773 de solo vectores):
   la búsqueda por palabras solo coincide dentro de un idioma y mete ruido en la fusión.
 
@@ -155,5 +163,5 @@ autoevaluación. Quedaron fuera para no sobrecargar el sistema; se evalúan solo
 | Siglas, nombres de servicios, términos exactos | Búsqueda por palabras |
 | Cubrir las dos cosas | Híbrido con RRF (más robusto) |
 | Corpus en dos idiomas con `e5-small` | Híbrido + RRF 1:1 sobre la pregunta en los dos idiomas |
-| Corpus en dos idiomas con `bge-m3` | Una sola formulación basta; la segunda suma unos 3 puntos |
+| Corpus en dos idiomas con `bge-m3` | Lo mejor medido es el híbrido + ES/EN 1:1 sobre semántico + cortes en headers (122 de 130); una sola formulación ya cruza idiomas en buena parte. Requiere un paso de traducción |
 | Más precisión en el orden de los resultados | Reranker (medir de nuevo antes de decidir) |

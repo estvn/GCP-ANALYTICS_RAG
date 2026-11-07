@@ -6,7 +6,6 @@ this branch's results: `bge-m3` (int8, ONNX Runtime).
 
 Full description, settings and how to reproduce: [CHUNKING.md](CHUNKING.md). Raw evaluation lines:
 [eval/runs/structure-then-semantic-bge-m3.log](eval/runs/structure-then-semantic-bge-m3.log).
-Hardware cost of the embedding model (`bge-m3`): [HARDWARE_bge-m3.md](HARDWARE_bge-m3.md).
 
 ## Technique applied
 
@@ -31,63 +30,43 @@ Written up in [eval/experiments.md](https://github.com/estvn/GCP-ANALYTICS_RAG/b
 | community two-stage | 97 / .508 | 113 / .584 **◀ this branch** |
 | user's hybrid (two-stage + merge) | 95 / .552 | 109 / .592 |
 
-Hits are questions answered out of 130, with about 9,000 characters returned per query. A gap of 2 to 4 questions is
-below the standard error (about 4 points): it is not conclusive.
+Hits are questions answered out of 130, with about 9,000 characters returned per query. Differences under about 8 points
+(about 10 of the 130 questions) are not conclusive.
 
 ## Layout
 
 ```
 src/rag/
-├── embed.py          # ONNX embedder (shared by ingestion and retrieval)
+├── embed.py          # ONNX embedders: bge-m3 and e5-small (shared by ingestion and retrieval)
 ├── store.py          # the only module that talks to Postgres
 ├── ingestion/        # offline pipeline
 │   ├── parse.py      # PDF/MD -> markdown
-│   ├── chunk.py      # header-aware chunking (default)
-│   ├── semantic.py   # semantic chunking under a token cap (option)
+│   ├── semantic.py   # SemanticChunker: the semantic cut used by the second stage
+│   ├── structure_then_semantic.py  # StructureThenSemanticChunker: headers first, meaning inside big sections
 │   └── pipeline.py   # incremental ingest (hash-based)
 ├── retrieval/        # online path
 │   ├── fusion.py     # Reciprocal Rank Fusion
-│   └── search.py     # HybridRetriever: vector leg + keyword leg, multi-phrasing search
-└── evaluation/       # golden sets, hit@k / MRR, comparison report
-eval/                 # golden sets, results.md and experiments.md (full ledger)
-docs/                 # study guides (Spanish)
+│   └── search.py     # HybridRetriever: vector leg + keyword leg, search_many (question + translation)
+└── evaluation/       # golden sets, hit rate / MRR, comparison report
+eval/                 # golden sets, results.md, experiments.md, runs/ (raw output)
 tests/                # mirrors src/
 infra/                # container definitions
-data/  models/        # local only, git-ignored (course files, ONNX model)
+data/  models/        # local only, git-ignored (course files, ONNX models)
 ```
 
-## Run
+## Branches
 
-Database (Podman; `podman compose` does not work here, use `podman run`):
+Each technique that was compared has a branch with a README that explains it and what happened in its experiments.
 
-```bash
-podman run -d --name rag-db -e POSTGRES_USER=rag -e POSTGRES_PASSWORD=rag -e POSTGRES_DB=rag \
-  -p 127.0.0.1:5433:5432 -v rag_pgdata:/var/lib/postgresql/data --memory 1g --cpus 2 \
-  docker.io/pgvector/pgvector:pg17
-```
-
-Python (uv, Python 3.12):
-
-```bash
-uv sync
-uv run pytest
-```
-
-The embedding model goes in `models/multilingual-e5-small/` (`onnx/model_quantized.onnx` and
-`tokenizer.json` from `Xenova/multilingual-e5-small` on Hugging Face).
-
-## Results
-
-On exact-term queries hybrid retrieval reaches hit@5 1.00; on paraphrased questions hybrid and vector-only are
-equivalent (about 0.70 hit@5 on two independent sets of 40). Within a language it answers 26 of 26 questions of the
-first set; the weak spot is cross-language search, handled by querying in both languages
-(`HybridRetriever.search_many`, hit@5 0.925). Structural, semantic and structure-first chunking tie within the noise
-of these sets, so the simplest one is the default. The complete experiment ledger is [eval/experiments.md](eval/experiments.md). Full tables, what each experiment changed and the limits of the
-evaluation are in [eval/results.md](eval/results.md). Reproduce with:
-
-```bash
-uv run python -m rag.evaluation.report
-```
+| technique | branches |
+|---|---|
+| structural chunking | `chunking/structural-e5-small`, `chunking/structural-bge-m3` |
+| semantic chunking | `chunking/semantic-e5-small`, `chunking/semantic-bge-m3` |
+| semantic + header cuts (called `structure-semantic`) | `chunking/structure-semantic-e5-small`, `chunking/structure-semantic-bge-m3` |
+| community two-stage chunking | `chunking/structure-then-semantic-e5-small`, `chunking/structure-then-semantic-bge-m3` |
+| two-stage + merge (the author's variant) | `chunking/structure-semantic-merge-e5-small`, `chunking/structure-semantic-merge-bge-m3` |
+| vector, keyword, hybrid search | `retrieval/vector`, `retrieval/keyword`, `retrieval/hybrid` |
+| ES/EN fusion | `retrieval/vector-es-en-rrf`, `retrieval/hybrid-es-en-rrf` |
 
 ## Study guides (Spanish)
 

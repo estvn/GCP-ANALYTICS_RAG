@@ -2,6 +2,6 @@
 
 from rag.ingestion.parse import convert_corpus
 from rag.ingestion.pipeline import ingest
-from rag.ingestion.semantic import SemanticChunker
+from rag.ingestion.structural import StructuralChunker, chunk_markdown
 
-__all__ = ["SemanticChunker", "convert_corpus", "ingest"]
+__all__ = ["StructuralChunker", "chunk_markdown", "convert_corpus", "ingest"]

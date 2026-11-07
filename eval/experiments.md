@@ -422,6 +422,36 @@ Weights are original : translation; the translation always comes from `golden_tr
 
 ---
 
+### E29. All chunking techniques on one common method (10 indexes, 130 questions, hybrid)
+- **Question**: which chunking technique wins when every index is measured the same way, and does the user's hybrid (community two-stage recipe + merge step) beat the community recipe alone?
+- **Setup**: full corpus (310 files, 309 with chunks), 130 questions (A 40, T 10, V 40, F 40), single phrasing, hybrid = vector + keyword leg fused with RRF, df cap 0.05.
+  `k` is set per index so every query returns about 9,000 characters (`k = round(9000 / average chunk length)`), which gives larger-chunk techniques fewer results. One script (`eval_all.py`, session scratchpad, **not in the repo**) evaluated all ten databases in one run; the raw output is `eval/runs/e29_unified_eval.log`.
+  Chunker settings: structural `StructuralChunker(2400, 200)` (characters); semantic `SemanticChunker(emb, 440, 100, 90, split_on_headers=False)`; semantic + header cuts the same with `split_on_headers=True`; **community two-stage** `StructureThenSemanticChunker(emb, 440, 100, 90)`; **user's hybrid** `StructureSemanticMergeChunker(emb, 440, 100, 25)`.
+- **Result** (hybrid, pooled over 130 questions; hits = questions with a relevant chunk in the top k):
+
+| chunking technique | model | database | chunks | avg chars | k | hits / 130 | hit rate | MRR | same-lang (108) | cross-lingual (22) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| structural | e5-small | `full_S2400` | 741 | 1567 | 6 | 95 | .731 | .561 | .861 | .091 |
+| semantic | e5-small | `full_SEM` | 1144 | 1045 | 9 | 96 | .738 | .517 | .852 | .182 |
+| semantic + header cuts | e5-small | `full_SEMH` | 1408 | 883 | 10 | 99 | .762 | .557 | .870 | .227 |
+| **community two-stage** | e5-small | `full_STSEM_e5` | 1335 | 911 | 10 | 97 | .746 | .508 | .870 | .136 |
+| **user's hybrid (two-stage + merge)** | e5-small | `full_STMERGE_e5` | 907 | 1267 | 7 | 95 | .731 | .552 | .861 | .091 |
+| structural | bge-m3 | `full_S2400_bge` | 741 | 1567 | 6 | 107 | .823 | .612 | .898 | .455 |
+| semantic | bge-m3 | `full_SEM_bge` | 1128 | 1058 | 9 | 113 | .869 | .576 | .917 | .636 |
+| semantic + header cuts | bge-m3 | `full_SEMH_bge` | 1416 | 879 | 10 | **114** | **.877** | .580 | .907 | .727 |
+| **community two-stage** | bge-m3 | `full_STSEM_bge` | 1336 | 911 | 10 | 113 | .869 | .584 | .926 | .591 |
+| **user's hybrid (two-stage + merge)** | bge-m3 | `full_STMERGE_bge` | 906 | 1268 | 7 | 109 | .838 | .592 | .917 | .455 |
+
+  Vector only (hits / 130): structural e5 86, semantic e5 92, semantic + header cuts e5 94, two-stage e5 91, hybrid e5 89; structural bge 102, semantic bge 107, semantic + header cuts bge 112, two-stage bge 107, hybrid bge 105.
+- **Findings**:
+  - Community vs user's hybrid: the community two-stage recipe has more hits in both models (e5 97 vs 95, bge 113 vs 109), the user's hybrid has a higher MRR in both (e5 .552 vs .508, bge .592 vs .584). The gaps are 2 and 4 questions out of 130, below the ~4 point standard error: **not conclusive**.
+  - The best index overall is semantic + header cuts with bge-m3 (114 hits). That is **not** the user's hybrid (see the technique definitions in `CLAUDE.md`).
+  - bge-m3 beats e5-small on every technique (+12 to +17 hits); about half or more of the gain is the 22 cross-lingual questions (e5 gets 2-5 of them, bge-m3 10-14).
+  - Semantic + header cuts makes more chunks than pure semantic because it adds a third cut: at every `#` header, when the current chunk already has 100 tokens (`starts_section and tokens >= min_tokens`). 1416 vs 1128 chunks with bge-m3.
+  - The user's hybrid makes the biggest chunks (average 1268 characters), so at equal returned text it gets the smallest `k` (7). Whether it would close the gap at `k = 10` was not measured.
+- **Caveats**: single run per index; `k` differs by technique; the chunk counts of the three e5 indexes (741, 1144, 1408) differ from the ones in the older branch documents (755, 1173, 1443) while the hit counts match, and the cause was **not verified** (the working tree has uncommitted changes in `parse.py`); `full_STMERGE_bge` was first evaluated with 289 of 309 documents and `full_SEM_bge` with 69, then both were completed (resume with the same chunker settings: 20 and 241 documents added, the rest skipped) before the numbers above.
+- **Status**: accepted (single run, n = 130). **Branches**: one per technique and model, each with a `CHUNKING.md` (see "Branches and commits").
+
 ## Corrections log (things said or measured wrongly, and what replaced them)
 
 | # | Claim or measurement | Reality | Where fixed |
@@ -436,9 +466,11 @@ Weights are original : translation; the translation always comes from `golden_tr
 | 8 | df cap 0.15 | Tuned on 162 chunks; 0.05 is better on 750-1450 chunks (E19). Code unchanged yet | open |
 | 9 | Reranker not needed | Measured only on course 1 (E10); not repeated on the full index | open |
 | 10 | "Vectors alone miss exact terms almost always" | 9 of 10 on course 1; 0.600 vs 0.900 hybrid on the full index | PDF guide |
+| 11 | First unified run of E29: 0.000 on sets A, T and V for every index | Evaluation bug, not retrieval: the course 1 golden sets lack the `01_INTRODUCTION_GC_DATA_ANALYTICS/` prefix that the indexes have (`load_golden(path, source_prefix)`); redone with the prefix. `python -m rag.evaluation.report` still loads those sets without the prefix | E29 |
 
 ## Operational notes
 
+- `rag-db` would not start: it mounted `rag/sql/init.sql`, which no longer exists. Recreated with `podman run` on the same volume `rag_pgdata` and without that mount (the script only runs on first initialisation); all ten databases were intact.
 - Tooling quirk: `\n` escapes written through shell heredocs were turned into real newlines inside source files (broke `chunk.py` twice); use the editor tool for code with backslash escapes.
 - The machine slowed 5-10x for periods (background apps): indexing times are noisy; quote only the ones marked as measured idle.
 - `uv init` created a nested git repo inside `rag/`, which became the project repo (remote `estvn/GCP-ANALYTICS_RAG`); `mcp/` and `mcp-drawio/` have their own empty repos.

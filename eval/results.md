@@ -184,6 +184,23 @@ Checked on course 1 by looking, in the source markdown, at what follows each chu
 - The remaining cuts come from the PDF conversion, which sometimes inserts a paragraph break (or a page number)
   in the middle of a sentence: 22 such breaks in 2 of the 70 files. Both structural and semantic chunking inherit them.
 
+## All techniques on one method, two embedding models (E29)
+
+Hybrid search (df cap 0.05), 130 questions, about 9,000 characters returned per query (`k` depends on the chunk size). Hits = questions answered out of 130. Full table, settings and caveats: [experiments.md](experiments.md) E29; raw output: [runs/e29_unified_eval.log](runs/e29_unified_eval.log).
+
+| technique | e5-small hits / MRR | bge-m3 hits / MRR |
+|---|---|---|
+| structural 2400 | 95 / .561 | 107 / .612 |
+| semantic | 96 / .517 | 113 / .576 |
+| semantic + header cuts | 99 / .557 | **114** / .580 |
+| community two-stage (headers, then semantic on big sections) | 97 / .508 | 113 / .584 |
+| user's hybrid (two-stage + merge of neighbours) | 95 / .552 | 109 / .592 |
+
+- The community recipe has more hits than the user's hybrid in both models (by 2 and 4 questions); the hybrid has the higher MRR. The gaps are inside the noise (about 4 points of standard error), so neither wins on this evidence.
+- The best index is semantic + header cuts with bge-m3. It is not the user's hybrid.
+- bge-m3 beats e5-small on every technique; at least half of the gain comes from the 22 cross-lingual questions.
+- The user's hybrid makes the largest chunks (average 1268 characters), so at equal returned text it gets the smallest `k` (7 against 10).
+
 ## Limits
 
 - Small sets (a single question moves hit@5 by 2.5 points on the main set; ignore differences under about 7 points).

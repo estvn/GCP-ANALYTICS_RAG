@@ -362,6 +362,30 @@ and `courses_e5.dump` (3.1 MB), git-ignored.
 
 Details, setups and caveats: E39, E40 and E41 in [eval/experiments.md](eval/experiments.md).
 
+### Where it ends up: what the indexes hold and how many questions they answer
+
+| | |
+|---|---|
+| indexes | `courses_bge` (bge-m3, the official model) and `courses_e5` (e5-small, the light option) |
+| content | 417 documents: 310 of the GCP course and 107 of the Power BI course; 1,728 chunks (bge-m3) and 1,720 (e5-small), with the OCR text included |
+| chunking | semantic + header cuts: a chunk ends when the meaning shifts (top 10% distance between neighbouring sentences), at 440 tokens, or at a `#` header once it has 100 tokens |
+| retrieval | hybrid (vector + keyword, fused with RRF) on the question and on its translation, fused 1:1 |
+| returned | 30 chunks, from 100 candidates per search |
+
+Questions whose correct passage is among the 30 chunks returned (the 180 GCP questions of E31 + E32 and the 39 Power BI
+questions of E40, all written by us and run once):
+
+| question set | bge-m3 | e5-small |
+|---|---|---|
+| GCP, 180 questions | 175 (97%) | 168 (93%) |
+| Power BI, 39 questions | 38 (97%) | 35 (90%) |
+| **Both, 219 questions** | **213 (97%)** | **203 (93%)** |
+
+What these numbers do and do not say: they count that the right passage reached the 30 chunks, not that a language model
+answers well from them. They do not cover what only the screenshots of the Power BI slides say (the 39 questions come from
+files that already had text), the images, `.csv` and `.pbix` files of the course folders were not ingested, and 39 questions
+are few: one or two questions are noise.
+
 ## Tools and what each is for
 
 | tool | what it does here |

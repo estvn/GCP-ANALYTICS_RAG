@@ -8,6 +8,20 @@ returns the course passages that answer it. It is built to run on a laptop CPU w
 Status: ingestion, hybrid retrieval and evaluation work. The MCP server that exposes it to Claude Code is a separate
 repository and is the next step.
 
+## Architecture
+
+How the pieces connect, from the question in Claude Code to the vectors in PostgreSQL, and how the index was built and
+published (the MCP server and the database container are in other repositories and in GHCR):
+
+![System architecture: client, MCP server, RAG library, database, and how the index is built and published](docs/diagrams/system-architecture.png)
+
+How the code works: ingestion writes the index, retrieval reads it, evaluation measures it:
+
+![Code flow: ingestion, retrieval and evaluation packages](docs/diagrams/code-flow.png)
+
+The diagrams are draw.io files (`docs/diagrams/*.drawio`, editable at [app.diagrams.net](https://app.diagrams.net)) with
+their PNG export next to them.
+
 ## What `main` implements
 
 `main` contains only the techniques that won the experiments. Every other technique lives in its own branch (see
@@ -519,7 +533,8 @@ src/rag/
 └── evaluation/       # golden sets, hit rate / MRR, comparison report
 eval/                 # golden sets, results.md, experiments.md, runs/ (raw output)
 tests/                # mirrors src/
-infra/                # container definitions
+infra/                # container definitions (infra/db: the index images)
+docs/diagrams/        # architecture diagrams (.drawio and .png)
 data/  models/        # local only, git-ignored (course files, ONNX models)
 ```
 

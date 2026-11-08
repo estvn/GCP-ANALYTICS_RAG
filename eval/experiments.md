@@ -721,6 +721,22 @@ e5-small:
 - **Caveats**: only GCP questions were measured; there is no golden set for the Power BI course, so how well it is answered is **not measured** (two spot checks only). Which chunks take the first places from the GCP ones was not investigated. The two courses share no overlapping topic that is hard to tell apart, so a corpus with closer topics could behave differently. The keyword search keeps its document-frequency cap (0.05) calibrated on the GCP course. Single run each.
 - **Status**: accepted (single run, n = 180). Dumps: `data/backups/courses_bge.dump` (7.8 MB) and `courses_e5.dump` (3.1 MB), git-ignored.
 
+### E40. Questions about the Power BI course (39 questions, 2 indexes)
+- **Question**: is the Power BI part of the mixed index answered well, and which retrieval technique suits it?
+- **Setup**: after E39, three more Power BI PDFs were found to have identical text to another one (a copy named with `(1)` or with a different accent) and were deleted from the source folder, so the indexes now hold 417 documents (107 of Power BI): `courses_bge` 1,655 chunks and `courses_e5` 1,647. 40 questions were drafted by two read-only sub-agents, each over disjoint folders of the converted course (`data/md/POWERBI`), one question per file, with the evidence copied from the file and an English translation. `build_powerbi_set.py` (session scratchpad, **not in the repo**) checked every evidence snippet: it must be in its own file and in no other, one question per file; one question was dropped because its evidence did not match the file (an HTML entity), leaving 39 (`eval/golden_powerbi.json` and `eval/golden_powerbi_translations.json`). It also found that the evidence of `pb16` is split between two chunks in `courses_e5`, so that index cannot answer it. All questions are in Spanish and the course is in Spanish (no cross-language question). Run with `powerbi_eval.py` (scratchpad, **not in the repo**; raw output not saved): 30 chunks, 100 candidates, same code as E31 and E32.
+- **Result** (questions answered within 10 / 20 / 30 chunks, and MRR@30, of 39):
+
+| technique | bge-m3 | e5-small |
+|---|---|---|
+| vector | 37 / 39 / 39, MRR 0.825 | 35 / 37 / 37, MRR 0.743 |
+| vector + ES/EN 1:1 | 37 / 39 / 39, MRR 0.797 | 35 / 36 / 37, MRR 0.600 |
+| hybrid | 34 / 37 / 38, MRR 0.720 | 35 / 36 / 37, MRR 0.680 |
+| **hybrid + ES/EN 1:1** (the default) | 36 / 38 / 38, MRR 0.580 | 33 / 33 / 37, MRR 0.553 |
+
+- **Findings**: with 30 chunks the default answers 38 of 39 with bge-m3 and 37 of 39 with e5-small, so the Power BI course is found in the first 30 chunks. The ranking inside those 30 is better with the plain vector search (MRR 0.825 against 0.580 with bge-m3): on same-language questions the translation fusion and the keyword leg push the correct chunk down. This is the same effect as in E31 (the fusion helps the questions written in the other language of the file, and costs ranking elsewhere), here without any cross-language question to compensate.
+- **Caveats**: 39 questions, one run, so a difference of 1 or 2 answered questions is noise; the MRR gap is large enough to be real for this set but it was not repeated. The questions were drafted from the same text they are checked against, so their wording may echo the evidence and favour the vector search. They only cover files with enough extracted text: several Power BI PDFs are slides and gave almost no text when converted (some under 100 characters), so **what those slides say is not in the index and this set cannot see it**; OCR was not tried. The 05_IA_POWERBI folder has no file with enough text to ask about. The dumps `data/backups/courses_*.dump` were regenerated after the last deduplication.
+- **Status**: accepted (single run, n = 39). Decision pending: the default (hybrid + ES/EN 1:1) stays for now, since the questions of the course can come in either language.
+
 ## Corrections log (things said or measured wrongly, and what replaced them)
 
 | # | Claim or measurement | Reality | Where fixed |

@@ -1,0 +1,433 @@
+{
+ "questions": [
+  {
+   "id": "pa01",
+   "lang": "es",
+   "question": "¿Qué herramientas comparten Excel y Power BI que hacen más fácil pasar de uno al otro?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/00_INTRODUCCION/Introducción+a+PowerBI.md",
+     "evidence": "Ambas plataformas utilizan Power Query y DAX, facilitando la transición y el aprendizaje cruzado entre Excel y Power BI."
+    }
+   ]
+  },
+  {
+   "id": "pa02",
+   "lang": "es",
+   "question": "¿Por qué al importar datos con fechas en formato de Estados Unidos me salen errores solo a partir de cierto día del mes?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/01_POWER_QUERY/Ajustes+de+Configuración+Regional+para+Fecha.md",
+     "evidence": "Podríamos empezar a ver errores después del día 12 de cada mes, ya que Power BI podría confundir el día con el mes."
+    }
+   ]
+  },
+  {
+   "id": "pa03",
+   "lang": "es",
+   "question": "¿Para qué sirve hacer el perfilado de datos en Power Query?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/01_POWER_QUERY/Herramientas+de+Perfilado+de+Datos.md",
+     "evidence": "El perfilado de datos es esencial para entender la composición de nuestros datos y cómo podemos mejorar su calidad antes de proceder al análisis."
+    }
+   ]
+  },
+  {
+   "id": "pa04",
+   "lang": "es",
+   "question": "¿Qué calcula la opción \"Antigüedad\" en las herramientas de fecha de Power Query?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/01_POWER_QUERY/Herramientas+para+Tratamiento+de+Fechas.md",
+     "evidence": "“Antigüedad” calcula la diferencia entre el tiempo actual (o la función Ahora) y la fecha en cada fila"
+    }
+   ]
+  },
+  {
+   "id": "pa05",
+   "lang": "es",
+   "question": "¿Cómo puedo separar una columna de texto en varias columnas en Power Query?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/01_POWER_QUERY/Herramientas+para+Tratamiento+de+Textos.md",
+     "evidence": "Divide una columna de texto con base en un delimitador específico: número de caracteres u otros atributos"
+    }
+   ]
+  },
+  {
+   "id": "pa06",
+   "lang": "es",
+   "question": "¿Cuándo conviene conectarse a la fuente en tiempo real en lugar de cargar los datos en memoria?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/01_POWER_QUERY/Modos+de+Almacenamiento+y+Conexion.md",
+     "evidence": "Conecta en tiempo real a la fuente de datos, clave para conjuntos de datos grandes o de actualización frecuente."
+    }
+   ]
+  },
+  {
+   "id": "pa07",
+   "lang": "es",
+   "question": "¿Qué puedo hacer desde la pestaña Agregar Columna del editor de consultas?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/01_POWER_QUERY/Editor+de+Consultas (1).md",
+     "evidence": "Pestaña Agregar Columna: Creación de columnas basadas en reglas condicionales, operaciones de texto, cálculos, y más."
+    }
+   ]
+  },
+  {
+   "id": "pa08",
+   "lang": "es",
+   "question": "¿En qué situación tiene sentido crear un calendario dinámico en vez de uno fijo?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/01_POWER_QUERY/Creando+un+Calendario+Dinámico.md",
+     "evidence": "¿Qué harías si te encontraras en una situación en la que necesitas actualizar tus datos constantemente? Imagina que has creado un reporte semanal que deseas actualizar diariamente con datos nuevos para compartir con tus colegas, jefe o clientes."
+    }
+   ]
+  },
+  {
+   "id": "pa09",
+   "lang": "es",
+   "question": "¿Qué desventajas tiene fusionar consultas en lugar de mantener las tablas separadas y relacionarlas?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/01_POWER_QUERY/Combinando+Consultas.md",
+     "evidence": "Utilizar consultas combinadas complica el mantenimiento del modelo de datos y reduce el rendimiento al procesar grandes volúmenes de información."
+    }
+   ]
+  },
+  {
+   "id": "pa10",
+   "lang": "es",
+   "question": "¿Qué le pasa a mi informe si cambio de nombre o muevo de carpeta el archivo local que usé como origen de datos?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/01_POWER_QUERY/Configuración+de+Origen+de+Datos.md",
+     "evidence": "Esto implica que cualquier cambio en el archivo, ya sea un cambio de nombre, ubicación, actualización de permisos o de la ruta, no se actualizará automáticamente en Power BI."
+    }
+   ]
+  },
+  {
+   "id": "pa11",
+   "lang": "es",
+   "question": "¿Qué requisito deben cumplir los archivos de una carpeta para poder anexarlos todos a la vez?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/01_POWER_QUERY/Anexar+Consultas.md",
+     "evidence": "Permite la anexión de todos ellos de manera simultánea, siempre y cuando compartan la misma estructura."
+    }
+   ]
+  },
+  {
+   "id": "pa12",
+   "lang": "es",
+   "question": "¿Qué consultas es recomendable dejar fuera del proceso de actualización del informe?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/01_POWER_QUERY/Actualización+de+Consultas.md",
+     "evidence": "Excluir de este proceso aquellas consultas que no cambian frecuentemente o que no varían en absoluto."
+    }
+   ]
+  },
+  {
+   "id": "pa13",
+   "lang": "es",
+   "question": "¿Por qué falla la conexión de dos tablas por IDProducto cuando un mismo producto aparece repetido en ambas?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/02_MODELO_DATOS/Cardinalidad+de+la+Relación.md",
+     "evidence": "El IDProducto número uno aparece duplicado, lo cual, al intentar conectar ambas tablas mediante el campo IDProducto, resultaría en un error por constituir una relación muchos a muchos."
+    }
+   ]
+  },
+  {
+   "id": "pa14",
+   "lang": "es",
+   "question": "¿Cuál es el problema de tener relaciones ambiguas en el modelo de datos?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/02_MODELO_DATOS/Dirección+Bidireccional+del+Filtro+y+Ambiguedad.md",
+     "evidence": "El problema con las relaciones ambiguas es que podría crear dos conjuntos distintos y conflictivos de contexto de filtro que se transmiten simultáneamente a la tabla de Consulta de Territorios."
+    }
+   ]
+  },
+  {
+   "id": "pa15",
+   "lang": "es",
+   "question": "¿Qué ventaja ofrece crear una jerarquía personalizada para analizar un informe?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/02_MODELO_DATOS/Jerarquias.md",
+     "evidence": "UTILIZAR JERARQUÍAS PERMITE TRATAR MÚLTIPLES CAMPOS COMO UN SOLO ELEMENTO EN INFORMES, FACILITANDO EL ANÁLISIS AVANZADO MEDIANTE OPERACIONES DE DRILL-UP Y DRILL-DOWN PARA EXPLORAR DISTINTOS NIVELES DE DATOS."
+    }
+   ]
+  },
+  {
+   "id": "pa16",
+   "lang": "es",
+   "question": "¿Qué se gana en el modelo al eliminar la información repetida mediante la normalización?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/02_MODELO_DATOS/Noramalización+de+Datos.md",
+     "evidence": "Eliminar datos redundantes en el modelo, reduciendo el tamaño de las tablas y, más importante aún, mejorando la velocidad de procesamiento y la eficiencia."
+    }
+   ]
+  },
+  {
+   "id": "pa17",
+   "lang": "es",
+   "question": "¿Qué campos conviene ocultar en la vista de informe para evitar errores al filtrar?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/02_MODELO_DATOS/Ocultando+Campos+de+la+Vista+de+Informe.md",
+     "evidence": "Consejo: ocultar las claves foráneas en las tablas de datos, forzando de este modo a los usuarios a filtrar exclusivamente mediante las claves primarias de nuestras tablas de dimensión."
+    }
+   ]
+  },
+  {
+   "id": "pa18",
+   "lang": "es",
+   "question": "¿Qué utilidad tiene conservar una relación inactiva en lugar de eliminarla?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/02_MODELO_DATOS/Relaciones+Activas+e+Inactivas+Corregida.md",
+     "evidence": "Posibilidad de utilizar funciones DAX avanzadas que permiten activar forzosamente dicha relación."
+    }
+   ]
+  },
+  {
+   "id": "pa19",
+   "lang": "es",
+   "question": "¿Qué tipo de información guarda una tabla de dimensiones y para qué se utiliza?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/02_MODELO_DATOS/Tipos+de+Tablas+Datos+y+Búsqueda.md",
+     "evidence": "Las tablas de dimensiones contienen atributos descriptivos, predominantemente textuales, que empleamos para filtrar o agrupar dichos valores numéricos."
+    }
+   ]
+  },
+  {
+   "id": "pa20",
+   "lang": "es",
+   "question": "¿Con qué analogía sencilla se entiende la diferencia entre una clave primaria y una foránea?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/02_MODELO_DATOS/transcripciones/01_FK_PK.md",
+     "evidence": "las PK son los “IDs oficiales” y las FK son los “links” que los usan."
+    }
+   ]
+  },
+  {
+   "id": "pb01",
+   "lang": "es",
+   "question": "¿Qué diferencia hay entre una función de agregación y una función iteradora en DAX?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/03_DAX/Categorías+de+Funciones+DAX.md",
+     "evidence": "La distinción entre funciones de agregación e iteradoras es crucial, ya que las primeras proporcionan resultados resumidos, mientras que las segundas realizan cálculos detallados, evaluando cada fila individualmente."
+    }
+   ]
+  },
+  {
+   "id": "pb03",
+   "lang": "es",
+   "question": "¿Con qué funciones de Excel se puede comparar CALCULATE y en qué se diferencia de ellas?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/03_DAX/Funcion+CALCULATE.md",
+     "evidence": "Considerar CALCULATE como una función que modifica filtros, similar a las funciones SUMIF, COUNTIF o AVERAGEIF en Excel, pero mucho más potente."
+    }
+   ]
+  },
+  {
+   "id": "pb04",
+   "lang": "es",
+   "question": "¿Qué le pasa al contexto de filtro inicial de un visual cuando la medida usa CALCULATE con un filtro propio?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/03_DAX/Funcion+CALCULATE+Sesión+B.md",
+     "evidence": "Si se incluye la función `CALCULATE` en una medida, puede cambiar o sobrescribir el contexto de filtro establecido en el primer paso, imponiendo nuevas condiciones para el cálculo."
+    }
+   ]
+  },
+  {
+   "id": "pb05",
+   "lang": "es",
+   "question": "¿Qué devuelve SWITCH cuando el valor evaluado no coincide con ninguno de los casos definidos?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/03_DAX/Funciones+SWITCH.md",
+     "evidence": "La cláusula ELSE actúa como nuestro valor de retorno por defecto, para cuando no haya ninguna coincidencia en los casos previstos."
+    }
+   ]
+  },
+  {
+   "id": "pb06",
+   "lang": "es",
+   "question": "¿Qué función de conteo sirve para contar celdas no vacías de una columna aunque contengan texto y no solo números?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/03_DAX/Funciones+de+Conteo.md",
+     "evidence": "COUNTA: Cuenta el número de celdas no vacías en una columna, independientemente si contienen valores numéricos o caracteres"
+    }
+   ]
+  },
+  {
+   "id": "pb07",
+   "lang": "es",
+   "question": "¿Cómo se extrae solo el día, el mes o el año de una fecha en DAX?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/03_DAX/Funciones+de+Fecha+y+Hora.md",
+     "evidence": "DAY/MONTH/YEAR: extraen componentes específicos de esa fecha: el día, el mes o el año, respectivamente."
+    }
+   ]
+  },
+  {
+   "id": "pb08",
+   "lang": "es",
+   "question": "¿Para qué sirve DATESYTD en inteligencia de tiempo?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/03_DAX/Funciones+de+Inteligencia+de+Tiempo.md",
+     "evidence": "Calcula el total acumulado desde el inicio del año hasta la fecha actual, útil para evaluar el rendimiento a lo largo de un año."
+    }
+   ]
+  },
+  {
+   "id": "pb09",
+   "lang": "es",
+   "question": "¿Cuándo conviene usar una columna calculada y cuándo una medida en DAX?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/03_DAX/Mejores+Prácticas+en+DAX.md",
+     "evidence": "EMPLEAR COLUMNAS CALCULADAS PARA CREAR DATOS NUEVOS CON VALORES ESTÁTICOS POR FILA Y MEDIDAS PARA AGREGACIONES O VALORES DINÁMICOS EN INFORMES Y VISUALIZACIONES."
+    }
+   ]
+  },
+  {
+   "id": "pb10",
+   "lang": "es",
+   "question": "¿En qué se diferencia FILTER de CALCULATE a la hora de tratar las filas de una tabla?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/03_DAX/Función+FILTER.md",
+     "evidence": "A diferencia de `CALCULATE`, que modifica el contexto de filtro sin iterar por las filas, `FILTER` crea una tabla nueva y reducida que solo incluye las filas que satisfacen la expresión de filtro."
+    }
+   ]
+  },
+  {
+   "id": "pb11",
+   "lang": "es",
+   "question": "¿Cómo se crea una medida implícita en Power BI?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/03_DAX/Medidas+Implícitas+vs+Medidas+Explícitas.md",
+     "evidence": "Las medidas implícitas se crean automáticamente en la vista de informes cuando arrastramos campos numéricos brutos, como la cantidad de pedido de nuestra tabla de datos de ventas, al panel de valores de una visualización."
+    }
+   ]
+  },
+  {
+   "id": "pb12",
+   "lang": "es",
+   "question": "¿Qué tipo de cálculos puedo construir con la herramienta de medidas rápidas?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/03_DAX/Medidas+Rapidas.md",
+     "evidence": "Permite construir medidas utilizando plantillas predefinidas para operaciones como promedios ponderados, varianza, diferencia porcentual, inteligencia temporal, totales acumulados y mucho más."
+    }
+   ]
+  },
+  {
+   "id": "pb13",
+   "lang": "es",
+   "question": "¿Cómo trae RELATED valores de otra tabla y con qué función de Excel se parece?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/03_DAX/Related.md",
+     "evidence": "Similar a VLOOKUP en Excel: utiliza la relación entre tablas, definida por nuestras claves primarias y foráneas, para \"mirar\" en la tabla relacionada y traer los valores necesarios."
+    }
+   ]
+  },
+  {
+   "id": "pb14",
+   "lang": "es",
+   "question": "¿Qué diferencia hay entre crear la tabla de medidas con código DAX y hacerlo con la opción de introducir datos?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/03_DAX/Tablas+de+Medidas.md",
+     "evidence": "Este método proporciona el mismo resultado que el anterior, con la diferencia de que la tabla no será visible dentro del editor de consultas."
+    }
+   ]
+  },
+  {
+   "id": "pb15",
+   "lang": "es",
+   "question": "¿Qué función de texto en DAX me dice cuántos caracteres tiene el contenido de una columna?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/03_DAX/Funciones+de+Texto.md",
+     "evidence": "LEN: se aplica a una columna de texto y devuelve el recuento total de caracteres en ella."
+    }
+   ]
+  },
+  {
+   "id": "pb16",
+   "lang": "es",
+   "question": "¿A qué público va dirigido el dashboard multipágina del ejemplo y qué equilibrio busca en el nivel de detalle?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/04_VISUALIZACION_DATOS/Diseñando+el+Layout+de+Dashboards+Efectivos.md",
+     "evidence": "EL DASHBOARD ESTÁ DISEÑADO ESPECÍFICAMENTE PARA MANAGERS, EQUILIBRANDO ENTRE DETALLE Y VISIÓN GENERAL."
+    }
+   ]
+  },
+  {
+   "id": "pb17",
+   "lang": "es",
+   "question": "¿Qué es un dashboard y para qué se utiliza?",
+   "relevant": [
+    {
+     "source": "POWERBI/DOCUMENTACION/04_VISUALIZACION_DATOS/Marco+Conceptual+para+el+Diseño+de+Dashboards.md",
+     "evidence": "HERRAMIENTAS ANALÍTICAS DISEÑADAS PARA CONSOLIDAR DATOS DE MÚLTIPLES FUENTES, FACILITAR EL SEGUIMIENTO DE MÉTRICAS CLAVE DE UN VISTAZO Y PROMOVER LA NARRACIÓN DE HISTORIAS BASADA EN DATOS PARA LA TOMA DE DECISIONES."
+    }
+   ]
+  },
+  {
+   "id": "pb18",
+   "lang": "es",
+   "question": "¿Qué tipo de gráfico conviene usar si quiero mostrar cómo se reparten los valores de un conjunto de datos?",
+   "relevant": [
+    {
+     "source": "POWERBI/PDFs/Visualización/Preguntas Clave en la Visualización de Datos.md",
+     "evidence": "Aplicar histogramas para ilustrar cómo se agrupan o dispersan los datos dentro de un conjunto, permitiendo ver la frecuencia de valores o intervalos."
+    }
+   ]
+  },
+  {
+   "id": "pb19",
+   "lang": "es",
+   "question": "¿Qué devuelve la función ALL y cómo trata los filtros que ya están aplicados?",
+   "relevant": [
+    {
+     "source": "POWERBI/PDFs/DAX/Función ALL.md",
+     "evidence": "Devuelve todas las filas de una tabla o todos los valores dentro de una columna, ignorando por completo cualquier contexto de filtro."
+    }
+   ]
+  },
+  {
+   "id": "pb20",
+   "lang": "es",
+   "question": "¿Qué significa DAX y qué papel cumple dentro de Power BI?",
+   "relevant": [
+    {
+     "source": "POWERBI/PDFs/DAX/Introduccion a DAX.md",
+     "evidence": "DAX (Data Analysis Expressions) es el lenguaje de fórmulas que impulsa la interfaz de usuario de Power BI."
+    }
+   ]
+  }
+ ]
+}

@@ -737,6 +737,22 @@ e5-small:
 - **Caveats**: 39 questions, one run, so a difference of 1 or 2 answered questions is noise; the MRR gap is large enough to be real for this set but it was not repeated. The questions were drafted from the same text they are checked against, so their wording may echo the evidence and favour the vector search. They only cover files with enough extracted text: several Power BI PDFs are slides and gave almost no text when converted (some under 100 characters), so **what those slides say is not in the index and this set cannot see it**; OCR was not tried. The 05_IA_POWERBI folder has no file with enough text to ask about. The dumps `data/backups/courses_*.dump` were regenerated after the last deduplication.
 - **Status**: accepted (single run, n = 39). Decision pending: the default (hybrid + ES/EN 1:1) stays for now, since the questions of the course can come in either language.
 
+### E41. OCR of the Power BI slides that had no text
+- **Question**: how much of the Power BI course was missing because its slides are screenshots, and does adding what OCR reads from them change the answers?
+- **Setup**: the 103 Power BI PDFs have 372 pages; 187 of them have under 200 characters in their text layer (counted with `pymupdf`; every PDF has at least one such page). Those pages were rendered at 110 dpi and read with RapidOCR (`rapidocr-onnxruntime`, local ONNX, 4 threads; `ocr_all.py` in the session scratchpad, **not in the repo**; raw lines in `ocr_raw.json`, same place). The text of a page was appended to the Markdown of its file under `## Texto de las imágenes (página N)` only when the OCR had more than 150 characters and more than 1.5 times the characters of the text layer (title slides are skipped), after dropping lines with fewer than 3 letters or digits. The 44 changed files were re-ingested (`updated: 44`; 31 s with e5-small, 249 s with bge-m3). The golden sets of E39 (180 GCP questions) and E40 (39 Power BI questions) were run again, same technique and parameters.
+- **Result**: 187 pages read, 75,267 characters of OCR text in all (including the title slides that were not kept); 72 pages in 44 files were appended; each index grew by 73 chunks (`courses_bge` 1,655 to 1,728; `courses_e5` 1,647 to 1,720).
+
+| hybrid + ES/EN 1:1, answered within 10 / 20 / 30 | before OCR | with OCR |
+|---|---|---|
+| bge-m3, 180 GCP questions | 162 / 170 / 175 | 161 / 171 / 175 |
+| e5-small, 180 GCP questions | 135 / 158 / 167 | 136 / 158 / 168 |
+| bge-m3, 39 Power BI questions (MRR@30) | 36 / 38 / 38 (0.580) | 35 / 37 / 38 (0.587) |
+| e5-small, 39 Power BI questions (MRR@30) | 33 / 33 / 37 (0.553) | 30 / 33 / 35 (0.520) |
+
+- **Findings**: nothing changes beyond the noise, except that e5-small answers 2 Power BI questions fewer (37 to 35; 39 questions, so about noise). In a sample of 10 low-text pages (before the full run), 5 were title slides where OCR added nothing and 5 were screenshots where it read 400 to 1,000 characters: some explanatory sentences (for example, how anomaly detection words its explanation) and a lot of interface text. The OCR does not read accents and sometimes joins words.
+- **Caveats**: the 39 questions were written from files that already had text, so this set cannot show a gain from text that only the screenshots have: **the benefit of the OCR is not measured**. A set written from the screenshots would be needed. Single run; 110 dpi (not compared with a higher resolution); one OCR engine (no Tesseract or other model was tried). Title-slide pages are not in the index.
+- **Status**: accepted as a measurement (no gain, no clear loss). Decision pending whether to keep the OCR text in the published indexes.
+
 ## Corrections log (things said or measured wrongly, and what replaced them)
 
 | # | Claim or measurement | Reality | Where fixed |

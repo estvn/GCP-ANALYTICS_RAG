@@ -1,7 +1,8 @@
 # GCP Analytics RAG
 
 Question answering over the Google Cloud Data Analytics course (5 courses, about 310 Markdown files, with passages in
-both English and Spanish and questions asked in either language). This repository is the **retrieval half** of a RAG system: given a question it
+both English and Spanish and questions asked in either language), plus a Power BI course added later (see
+[A second course: Power BI](#a-second-course-power-bi-and-the-ocr-it-needed)). This repository is the **retrieval half** of a RAG system: given a question it
 returns the course passages that answer it. It is built to run on a laptop CPU within a small RAM budget (no GPU).
 
 Status: ingestion, hybrid retrieval and evaluation work. The MCP server that exposes it to Claude Code is a separate
@@ -318,12 +319,56 @@ Measured on 60 real chunks, 4 threads, int8 ONNX on CPU.
   `retrieval/vector-es-en-rrf`, whose report (`--translations`) evaluates the same modes.
 - The author's hybrid chunking and the e5-small indexes were not run through the retrieval modes of E30.
 
+## A second course: Power BI, and the OCR it needed
+
+A Power BI course (169 PDFs and 4 Markdown files, in Spanish) was added to the same kind of index, with the same chunker
+and the same two models. Two things had to be handled before it could be searched:
+
+- **Duplicates.** 66 of its PDFs were copies of another file (the same document in `DOCUMENTACION/` and in `PDFs/`, with
+  `+` or spaces in the name, or a `(1)` suffix): 63 were byte-identical and 3 had identical text. They were removed from
+  the source folder, leaving 107 documents. Left in, they filled the top places of a search with the same text twice.
+- **Slides without text.** Most of the course is slides, and `pymupdf4llm` only reads the text layer: **187 of the 372
+  pages (half) have under 200 characters**, and every one of the 103 PDFs has at least one. What those pages say lives in
+  screenshots of Power BI. They were read with OCR ([RapidOCR](https://github.com/RapidAI/RapidOCR), local, ONNX, about
+  3.4 s per page, about 11 minutes for the 187 pages) and the text was appended to the Markdown of each file under a
+  `## Texto de las imágenes (página N)` header. It was kept only where it adds something: 72 pages in 44 files (a title
+  slide already has its text in the layer). It added 73 chunks to each index.
+
+**Limits of that OCR.** It does not read accents (`Categoria`, `Martinez`), it sometimes joins words (`DesdelaWeb`), and a
+screenshot of an interface gives menus and numbers next to the useful sentences. It recovers something that was missing, but
+it is not clean text.
+
+Two indexes hold both courses: `courses_bge` (bge-m3, 417 documents, 1,728 chunks) and `courses_e5` (e5-small, 417
+documents, 1,720 chunks); 310 documents are GCP and 107 Power BI. Their dumps are `data/backups/courses_bge.dump` (7.7 MB)
+and `courses_e5.dump` (3.1 MB), git-ignored.
+
+**What was measured** (hybrid + ES/EN 1:1, 30 chunks, 100 candidates; questions answered within 10 / 20 / 30 chunks):
+
+| question set | index | GCP only | GCP + Power BI | + OCR text |
+|---|---|---|---|---|
+| 180 GCP questions (E31 + E32) | bge-m3 | 161 / 171 / 176 | 162 / 170 / 175 | 161 / 171 / 175 |
+| 180 GCP questions | e5-small | 142 / 160 / 166 | 135 / 158 / 167 | 136 / 158 / 168 |
+| 39 Power BI questions (E40) | bge-m3 | | 36 / 38 / 38 | 35 / 37 / 38 |
+| 39 Power BI questions | e5-small | | 33 / 33 / 37 | 30 / 33 / 35 |
+
+- Adding the second course does not change the answers for GCP beyond the noise (about 6 questions out of 180).
+- The Power BI course is found: 38 of 39 questions in the first 30 chunks with bge-m3 and 35 to 37 with e5-small.
+- **The OCR text did not improve any measurement, and it cost e5-small 2 Power BI questions** (37 to 35; with 39
+  questions that is noise). That is expected: the 39 questions were written from files that already had text, so they
+  cannot see what only the screenshots say. **Whether the OCR helps for questions about the screenshots is not measured.**
+- On Power BI the plain vector search ranks the correct chunk higher than the default (bge-m3 MRR 0.81 against 0.59),
+  because all its questions are in the same language as the course and the translation fusion adds noise; the default
+  stays because questions can come in either language.
+
+Details, setups and caveats: E39, E40 and E41 in [eval/experiments.md](eval/experiments.md).
+
 ## Tools and what each is for
 
 | tool | what it does here |
 |---|---|
 | Python 3.12 + [uv](https://docs.astral.sh/uv/) | runs the code and locks the dependencies (`pyproject.toml`, `uv.lock`) |
 | `pymupdf4llm` | converts the course PDFs to Markdown, keeping headers and lists |
+| RapidOCR | reads the text of screenshots in slide PDFs (Power BI course); local, ONNX, used outside the repository code |
 | `langchain-text-splitters` | only `RecursiveCharacterTextSplitter`, to split one sentence that is longer than the token cap; the semantic chunker is our own code |
 | ONNX Runtime + `tokenizers` | run the embedding models locally on CPU, int8, 4 threads |
 | bge-m3 / multilingual-e5-small | turn text into vectors; bge-m3 is the default, e5-small the light option |

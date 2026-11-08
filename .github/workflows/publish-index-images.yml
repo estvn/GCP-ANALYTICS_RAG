@@ -1,0 +1,85 @@
+name: Publish index images
+
+# Builds the two images with a finished index inside (infra/db) and pushes them to GHCR.
+# Run it by hand (Actions tab) or by pushing a tag such as db-v1.
+on:
+  workflow_dispatch:
+  push:
+    tags: ["db-v*"]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE: gcp-rag-db
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - model: bge-m3
+            db: courses_bge
+          - model: e5-small
+            db: courses_e5
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Log in to the container registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image name and tags
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE }}
+          tags: |
+            type=raw,value=${{ matrix.model }}
+
+      - name: Build the image
+        uses: docker/build-push-action@v7
+        with:
+          context: infra/db
+          file: infra/db/Containerfile
+          build-args: |
+            DUMP=${{ matrix.db }}.dump
+            DB=${{ matrix.db }}
+          load: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Start the image and check the index inside
+        run: |
+          docker run -d --name index ${{ steps.meta.outputs.tags }}
+          for i in $(seq 1 90); do
+            if docker logs index 2>&1 | grep -q "init process complete" && docker exec index pg_isready -h 127.0.0.1 -U rag > /dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+          docker exec index pg_isready -h 127.0.0.1 -U rag
+          counts=$(docker exec index psql -U rag -d "${{ matrix.db }}" -Atc "select (select count(*) from documents) || ' ' || (select count(*) from chunks)")
+          echo "documents and chunks: $counts"
+          set -- $counts
+          test "$1" -ge 300 && test "$2" -ge 1000
+          docker exec index psql -U rag -d "${{ matrix.db }}" -Atc "select extname from pg_extension where extname = 'vector'" | grep -qx vector
+
+      - name: Push the image
+        uses: docker/build-push-action@v7
+        with:
+          context: infra/db
+          file: infra/db/Containerfile
+          build-args: |
+            DUMP=${{ matrix.db }}.dump
+            DB=${{ matrix.db }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

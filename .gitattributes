@@ -1,0 +1,2 @@
+*.dump binary
+infra/db/restore.sh text eol=lf

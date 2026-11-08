@@ -386,6 +386,25 @@ answers well from them. They do not cover what only the screenshots of the Power
 files that already had text), the images, `.csv` and `.pbix` files of the course folders were not ingested, and 39 questions
 are few: one or two questions are noise.
 
+### Run the finished index (container images)
+
+Each index is published as a container image of PostgreSQL 17 + pgvector with the data inside (built by
+[`.github/workflows/publish-index-images.yml`](.github/workflows/publish-index-images.yml) from the dumps in
+[`infra/db/`](infra/db)). On the first start it creates the database and restores the dump; nothing else to install:
+
+| image | model | database inside |
+|---|---|---|
+| `ghcr.io/estvn/gcp-rag-db:bge-m3` | bge-m3 (official) | `courses_bge` |
+| `ghcr.io/estvn/gcp-rag-db:e5-small` | e5-small (light) | `courses_e5` |
+
+```bash
+podman run -d --name rag-db -p 127.0.0.1:5433:5432 -v rag_pgdata:/var/lib/postgresql/data   ghcr.io/estvn/gcp-rag-db:bge-m3
+# connection: postgresql://rag:rag@127.0.0.1:5433/courses_bge   (user and password `rag`, local use only)
+```
+
+The image holds the index, not the model: the matching model files still go in `models/` (step 3 of the steps above), and
+a query has to use the same model as the index. The text of the course is inside the images.
+
 ## Tools and what each is for
 
 | tool | what it does here |

@@ -1,0 +1,15 @@
+# PostgreSQL 17 + pgvector with one finished index inside.
+# On the first start the image creates the database and restores the dump; later starts reuse the data volume.
+FROM docker.io/pgvector/pgvector:pg17
+
+ARG DUMP
+ARG DB
+
+# Local credentials of a container meant to listen on 127.0.0.1 only.
+ENV POSTGRES_USER=rag \
+    POSTGRES_PASSWORD=rag \
+    POSTGRES_DB=rag \
+    RAG_DB=${DB}
+
+COPY ${DUMP} /docker-entrypoint-initdb.d/index.dump
+COPY --chmod=755 restore.sh /docker-entrypoint-initdb.d/10-restore.sh

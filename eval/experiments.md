@@ -703,6 +703,24 @@ e5-small:
 - **Caveats**: 4 questions; one machine, 4 threads (more threads or a GPU would be faster); quality was not measured: a test on 40 questions was started and stopped on purpose when the cost was clear; a smaller multilingual reranker (for example `cross-encoder/mmarco-mMiniLMv2-L12-H384-v1`, 113 MB) was not tried.
 - **Status**: accepted as a cost measurement. **Decision (the user)**: no reranker; rank fusion and 30 chunks stay.
 
+### E39. A second course in the same index (GCP + Power BI), checked with the GCP questions
+- **Question**: does adding a second, different course to an index make the answers for the first course worse?
+- **Setup**: the Power BI course (`COURSES/GOOGLE_CLOUD_DATA_ANALYSIS_CERTIFICATE/POWERBI`: 169 PDFs and 4 Markdown files) was converted with `convert_corpus` into `data/md/POWERBI/`. 63 of its PDFs were byte-identical copies (the same file in `DOCUMENTACION/` and in `PDFs/`, one name with `+` and one with spaces); the copies in `PDFs/` were deleted from the source folder, leaving 110 documents. Two new indexes were built from scratch with the default chunker (semantic + header cuts): `courses_bge` (bge-m3, 1,658 chunks) and `courses_e5` (e5-small, 1,650 chunks), each with the 310 GCP documents and the 110 Power BI ones (420 in total); ingestion took 240 s with e5-small. Retrieval: hybrid + ES/EN 1:1, 30 chunks, 100 candidates. The 130 questions of E31 and the 50 of E32, run with `matrix_k30.py` and `heldout_eval.py` (session scratchpad, **not in the repo**; raw output was not saved) against the new index and, as a baseline, against the GCP-only index of the same model (`full_SEMH_bge`, `full_SEMH`). The questions are about GCP only.
+- **Result** (questions answered within 10 / 20 / 30 chunks, and MRR@30):
+
+| model | set | GCP only | GCP + Power BI |
+|---|---|---|---|
+| bge-m3 | 130 questions | 119 / 127 / 130, MRR 0.553 | 120 / 126 / 129, MRR 0.539 |
+| bge-m3 | 50 questions | 42 / 44 / 46, MRR 0.583 | 42 / 44 / 46, MRR 0.551 |
+| bge-m3 | **180 together** | 161 / 171 / 176 | 162 / 170 / 175 |
+| e5-small | 130 questions | 100 / 115 / 119, MRR 0.386 | 93 / 113 / 121, MRR 0.377 |
+| e5-small | 50 questions | 42 / 45 / 47, MRR 0.571 | 42 / 45 / 46, MRR 0.552 |
+| e5-small | **180 together** | 142 / 160 / 166 | 135 / 158 / 167 |
+
+- **Findings**: with 30 chunks the answers do not change beyond the noise (about 6 questions for n = 180): bge-m3 176 against 175, e5-small 166 against 167. With 10 chunks bge-m3 is the same (161 against 162) and e5-small answers 7 fewer (142 against 135), at the edge of the noise. MRR goes down a little in all four rows (0.01 to 0.03). A question about Dataproc returned no Power BI chunk among its 30; one about `CALCULATE` returned Power BI chunks only.
+- **Caveats**: only GCP questions were measured; there is no golden set for the Power BI course, so how well it is answered is **not measured** (two spot checks only). Which chunks take the first places from the GCP ones was not investigated. The two courses share no overlapping topic that is hard to tell apart, so a corpus with closer topics could behave differently. The keyword search keeps its document-frequency cap (0.05) calibrated on the GCP course. Single run each.
+- **Status**: accepted (single run, n = 180). Dumps: `data/backups/courses_bge.dump` (7.8 MB) and `courses_e5.dump` (3.1 MB), git-ignored.
+
 ## Corrections log (things said or measured wrongly, and what replaced them)
 
 | # | Claim or measurement | Reality | Where fixed |

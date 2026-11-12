@@ -451,9 +451,33 @@ uv sync
 uv run pytest
 ```
 
-**3. Put the model in `models/`** (the folder is git-ignored). bge-m3 needs `onnx/model_int8.onnx`, `tokenizer.json` and
-`config.json` in `models/bge-m3/`; the repository of that int8 file is not recorded here. e5-small needs
-`onnx/model_quantized.onnx` and `tokenizer.json` from `Xenova/multilingual-e5-small` in `models/multilingual-e5-small/`.
+**3. Download the model into `models/`.** The models are **not in this repository**: `models/` is git-ignored (the files
+weigh 559 MB and 130 MB, above the 100 MB limit of GitHub). After `git clone` the folder does not exist, so create it
+inside the clone (`rag/models/`) and download only the model that matches the index you want to use (next section).
+
+| Model | Folder | Files | Size | Where to get it |
+|---|---|---|---|---|
+| bge-m3 (default, best ranking) | `models/bge-m3/` | `onnx/model_int8.onnx`, `tokenizer.json`, `config.json` | 559 MB | `onnx-community/bge-m3-ONNX` on Hugging Face, revision `25b9af8e87a38eb120cfe87125383677b9cd309e` (verified: same commit and same sha256 `2237f770…` as the file used for the indexes). Do not use `Xenova/bge-m3`: its `model_int8.onnx` has a different sha256, so its vectors may not match the published index |
+| e5-small (light) | `models/multilingual-e5-small/` | `onnx/model_quantized.onnx`, `tokenizer.json`, `config.json` | 130 MB | `Xenova/multilingual-e5-small` on Hugging Face (verified: same commit as the files used for the index) |
+
+```bash
+uvx --from huggingface_hub hf download Xenova/multilingual-e5-small onnx/model_quantized.onnx tokenizer.json config.json \
+  --local-dir models/multilingual-e5-small
+```
+
+### Which model, which database, what to change
+
+The model that embeds the question must be the same one that embedded the chunks, because vectors of different models
+(or different sizes) cannot be compared. Pick one row and change only what it lists:
+
+| | bge-m3 | e5-small |
+|---|---|---|
+| Database | `courses_bge` (image `ghcr.io/estvn/gcp-rag-db:bge-m3`) | `courses_e5` (image `ghcr.io/estvn/gcp-rag-db:e5-small`) |
+| Vector size | 1024 | 384 |
+| This repository | `load_embedder()` (default) and `init_schema(conn, dim=1024)` | `load_embedder("e5-small")` and `init_schema(conn, dim=384)`; the evaluation report takes `--model e5-small` |
+| MCP server (`GCP-ANALYTICS_RAG_MCP`) | nothing, it is the default | `python -m gcp_rag_mcp switch --model e5-small` (or `setup`), or `RAG_MODEL=e5-small` in the client's `env`. The MCP commands download the model into `models/`, pull the database image of that model and pick the database; see the Commands section of the MCP README |
+
+The e5 family also needs the `query: ` and `passage: ` prefixes; `E5_SMALL` in `src/rag/embed.py` already adds them.
 
 **4. Convert, chunk, embed and store.** Ingestion is incremental: a file is chunked and embedded only when its content
 or the chunker settings change, so an interrupted run resumes where it stopped.
